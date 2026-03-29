@@ -302,6 +302,17 @@ if (settingsBtn && settingsMenu && themeSelect && languageSelect) {
   });
 }
 
+ /* ─── NOTIFICATION BELL ─── */
+  const bell = document.querySelector('.nav-bell');
+
+  if (bell) {
+    bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const lang = localStorage.getItem('language') || 'en';
+      showToast(translations[lang].bellNoNew);
+    });
+  }
+  
 });
 
 

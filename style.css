@@ -235,6 +235,22 @@ body.dark {
   background: #0f172a;
   color: #e5e7eb;
 }
+body.dark .nav-logo {
+  color: var(--red);
+}
+
+body.dark .nav-logo svg {
+  stroke: var(--red);
+}
+/* light mode — icon */
+.nav-logo svg {
+  fill: red;
+}
+
+/* dark mode — red icon on dark navbar */
+body.dark .nav-logo svg {
+  fill: var(--red);
+}
 
 body.dark .settings-menu {
   background: #111827;
@@ -303,17 +319,17 @@ body.dark .btn-login {
 
 body.dark .btn-register,
 body.dark .btn-primary {
-  background: #f8fafc;
-  color: #111827;
+  background: var(--red);
+  color: #ffffff;
 }
 
 body.dark .btn-outline {
-  border-color: rgba(248,250,252,0.5);
-  color: #f8fafc;
+  border-color: var(--red);
+  color: var(--red);
 }
 
 body.dark .btn-outline:hover {
-  background: rgba(248,250,252,0.08);
+  background: rgba(192, 40, 28, 0.12);
 }
 
 body.dark .stats,
@@ -361,10 +377,15 @@ body.dark .blood-type-large {
   color: #f8fafc;
 }
 
-body.dark .urgency-badge {
-  color: #fff;
+body.dark .urgency-badge.urgent {
+  background: #92400E;
+  color: #FEF3C7;
 }
 
+body.dark .urgency-badge.emergency {
+  background: #991B1B;
+  color: #FEE2E2;
+}
 body.dark .newsletter-row input {
   background: #111827;
   border: 1px solid #334155;

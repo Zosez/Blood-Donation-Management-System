@@ -1,6 +1,11 @@
 const translations = {
   en: {
     navLogo: "LifeLink",
+    navHome: "Home",
+    navAbout: "About",
+    navRequests: "Active Requests",
+    navEvents: "Events",
+    bellNoNew: "No new notifications",
     login: "Log In",
     register: "Register",
     theme: "Theme",
@@ -77,6 +82,11 @@ const translations = {
 
   np: {
     navLogo: "लाइफलिंक",
+    navHome: "होम",
+    navAbout: "बारेमा",
+    navRequests: "सक्रिय अनुरोधहरू",
+    navEvents: "कार्यक्रमहरू",
+    bellNoNew: " नयाँ सूचनाहरू छैनन्",
     login: "लग इन",
     register: "दर्ता गर्नुहोस्",
     theme: "थिम",
