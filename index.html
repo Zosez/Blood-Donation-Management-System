@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink — Every Drop Counts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+      viewBox="0 0 24 24" fill="none"
+      stroke="white" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2C12 2 6 9 6 13a6 6 0 0 0 12 0c0-4-6-11-6-11z" />
+    </svg>
+    <span data-key="navLogo">LifeLink</span>
+  </div>
+
+  <div class="nav-right">
+    <span class="nav-bell"></span>
+    <button class="btn-login" data-key="login">Log In</button>
+    <button class="btn-register" data-key="register">Register</button>
+
+    <div class="settings-wrap">
+      <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06
+          a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+          1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09
+          a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06
+          a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82
+          1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09
+          a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06
+          a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01
+          a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09
+          a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+          a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01
+          a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09
+          a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+
+      <div class="settings-menu" id="settingsMenu">
+        <div class="settings-group">
+          <label for="themeSelect" data-key="theme">Theme</label>
+          <select id="themeSelect">
+            <option value="light" data-key="light">Light</option>
+            <option value="dark" data-key="dark">Dark</option>
+          </select>
+        </div>
+
+        <div class="settings-group">
+          <label for="languageSelect" data-key="language">Language</label>
+           <select id="languageSelect">
+           <option value="en" data-key="langEnglish">English</option>
+          <option value="np" data-key="langNepali">Nepali</option>
+         </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#home" data-key="mobileHome">Home</a>
+  <a href="#process" data-key="mobileAbout">About</a>
+  <a href="#requests" data-key="mobileRequests">Active Requests</a>
+  <a href="#cta" data-key="mobileEvents">Events</a>
+</div>
+
+<!-- ─── HERO ─── -->
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1 data-key="heroTitle">Every Drop Counts.<br>Every Second Matters.</h1>
+      <p data-key="heroDesc">LifeLink connects blood donors with people in need — fast, direct, and free. We bridge the gap between urgent medical needs and community heroes.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" data-key="donate">Donate Blood</button>
+        <button class="btn-outline" data-key="request">Request Blood</button>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-img-wrap">
+        <div class="hero-img-placeholder">
+          <img src="images/lifelink_image.jpg" alt="Blood donation" class="hero-img">
+        </div>
+
+        <div class="realtime-badge">
+          <div class="badge-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"></circle>
+            </svg>
+          </div>
+
+          <div class="badge-text">
+            <strong data-key="realtimeTitle">Real-time Matching</strong>
+            <span data-key="realtimeDesc">Connects in &lt; 5 mins</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── STATS ─── -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num" data-target="1200" data-suffix="+">0</div>
+      <div class="stat-label" data-key="statsDonors">Donors</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="340" data-suffix="+">0</div>
+      <div class="stat-label" data-key="statsLives">Lives Helped</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="8" data-suffix="">0</div>
+      <div class="stat-label" data-key="statsTypes">Types Supported</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="process reveal" id="process">
+  <div class="section-tag" data-key="processTag">The Process</div>
+  <h2 class="section-title" data-key="processTitle">How It Works</h2>
+
+  <div class="steps">
+    <div class="step-card reveal">
+      <div class="step-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 7a4 4 0 1 1 8 0a4 4 0 0 1 -8 0" />
+          <path d="M16 19h-8a4 4 0 0 1 0 -8h8" />
+          <path d="M19 16v6" />
+          <path d="M22 19h-6" />
+        </svg>
+      </div>
+      <h3 data-key="step1Title">Register</h3>
+      <p data-key="step1Desc">Join our community as a donor or a requester. A simple 2-minute setup verifies your profile and health stats.</p>
+    </div>
+
+    <div class="step-card reveal" style="transition-delay:0.1s">
+      <div class="step-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s-6-5-6-10a6 6 0 1 1 12 0c0 5-6 10-6 10z" />
+          <circle cx="12" cy="11" r="2" />
+        </svg>
+      </div>
+      <h3 data-key="step2Title">Get Matched</h3>
+      <p data-key="step2Desc">Our clinical curator algorithm instantly notifies nearby donors when an urgent request matches their blood type.</p>
+    </div>
+
+    <div class="step-card reveal" style="transition-delay:0.2s">
+      <div class="step-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="none"
+          stroke="#C0281C" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21l-8-7a5 5 0 0 1 7-7l1 1l1-1a5 5 0 0 1 7 7l-8 7" />
+          <path d="M9 13h2l1-2l2 4l1-2h2" />
+        </svg>
+      </div>
+      <h3 data-key="step3Title">Save a Life</h3>
+      <p data-key="step3Desc">Facilitate the donation through our secure portal. Track the impact of your contribution in real-time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── BLOOD TYPES ─── -->
+<section class="blood-types reveal">
+  <h2 class="section-title" data-key="bloodTitle">Supporting All Blood Types</h2>
+  <div class="blood-grid">
+    <div class="blood-badge">A+</div>
+    <div class="blood-badge">A-</div>
+    <div class="blood-badge">B+</div>
+    <div class="blood-badge">B-</div>
+    <div class="blood-badge">O+</div>
+    <div class="blood-badge">O-</div>
+    <div class="blood-badge">AB+</div>
+    <div class="blood-badge">AB-</div>
+  </div>
+</section>
+
+<!-- ─── ACTIVE REQUESTS ─── -->
+<section class="requests-section reveal" id="requests">
+  <div class="section-header">
+    <div>
+      <div class="live-tag" data-key="liveUpdates">Live Updates</div>
+      <h2 data-key="activeRequests">Active Requests</h2>
+    </div>
+    <a href="#" class="view-all" data-key="viewAll">View All Requests →</a>
+  </div>
+
+  <div class="request-cards">
+    <div class="request-card reveal">
+      <div class="card-top">
+        <span class="hospital-name">City Hospital</span>
+        <span class="urgency-badge urgent" data-key="urgent">Urgent</span>
+      </div>
+      <div class="location">&#128205; New York, NY</div>
+      <div class="blood-info">
+        <div>
+          <div class="blood-label" data-key="bloodType">Blood Type</div>
+          <div class="blood-type-large">O-</div>
+        </div>
+        <button class="btn-respond" data-key="respond">Respond</button>
+      </div>
+    </div>
+
+    <div class="request-card reveal" style="transition-delay:0.1s">
+      <div class="card-top">
+        <span class="hospital-name">St. Jude Medical</span>
+      </div>
+      <div class="location">&#128205; Brooklyn, NY</div>
+      <div class="blood-info">
+        <div>
+          <div class="blood-label" data-key="bloodType">Blood Type</div>
+          <div class="blood-type-large">A+</div>
+        </div>
+        <button class="btn-respond" data-key="respond">Respond</button>
+      </div>
+    </div>
+
+    <div class="request-card reveal" style="transition-delay:0.2s">
+      <div class="card-top">
+        <span class="hospital-name">Mercy Clinic</span>
+        <span class="urgency-badge emergency" data-key="emergency">Emergency</span>
+      </div>
+      <div class="location">&#128205; Queens, NY</div>
+      <div class="blood-info">
+        <div>
+          <div class="blood-label" data-key="bloodType">Blood Type</div>
+          <div class="blood-type-large">B-</div>
+        </div>
+        <button class="btn-respond" data-key="respond">Respond</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA BANNER ─── -->
+<section class="cta-section" id="cta">
+  <div class="cta-banner reveal">
+    <h2 data-key="ctaTitle">Ready to save a life?</h2>
+    <p data-key="ctaDesc">Join thousands of donors who are making a difference every day. Your contribution can provide someone with a second chance at life.</p>
+    <div class="cta-btns">
+      <button class="btn-primary" data-key="becomeDonor">Become a Donor</button>
+      <button class="btn-outline" data-key="learnMore">Learn More</button>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="brand-name" data-key="navLogo">LifeLink</span>
+      <p data-key="footerDesc">A clinical curator platform dedicated to connecting blood donors and recipients through precise, real-time matching technology.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerPlatform">Platform</h4>
+      <ul>
+        <li><a href="#" data-key="footerHowItWorks">How it Works</a></li>
+        <li><a href="#" data-key="footerSearchDonors">Search Donors</a></li>
+        <li><a href="#" data-key="footerActiveRequests">Active Requests</a></li>
+        <li><a href="#" data-key="footerBloodBanks">Blood Banks</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerResources">Resources</h4>
+      <ul>
+        <li><a href="#" data-key="footerDonationTips">Donation Tips</a></li>
+        <li><a href="#" data-key="footerHealthRequirements">Health Requirements</a></li>
+        <li><a href="#" data-key="footerSuccessStories">Success Stories</a></li>
+        <li><a href="#" data-key="footerContactSupport">Contact Support</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerConnect">Connect</h4>
+      <div class="social-row">
+        <button class="social-btn"><i class="fab fa-linkedin"></i></button>
+       <button class="social-btn"><i class="fab fa-instagram"></i></button>
+       <button class="social-btn"><i class="fab fa-youtube"></i></button>
+      </div>
+      <div class="footer-sub-label" data-key="subscribeLabel">Subscribe for emergency alerts</div>
+      <div class="newsletter-row">
+        <input type="email" id="newsletterEmail" data-key="emailPlaceholder" placeholder="Email address"/>
+        <button id="newsletterBtn">&#10148;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span data-key="footerCopyright">&copy; 2026 LifeLink Clinical Systems. All rights reserved.</span>
+    <div class="footer-bottom-links">
+      <a href="#" data-key="footerPrivacy">Privacy Policy</a>
+      <a href="#" data-key="footerTerms">Terms of Service</a>
+      <a href="#" data-key="footerCookies">Cookie Settings</a>
+    </div>
+  </div>
+</footer>
+
+<script src="language.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
