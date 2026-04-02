@@ -38,19 +38,30 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 5%;
-  height: 60px;
-  background: var(--red);
-  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  padding: 0 2.5rem;
+  height: 74px;                
+  background: #e3170a;          
 }
 
 .nav-logo {
-  font-family: 'Sora', sans-serif;
-  font-weight: 800;
-  font-size: 1.3rem;
-  color: var(--white);
-  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   text-decoration: none;
+}
+
+.logo-img {
+  width: 34px;
+  height: 34px;
+  filter: brightness(0) invert(1);
+}
+
+.logo-text {
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;           
+  font-size: 1.15rem;         
+  color: #ffffff;
+  letter-spacing: -0.5px;
 }
 
 .nav-links {
@@ -60,11 +71,12 @@ nav {
 }
 
 .nav-links a {
-  color: rgba(255,255,255,0.85);
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 600;      
+  color: #ffffff;        
   text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .nav-links a:hover,
