@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink – User Dashboard</title>
+  <link rel="stylesheet" href="userdashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+  <div class="nav-logo">
+     <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
+     <span class="logo-text">LifeLink</span>
+  </div>
+    <div class="nav-links">
+    <a href="#" data-section="Dashboard" class="active">Dashboard</a>
+    <a href="#" data-section="Donations">Donations</a>
+    <a href="#" data-section="Requests">Requests</a>
+    <a href="#" data-section="Profile">Profile</a>
+  </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="notifBtn" title="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-dot"></span>
+      </button>
+      <div class="avatar" title="User Profile">
+        <img src="https://i.pravatar.cc/40?img=12" alt="User Avatar"/>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard">
+
+    <!-- ===== DONOR MODE ===== -->
+    <section class="card-section donor-section fade-in">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="section-icon donor-icon"><i class="fa-solid fa-droplet"></i></span>
+          <div>
+            <h2 class="section-title">Donor Mode</h2>
+            <p class="section-subtitle">Empowering the flow of life through selfless contribution.</p>
+          </div>
+        </div>
+        <div class="section-controls">
+          <div class="status-badge">
+            <span class="status-dot green"></span>
+            <span>Ready to Donate</span>
+          </div>
+          <div class="toggle-group">
+            <span class="toggle-label">AVAILABILITY</span>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="availToggle"/>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p class="stat-label">TOTAL DONATIONS</p>
+          <div class="stat-value">12 <span class="stat-unit">Units</span></div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:60%"></div></div>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">LIVES IMPACTED</p>
+          <div class="stat-value">36 <span class="stat-unit">People</span></div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +3 this month</div>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">DONOR TIER</p>
+          <div class="stat-value tier-silver">Silver <i class="fa-regular fa-circle-check"></i></div>
+          <p class="stat-hint">3 donations until Gold</p>
+        </div>
+        <div class="stat-card next-badge-card">
+          <p class="stat-label">NEXT BADGE</p>
+          <div class="badge-name">Centurion Blood Guard</div>
+          <div class="badge-icons">
+            <span class="badge-chip blue">C</span>
+            <span class="badge-chip teal">B</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matched Requests -->
+      <div class="requests-header">
+        <h3>Matched Requests</h3>
+        <span class="tag red">3 Near You</span>
+      </div>
+      <div class="requests-grid">
+
+        <div class="request-card critical">
+          <div class="req-top">
+            <span class="urgency-badge critical-badge">CRITICAL</span>
+            <span class="blood-type">AB+</span>
+          </div>
+          <div class="req-body">
+            <p class="req-hospital">City General Hospital</p>
+            <p class="req-meta"><i class="fa-solid fa-location-dot"></i> 1.2 km away &bull; Emergency Surgery</p>
+          </div>
+          <button class="req-btn btn-red">Donate Now</button>
+        </div>
+
+        <div class="request-card urgent">
+          <div class="req-top">
+            <span class="urgency-badge urgent-badge">URGENT</span>
+            <span class="blood-type">O-</span>
+          </div>
+          <div class="req-body">
+            <p class="req-hospital">St. Jude Medical Center</p>
+            <p class="req-meta"><i class="fa-solid fa-location-dot"></i> 4.5 km away &bull; Routine Procedure</p>
+          </div>
+          <button class="req-btn btn-orange">Respond</button>
+        </div>
+
+        <div class="request-card normal">
+          <div class="req-top">
+            <span class="urgency-badge normal-badge">NORMAL</span>
+            <span class="blood-type">A+</span>
+          </div>
+          <div class="req-body">
+            <p class="req-hospital">North Wellness Clinic</p>
+            <p class="req-meta"><i class="fa-solid fa-location-dot"></i> 8.1 km away &bull; Stock Replenishment</p>
+          </div>
+          <button class="req-btn btn-dark">View Details</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== RECEIVER MODE ===== -->
+    <section class="card-section receiver-section fade-in delay-1">
+      <div class="section-header">
+        <div class="section-title-group">
+          <span class="section-icon receiver-icon"><i class="fa-solid fa-heart"></i></span>
+          <div>
+            <h2 class="section-title">Receiver Mode</h2>
+            <p class="section-subtitle">Accessing the lifeline when time is of the essence.</p>
+          </div>
+        </div>
+        <button class="submit-request-btn">
+          <i class="fa-solid fa-circle-plus"></i> Submit a Blood Request
+        </button>
+      </div>
+
+      <!-- Active Request -->
+      <div class="active-request-card">
+        <div class="active-req-left">
+          <div class="active-req-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div>
+            <p class="active-req-id">Active Request #RF-9921</p>
+            <p class="active-req-meta">Blood Type: <span class="blood-neg">B- Negative</span> &bull; Created 4 hours ago</p>
+          </div>
+        </div>
+        <div class="active-req-stats">
+          <div class="req-stat">
+            <span class="req-stat-num">05</span>
+            <span class="req-stat-label">NOTIFIED</span>
+          </div>
+          <div class="req-stat accepted">
+            <span class="req-stat-num green-num">02</span>
+            <span class="req-stat-label">ACCEPTED</span>
+            <div class="req-stat-bar"><div class="req-stat-fill"></div></div>
+          </div>
+          <div class="req-stat">
+            <span class="req-stat-num">00</span>
+            <span class="req-stat-label">CONFIRMED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request History -->
+      <h3 class="history-title">Request History</h3>
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>REQUEST ID</th>
+              <th>TYPE / UNITS</th>
+              <th>DATE</th>
+              <th>STATUS</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="req-id-cell">#RF-8820</td>
+              <td><span class="blood-chip">B</span> 2 Units</td>
+              <td>Oct 12, 2023</td>
+              <td><span class="status-pill completed">Completed</span></td>
+              <td><a href="#" class="action-link">View Receipt</a></td>
+            </tr>
+            <tr>
+              <td class="req-id-cell">#RF-7651</td>
+              <td><span class="blood-chip">B</span> 1 Unit</td>
+              <td>Sep 05, 2023</td>
+              <td><span class="status-pill cancelled">Cancelled</span></td>
+              <td><a href="#" class="action-link">View History</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <span>Notifications</span>
+      <button class="notif-close" id="notifClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <ul class="notif-list">
+      <li class="notif-item unread">
+        <span class="notif-icon red"><i class="fa-solid fa-droplet"></i></span>
+        <div>
+          <p class="notif-text">Critical request near you — City General Hospital needs AB+ urgently.</p>
+          <p class="notif-time">2 min ago</p>
+        </div>
+      </li>
+      <li class="notif-item unread">
+        <span class="notif-icon orange"><i class="fa-solid fa-bell"></i></span>
+        <div>
+          <p class="notif-text">2 donors accepted your request #RF-9921.</p>
+          <p class="notif-time">1 hour ago</p>
+        </div>
+      </li>
+      <li class="notif-item">
+        <span class="notif-icon green"><i class="fa-solid fa-circle-check"></i></span>
+        <div>
+          <p class="notif-text">Your donation to St. Jude Medical Center was confirmed.</p>
+          <p class="notif-time">Yesterday</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <script src="userdashboard.js"></script>
+</body>
+</html>
