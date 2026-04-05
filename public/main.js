@@ -288,3 +288,8 @@ document.getElementById("btn-login").addEventListener("click",function(){
 document.getElementById("btn-register").addEventListener("click",function(){
   window.location.href = "/signup";
 });
+
+//AboutUS Redirection
+document.getElementById("about-us").addEventListener("click",function(){
+  window.location.href = "/aboutUs";
+});

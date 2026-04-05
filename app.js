@@ -29,6 +29,10 @@ app.get("/passwordReset",(req,res)=>{
     res.sendFile(path.join(__dirname, "public/passwordReset/passwordreset.html"));
 });
 
+app.get("/aboutUs",(req,res)=>{
+    res.sendFile(path.join(__dirname, "public/aboutUs/about.html"));
+});
+
 // Routes
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);

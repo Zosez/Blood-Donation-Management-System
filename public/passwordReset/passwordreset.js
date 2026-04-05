@@ -28,3 +28,9 @@ function handleSend() {
 document.getElementById('email').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') handleSend();
 });
+
+//Login Redirection 
+
+document.getElementById("btn-login").addEventListener("click",function(){
+  window.location.href = "/login";
+});
