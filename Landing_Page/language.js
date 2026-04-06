@@ -14,6 +14,7 @@ const translations = {
     dark: "Dark",
     langEnglish: "English",
     langNepali: "Nepali",
+    
 
     mobileHome: "Home",
     mobileAbout: "About",
@@ -124,7 +125,60 @@ const translations = {
     aboutFooterCareers: "Careers",
     footerCompany: "Company",
     aboutNewsletter: "Newsletter",
-    aboutFooterCopyright: "© 2026 LifeLink. All rights reserved."
+    aboutFooterCopyright: "© 2026 LifeLink. All rights reserved.",
+
+    activeRequestsTitle: "Active Blood Requests",
+    activeRequestsDesc: "These requests are currently seeking donors. Your contribution could save a life today. Filter by type or urgency to find a match.",
+    themeLabel: "Theme",
+    languageLabel: "Language",
+    themeLight: "Light",
+    themeDark: "Dark",
+    langEnglish: "English",
+    langNepali: "Nepali",
+    filterBloodType: "Blood Type",
+    filterUrgency: "Urgency",
+    filterLocation: "Location / City",
+    allTypes: "All Types",
+    allLevels: "All Levels",
+    critical: "Critical",
+    urgent: "Urgent",
+    standard: "Standard",
+    searchHospital: "Search for a city or hospital...",
+    unitsNeeded: "Units Needed",
+    expiresIn: "Expires in",
+    respondNow: "Respond Now",
+    showing: "Showing",
+    of: "of",
+    liveInsights: "Live Insights",
+    mapBannerTitle: "Can't find a request nearby? View the interactive map.",
+    mapBannerDesc: "Our real-time map shows donation centers and urgent request clusters across the country. Toggle by blood type to see where your specific type is most needed right now.",
+    openInteractiveMap: "Open Interactive Map",
+    openingMap: "Opening interactive map...",
+    quickLinks: "THE NETWORK",
+    findBlood: "Emergency Dispatch",
+    statsLivesSaved: "DONORS",
+    eligibility: "Rewards Program",
+    benefits: "Health Screening",
+    contactTitle: "CONNECT",
+    contactDesc: "NEWSLETTER",
+    footerText: "© 2026 LifeLink. All rights reserved.",
+    hospitalStJude: "St. Jude Medical Center",
+    cityChicago: "Chicago, Illinois",
+    hospitalMercyGeneral: "Mercy General Hospital",
+    citySeattle: "Seattle, Washington",
+    hospitalCityHope: "City Hope Trauma Wing",
+    cityAustin: "Austin, Texas",
+    hospitalNorthside: "Northside Children's",
+    cityDenver: "Denver, Colorado",
+    hospitalValleyMedical: "Valley Medical Center",
+    cityPhoenix: "Phoenix, Arizona",
+    hospitalStMarys: "St. Mary's Regional",
+    cityBoston: "Boston, Massachusetts",
+    hospitalCentralCommunity: "Central Community Hospital",
+    cityPortland: "Portland, Oregon",
+    hospitalLakeview: "Lakeview General",
+    cityMinneapolis: "Minneapolis, Minnesota",
+    activeRequestsLabel: "active requests"
   },
 
   np: {
@@ -252,22 +306,81 @@ const translations = {
     aboutFooterHospitalLogin: "अस्पताल लगइन",
     aboutFooterCareers: "करियर",
     aboutNewsletter: "न्युजलेटर",
-    aboutFooterCopyright: "© 2026 लाइफलिंक। सबै अधिकार सुरक्षित।"
+    aboutFooterCopyright: "© 2026 लाइफलिंक। सबै अधिकार सुरक्षित।",
+
+    activeRequestsTitle: "सक्रिय रक्त अनुरोधहरू",
+    activeRequestsDesc: "यी अनुरोधहरू हाल दाताको खोजीमा छन्। तपाईंको योगदानले आज कसैको जीवन बचाउन सक्छ। मिल्दो अनुरोध फेला पार्न रक्त समूह वा अत्यावश्यकताको आधारमा फिल्टर गर्नुहोस्।",
+    themeLabel: "थिम",
+    languageLabel: "भाषा",
+    themeLight: "लाइट",
+    themeDark: "डार्क",
+    langEnglish: "अंग्रेजी",
+    langNepali: "नेपाली",
+    filterBloodType: "रक्त समूह",
+    filterUrgency: "अत्यावश्यकता",
+    filterLocation: "स्थान / सहर",
+    allTypes: "सबै प्रकार",
+    allLevels: "सबै स्तर",
+    critical: "गम्भीर",
+    urgent: "तत्काल",
+    standard: "सामान्य",
+    searchHospital: "सहर वा अस्पताल खोज्नुहोस्...",
+    unitsNeeded: "आवश्यक युनिट",
+    expiresIn: "समाप्त हुने समय",
+    respondNow: "प्रतिक्रिया दिनुहोस्",
+    showing: "देखाइँदै",
+    of: "मध्ये",
+    liveInsights: "लाइभ जानकारी",
+    mapBannerTitle: "नजिकै अनुरोध फेला पार्न सक्नुभएन? अन्तरक्रियात्मक नक्सा हेर्नुहोस्।",
+    mapBannerDesc: "हाम्रो रियल-टाइम नक्साले देशभरका रक्तदान केन्द्रहरू र अत्यावश्यक अनुरोध भएका क्षेत्रहरू देखाउँछ। तपाईंको रक्त समूह अहिले कहाँ बढी आवश्यक छ हेर्न रक्त समूह अनुसार नक्सा हेर्नुहोस्।",
+    openInteractiveMap: "अन्तरक्रियात्मक नक्सा खोल्नुहोस्",
+    openingMap: "अन्तरक्रियात्मक नक्सा खुल्दैछ...",
+    quickLinks: "सञ्जाल",
+    findBlood: "आपतकालीन समन्वय",
+    statsLivesSaved: "रक्तदाता",
+    eligibility: "पुरस्कार कार्यक्रम",
+    benefits: "स्वास्थ्य जाँच",
+    contactTitle: "सम्पर्क",
+    contactDesc: "न्युजलेटर",
+    footerText: "© २०२६ लाइफलिंक। सबै अधिकार सुरक्षित।",
+    activeRequestsLabel: "सक्रिय अनुरोधहरू",
+    hospitalStJude: "सेन्ट जुड मेडिकल सेन्टर",
+    cityChicago: "शिकागो, इलिनोइस",
+    hospitalMercyGeneral: "मर्सी जनरल अस्पताल",
+    citySeattle: "सिएटल, वाशिंगटन",
+    hospitalCityHope: "सिटी होप ट्रमा विंग",
+    cityAustin: "अस्टिन, टेक्सास",
+    hospitalNorthside: "नर्थसाइड चिल्ड्रेन्स अस्पताल",
+    cityDenver: "डेन्भर, कोलोराडो",
+    hospitalValleyMedical: "भ्याली मेडिकल सेन्टर",
+    cityPhoenix: "फिनिक्स, एरिजोना",
+    hospitalStMarys: "सेन्ट मेरीज रिजनल",
+    cityBoston: "बोस्टन, म्यासाचुसेट्स",
+    hospitalCentralCommunity: "सेन्ट्रल कम्युनिटी अस्पताल",
+    cityPortland: "पोर्टल्यान्ड, ओरेगन",
+    hospitalLakeview: "लेकभ्यु जनरल",
+    cityMinneapolis: "मिनियापोलिस, मिनेसोटा"
   }
 };
 
+window.translations = translations;
+window.currentTranslations = translations.en;
+
 function applyLanguage(lang) {
+  const selected = translations[lang] || translations.en;
+  window.currentTranslations = selected;
+
   document.querySelectorAll('[data-key]').forEach((el) => {
     const key = el.dataset.key;
-    if (!translations[lang] || !translations[lang][key]) return;
+    if (!selected[key]) return;
 
     if (
       (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') &&
       el.hasAttribute('placeholder')
     ) {
-      el.placeholder = translations[lang][key];
+      el.placeholder = selected[key];
     } else {
-      el.textContent = translations[lang][key];
+      el.textContent = selected[key];
     }
   });
 }
