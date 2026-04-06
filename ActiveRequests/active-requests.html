@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Blood Requests - LifeLink</title>
+  <link rel="stylesheet" href="active-requests.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <a href="../Landing_Page/index.html" class="nav-logo">
+      <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
+      <span class="logo-text" data-key="navLogo">LifeLink</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="../Landing_Page/index.html" data-key="navHome">Home</a></li>
+      <li><a href="../About_us_page/about.html" data-key="navAbout">About</a></li>
+      <li><a href="active-requests.html" class="active" data-key="navRequests">Active Requests</a></li>
+      <li><a href="#" data-key="navEvents">Events</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <span class="nav-bell">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </span>
+
+      <button class="btn-login" data-key="login">Log In</button>
+      <button class="btn-register" data-key="register">Register</button>
+
+      <div class="settings-wrap">
+        <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06
+            a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+            1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09
+            a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06
+            a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82
+            1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09
+            a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06
+            a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01
+            a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09
+            a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+            a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01
+            a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09
+            a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <div class="settings-menu" id="settingsMenu">
+          <div class="settings-group">
+            <label data-key="themeLabel">Theme</label>
+            <div class="filter-select-wrap">
+              <select id="themeSelect">
+                <option value="light" data-key="themeLight">Light</option>
+                <option value="dark" data-key="themeDark">Dark</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <label data-key="languageLabel">Language</label>
+            <div class="filter-select-wrap">
+              <select id="languageSelect">
+                <option value="en" data-key="langEnglish">English</option>
+                <option value="np" data-key="langNepali">Nepali</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="../Landing_Page/index.html" data-key="navHome">Home</a>
+    <a href="../About_us_page/about.html" data-key="navAbout">About</a>
+    <a href="active-requests.html" data-key="navRequests">Active Requests</a>
+    <a href="#" data-key="navEvents">Events</a>
+  </div>
+
+  <div class="page-wrapper">
+
+    <!-- PAGE HEADER + FILTERS -->
+    <div class="page-header">
+      <div style="max-width:1280px; margin:0 auto;">
+        <h1 data-key="activeRequestsTitle">Active Blood Requests</h1>
+        <p data-key="activeRequestsDesc">These requests are currently seeking donors. Your contribution could save a life today. Filter by type or urgency to find a match.</p>
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label data-key="filterBloodType">Blood Type</label>
+            <div class="filter-select-wrap">
+              <select id="filterBlood">
+                <option value="" data-key="allTypes">All Types</option>
+                <option>O-</option>
+                <option>O+</option>
+                <option>A+</option>
+                <option>A-</option>
+                <option>B+</option>
+                <option>B-</option>
+                <option>AB+</option>
+                <option>AB-</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label data-key="filterUrgency">Urgency</label>
+            <div class="filter-select-wrap">
+              <select id="filterUrgency">
+                <option value="" data-key="allLevels">All Levels</option>
+                <option value="critical" data-key="critical">Critical</option>
+                <option value="urgent" data-key="urgent">Urgent</option>
+                <option value="standard" data-key="standard">Standard</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-group" style="flex:1; min-width:200px;">
+            <label data-key="filterLocation">Location / City</label>
+            <div class="search-input-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="filterLocation" data-key-placeholder="searchHospital" placeholder="Search for a city or hospital...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS + PAGINATION -->
+    <div class="main-content">
+      <div class="requests-grid" id="requestsGrid">
+        <!-- Cards injected by JS -->
+      </div>
+
+      <div class="pagination">
+        <div class="pagination-info" id="paginationInfo">
+          <span data-key="showing">Showing</span> <span id="showCount">8</span> <span data-key="of">of</span> <span id="totalCount">43</span> <span data-key="activeRequestsLabel">active requests</span>
+        </div>
+        <div class="pagination-btns" id="paginationBtns">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- MAP BANNER -->
+      <div class="map-banner">
+        <div class="map-banner-text">
+          <div class="live-tag">
+            <span class="live-dot"></span> <span data-key="liveInsights">Live Insights</span>
+          </div>
+          <h2 data-key="mapBannerTitle">Can't find a request nearby? View the interactive map.</h2>
+          <p data-key="mapBannerDesc">Our real-time map shows donation centers and urgent request clusters across the country. Toggle by blood type to see where your specific type is most needed right now.</p>
+          <button class="btn-map" onclick="showToast(window.currentTranslations?.openingMap || 'Opening interactive map...', 'info')">
+            <span data-key="openInteractiveMap">Open Interactive Map</span>&nbsp;<i class="fas fa-arrow-right" style="font-size:0.75rem;"></i>
+          </button>
+        </div>
+
+        <div class="map-visual">
+          <svg class="map-svg" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="rgba(255,255,255,0.25)" stroke-width="0.5">
+              <line x1="0"   y1="40"  x2="320" y2="40"/>
+              <line x1="0"   y1="80"  x2="320" y2="80"/>
+              <line x1="0"   y1="120" x2="320" y2="120"/>
+              <line x1="0"   y1="160" x2="320" y2="160"/>
+              <line x1="64"  y1="0"   x2="64"  y2="200"/>
+              <line x1="128" y1="0"   x2="128" y2="200"/>
+              <line x1="192" y1="0"   x2="192" y2="200"/>
+              <line x1="256" y1="0"   x2="256" y2="200"/>
+            </g>
+            <path d="M30,90 Q60,60 90,80 Q120,50 150,70 Q180,45 210,65 Q240,50 270,75
+              Q295,65 310,80 L310,140 Q280,130 260,150 Q230,140 200,160 Q170,145 140,155
+              Q110,165 80,150 Q55,160 30,145 Z"
+              fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+            <circle cx="90"  cy="95"  r="4"  fill="#C0281C" opacity="0.9"/>
+            <circle cx="90"  cy="95"  r="10" fill="#C0281C" opacity="0.2"/>
+            <circle cx="175" cy="80"  r="4"  fill="#F59E0B" opacity="0.9"/>
+            <circle cx="175" cy="80"  r="10" fill="#F59E0B" opacity="0.2"/>
+            <circle cx="240" cy="115" r="4"  fill="#C0281C" opacity="0.9"/>
+            <circle cx="240" cy="115" r="10" fill="#C0281C" opacity="0.2"/>
+            <circle cx="135" cy="130" r="3"  fill="#34D399" opacity="0.9"/>
+            <circle cx="135" cy="130" r="8"  fill="#34D399" opacity="0.2"/>
+            <circle cx="60"  cy="135" r="3"  fill="#34D399" opacity="0.9"/>
+            <circle cx="280" cy="75"  r="3"  fill="#F59E0B" opacity="0.9"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand-name" data-key="navLogo">LifeLink</span>
+          <p data-key="aboutFooterDesc">A blood donation ecosystem built to save lives by connecting donors with recipients in real-time.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="quickLinks">The Network</h4>
+          <ul>
+            <li><a href="#" data-key="becomeDonor">Find a Center</a></li>
+            <li><a href="#" data-key="findBlood">Emergency Dispatch</a></li>
+            <li><a href="#" data-key="learnMore">Hospital Portal</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="statsLivesSaved">Donors</h4>
+          <ul>
+            <li><a href="#" data-key="eligibility">Rewards Program</a></li>
+            <li><a href="#" data-key="benefits">Health Screening</a></li>
+            <li><a href="#" data-key="learnMore">Donation FAQs</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="contactTitle">Connect</h4>
+          <div class="social-row">
+            <button class="social-btn"><i class="fab fa-facebook-f"></i></button>
+            <button class="social-btn"><i class="fab fa-twitter"></i></button>
+            <button class="social-btn"><i class="fab fa-instagram"></i></button>
+            <button class="social-btn"><i class="fab fa-linkedin-in"></i></button>
+          </div>
+          <div class="footer-sub-label" data-key="contactDesc">Newsletter</div>
+          <div class="newsletter-row">
+            <input type="email" data-key="emailPlaceholder" placeholder="Email address">
+            <button>&#10148;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span data-key="footerText">© 2026 LifeLink. All rights reserved.</span>
+        <div class="footer-bottom-links">
+          <a href="#" data-key="footerPrivacy">Privacy</a>
+          <a href="#" data-key="footerTerms">Terms</a>
+          <a href="#" data-key="footerCookies">Cookies</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="../Landing_Page/language.js"></script>
+  <script src="active-requests.js"></script>
+</body>
+</html>
