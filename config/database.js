@@ -46,6 +46,8 @@ async function initializeDatabase() {
                 is_verified TINYINT(1) DEFAULT 0,
                 reset_token VARCHAR(255),
                 reset_token_expiry DATETIME,
+                email_verification_token VARCHAR(255),
+                email_verification_expiry DATETIME,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
@@ -65,6 +67,14 @@ async function initializeDatabase() {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
+
+        // Migrate: add verification columns if missing (safe for existing tables)
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN email_verification_token VARCHAR(255)`);
+        } catch (e) { /* column already exists */ }
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN email_verification_expiry DATETIME`);
+        } catch (e) { /* column already exists */ }
 
         console.log('Database tables initialized successfully');
     } catch (error) {

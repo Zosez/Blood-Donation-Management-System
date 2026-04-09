@@ -82,14 +82,27 @@ async function handleLogin() {
         window.location.href = '/userdashboard';
       }, 1000);
     } else {
-      passwordError.textContent =
-        data.message ||
-        (data.errors?.[0]?.msg) ||
-        "Login failed.";
+      // Check if email is not verified (403)
+      if (data.requiresVerification && data.email) {
+        passwordError.textContent = data.message || "Please verify your email first.";
+        passwordInput.classList.add("is-error");
+        loginBtn.textContent = "Log In →";
+        loginBtn.disabled = false;
 
-      passwordInput.classList.add("is-error");
-      loginBtn.textContent = "Log In →";
-      loginBtn.disabled = false;
+        // Redirect to check-email page after a short delay
+        setTimeout(() => {
+          window.location.href = `/check-email?email=${encodeURIComponent(data.email)}`;
+        }, 2000);
+      } else {
+        passwordError.textContent =
+          data.message ||
+          (data.errors?.[0]?.msg) ||
+          "Login failed.";
+
+        passwordInput.classList.add("is-error");
+        loginBtn.textContent = "Log In →";
+        loginBtn.disabled = false;
+      }
     }
   } catch (error) {
     passwordError.textContent = "Server error.";

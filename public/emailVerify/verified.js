@@ -12,8 +12,7 @@ const timer = setInterval(() => {
   if (seconds <= 0) {
     clearInterval(timer);
     if (redirectNote) redirectNote.textContent = 'REDIRECTING NOW...';
-    // Replace with actual setup page URL
-    // window.location.href = 'setup.html';
+    window.location.href = '/login';
   }
 }, 1000);
 
@@ -21,6 +20,5 @@ const timer = setInterval(() => {
 function handleContinue() {
   clearInterval(timer);
   if (redirectNote) redirectNote.textContent = 'REDIRECTING NOW...';
-  // Replace with actual setup page URL
-  // window.location.href = 'setup.html';
+  window.location.href = '/login';
 }

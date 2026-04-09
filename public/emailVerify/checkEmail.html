@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink – Check Your Email</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/emailVerify/checkEmail.css" />
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="topnav">
+    <div class="topnav-logo">
+      <img src="/images/lifelink_logo.svg" alt="LifeLink Logo" class="nav-logo-img" />
+      <span>LifeLink</span>
+    </div>
+    <nav class="topnav-links">
+      <a href="/">Home</a>
+      <a href="/aboutUs">About</a>
+      <a href="/login" class="btn-login-nav">Login</a>
+    </nav>
+  </header>
+
+  <div class="page">
+
+    <!-- Check Email Card -->
+    <div class="check-card">
+
+      <!-- Email icon -->
+      <div class="icon-wrap">
+        <div class="icon-outer">
+          <div class="icon-inner">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="#fff" stroke-width="2"/>
+              <path d="M2 7l8.9 5.2a2 2 0 002.2 0L22 7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <h1>Check Your Email</h1>
+      <p class="subtitle" id="subtitleText">
+        We've sent a verification link to<br>
+        <strong id="userEmail">your email address</strong>
+      </p>
+      <p class="instruction">Click the link in the email to verify your account and get started.</p>
+
+      <!-- Resend section -->
+      <div class="resend-section">
+        <p class="resend-text">Didn't receive the email?</p>
+        <button class="btn-resend" id="resendBtn" onclick="handleResend()">
+          Resend Verification Email
+        </button>
+        <p class="resend-status" id="resendStatus"></p>
+      </div>
+
+      <!-- Tips -->
+      <div class="tips-badge">
+        <div class="tip-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#1d6a7a" stroke-width="1.6"/>
+            <path d="M12 8v4M12 16h.01" stroke="#1d6a7a" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="tip-text">
+          <strong>Can't find the email?</strong>
+          <p>Check your spam or junk folder. The email is from <em>LifeLink</em>.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Below card -->
+    <p class="contact-note">
+      Having trouble? <a href="#">Contact Support</a>
+    </p>
+
+    <footer>
+      <span>© 2026 LIFELINK. ALL RIGHTS RESERVED.</span>
+      <nav>
+        <a href="#">PRIVACY POLICY</a>
+        <a href="#">TERMS OF SERVICE</a>
+        <a href="#">HELP CENTER</a>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="/emailVerify/checkEmail.js"></script>
+</body>
+</html>

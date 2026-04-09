@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user');
 const { authenticateToken } = require('../middleware/auth');
+const { sendVerificationEmail } = require('../config/mailer');
 
 // Helper: generate JWT token
 function generateToken(user) {
@@ -18,8 +19,19 @@ function generateToken(user) {
 // Helper: sanitize user object for response (strip password & tokens)
 function sanitizeUser(user) {
     if (!user) return null;
-    const { password, reset_token, reset_token_expiry, ...safe } = user;
+    const { password, reset_token, reset_token_expiry, email_verification_token, email_verification_expiry, ...safe } = user;
     return safe;
+}
+
+// Helper: generate verification token and send email
+async function generateAndSendVerification(email) {
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await User.saveVerificationToken(email, verificationToken, expiry);
+    await sendVerificationEmail(email, verificationToken);
+
+    return verificationToken;
 }
 
 // ──────────────────────────────────────────────
@@ -50,23 +62,105 @@ router.post(
                 return res.status(409).json({ message: 'Email already registered. Please login instead.' });
             }
 
-            // Create user
+            // Create user (is_verified defaults to 0)
             const userId = await User.create({ fullname, email, password, phone, province, city, blood_type });
 
-            // Get created user
-            const user = await User.findById(userId);
+            // Generate and send verification email
+            await generateAndSendVerification(email);
 
-            // Generate token
-            const token = generateToken({ id: userId, email });
-
+            // Do NOT return a token — user must verify email first
             res.status(201).json({
-                message: 'Account created successfully',
-                token,
-                user: sanitizeUser(user)
+                message: 'Account created! Please check your email to verify your account.',
+                email: email,
+                requiresVerification: true
             });
         } catch (error) {
             console.error('Signup error:', error);
             res.status(500).json({ message: 'Server error during registration' });
+        }
+    }
+);
+
+// ──────────────────────────────────────────────
+// GET /api/auth/verify-email?token=xxx
+// User clicks this link from their email
+// ──────────────────────────────────────────────
+router.get('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            return res.status(400).send(`
+                <html><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#eef0f5;">
+                <div style="text-align:center;background:#fff;padding:40px;border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,0.09);">
+                <h2 style="color:#EF4444;">Invalid Link</h2>
+                <p>No verification token provided.</p>
+                <a href="/signup" style="color:#B91C1C;font-weight:600;">Sign up again</a>
+                </div></body></html>
+            `);
+        }
+
+        // Find user with this verification token
+        const user = await User.findByVerificationToken(token);
+
+        if (!user) {
+            return res.status(400).send(`
+                <html><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#eef0f5;">
+                <div style="text-align:center;background:#fff;padding:40px;border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,0.09);">
+                <h2 style="color:#EF4444;">Link Expired or Invalid</h2>
+                <p>This verification link is no longer valid.</p>
+                <a href="/signup" style="color:#B91C1C;font-weight:600;">Sign up again</a>
+                </div></body></html>
+            `);
+        }
+
+        // Mark email as verified
+        await User.markEmailVerified(user.id);
+
+        console.log(`[AUTH] Email verified for user: ${user.email}`);
+
+        // Redirect to the success page
+        res.redirect('/emailVerify');
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).send('Server error during email verification');
+    }
+});
+
+// ──────────────────────────────────────────────
+// POST /api/auth/resend-verification
+// ──────────────────────────────────────────────
+router.post(
+    '/resend-verification',
+    [
+        body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    ],
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
+            const { email } = req.body;
+
+            const user = await User.findByEmail(email);
+            if (!user) {
+                // Don't reveal whether the email exists
+                return res.json({ message: 'If this email is registered, a new verification link has been sent.' });
+            }
+
+            if (user.is_verified) {
+                return res.status(400).json({ message: 'This email is already verified. Please login.' });
+            }
+
+            // Generate and send new verification email
+            await generateAndSendVerification(email);
+
+            res.json({ message: 'Verification email resent. Please check your inbox.' });
+        } catch (error) {
+            console.error('Resend verification error:', error);
+            res.status(500).json({ message: 'Server error' });
         }
     }
 );
@@ -101,7 +195,16 @@ router.post(
                 return res.status(401).json({ message: 'Invalid email or password' });
             }
 
-            // Generate token
+            // Check if email is verified
+            if (!user.is_verified) {
+                return res.status(403).json({
+                    message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+                    requiresVerification: true,
+                    email: email
+                });
+            }
+
+            // Generate token only for verified users
             const token = generateToken(user);
 
             res.json({

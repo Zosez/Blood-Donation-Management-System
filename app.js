@@ -55,6 +55,10 @@ app.get('/emailVerify', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/emailVerify/verified.html'));
 });
 
+app.get('/check-email', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/emailVerify/checkEmail.html'));
+});
+
 app.get('/aboutUs', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/aboutUs/about.html'));
 });

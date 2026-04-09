@@ -349,16 +349,13 @@ signupForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
-            // Save token and user data
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            
-            btn.textContent = '✓ Account Created!';
+            // Do NOT save token — user must verify email first
+            btn.textContent = '✓ Verification Email Sent!';
             btn.style.background = '#16A34A';
             
-            // Redirect to dashboard after success
+            // Redirect to check-email page
             setTimeout(() => {
-                window.location.href = '/userdashboard';
+                window.location.href = `/check-email?email=${encodeURIComponent(userData.email)}`;
             }, 1500);
         } else {
             // Show error message

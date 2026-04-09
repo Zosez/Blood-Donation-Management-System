@@ -73,6 +73,33 @@ class User {
     static async verifyPassword(plainPassword, hashedPassword) {
         return await bcrypt.compare(plainPassword, hashedPassword);
     }
+
+    // Save email verification token
+    static async saveVerificationToken(email, token, expiry) {
+        const [result] = await db.execute(
+            'UPDATE users SET email_verification_token = ?, email_verification_expiry = ? WHERE email = ?',
+            [token, expiry, email]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Find user by verification token (only valid non-expired tokens)
+    static async findByVerificationToken(token) {
+        const [rows] = await db.execute(
+            'SELECT * FROM users WHERE email_verification_token = ? AND email_verification_expiry > NOW()',
+            [token]
+        );
+        return rows[0] || null;
+    }
+
+    // Mark user email as verified and clear token
+    static async markEmailVerified(userId) {
+        const [result] = await db.execute(
+            'UPDATE users SET is_verified = 1, email_verification_token = NULL, email_verification_expiry = NULL WHERE id = ?',
+            [userId]
+        );
+        return result.affectedRows > 0;
+    }
 }
 
 module.exports = User;
