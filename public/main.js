@@ -293,3 +293,9 @@ document.getElementById("btn-register").addEventListener("click",function(){
 document.getElementById("about-us").addEventListener("click",function(){
   window.location.href = "/aboutUs";
 });
+
+
+//ActiveRequest Redirection
+document.getElementById("active-request").addEventListener("click",function(){
+  window.location.href = "/activeRequests";
+});

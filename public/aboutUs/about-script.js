@@ -293,7 +293,17 @@ document.getElementById("btn-register").addEventListener("click",function(){
   window.location.href = "/signup";
 });
 
-//AboutUS Redirection
+//Home Redirection
 document.getElementById("home-logo").addEventListener("click",function(){
   window.location.href = "/";
+});
+
+//Home Redirection
+document.getElementById("home").addEventListener("click",function(){
+  window.location.href = "/";
+});
+
+//Home Redirection
+document.getElementById("active-request").addEventListener("click",function(){
+  window.location.href = "/activeRequests";
 });

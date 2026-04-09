@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeLink – Submit a Blood Request</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="requestBlood.css" />
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <a href="#" class="nav-back" id="back-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Back to Dashboard
+  </a>
+
+  <a href="#" class="nav-logo">
+    <img
+      src="../images/lifelink_logo.svg"
+      alt="LifeLink"
+      style="height:30px;width:30px;object-fit:contain;mix-blend-mode:multiply;"
+    />
+    <span class="nav-logo-text">LifeLink</span>
+  </a>
+
+  <div class="nav-actions">
+    <button class="nav-icon-btn" title="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+    <button class="nav-icon-btn" title="Profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ PAGE HEADING ═══ -->
+<div class="page-header">
+  <h1>Submit a Blood Request</h1>
+  <p>Fill in the details below. An admin will review your request before contacting donors.</p>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+  <!-- FORM CARD -->
+  <div class="card">
+
+    <!-- Blood Type + Donation Type -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="blood-type">Blood Type Needed</label>
+        <select id="blood-type">
+          <option value="" disabled selected>Select Type</option>
+          <option>A+</option><option>A−</option>
+          <option>B+</option><option>B−</option>
+          <option>AB+</option><option>AB−</option>
+          <option>O+</option><option>O−</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="donation-type">Donation Type</label>
+        <select id="donation-type">
+          <option selected>Whole Blood</option>
+          <option>Plasma</option>
+          <option>Platelets</option>
+          <option>Red Cells</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Units Needed -->
+    <div class="form-row">
+      <div class="form-group full">
+        <label for="units">Units Needed</label>
+        <input id="units" type="number" min="1" max="10" placeholder="Number of units" />
+      </div>
+    </div>
+
+    <!-- Urgency Level -->
+    <div class="urgency-section">
+      <label>Urgency Level</label>
+      <div class="urgency-grid">
+
+        <!-- Normal -->
+        <div class="urgency-card" id="urg-normal" onclick="selectUrgency('normal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" stroke="#6B7280"/>
+            <polyline points="12 6 12 12 16 14" stroke="#6B7280"/>
+          </svg>
+          Normal
+        </div>
+
+        <!-- Urgent -->
+        <div class="urgency-card" id="urg-urgent" onclick="selectUrgency('urgent')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D97706"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Urgent
+        </div>
+
+        <!-- Critical -->
+        <div class="urgency-card" id="urg-critical" onclick="selectUrgency('critical')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round">
+            <line x1="12"   y1="4"    x2="12"   y2="20"   stroke="#C0392B"/>
+            <line x1="4"    y1="12"   x2="20"   y2="12"   stroke="#C0392B"/>
+            <line x1="6.34" y1="6.34" x2="17.66" y2="17.66" stroke="#C0392B"/>
+            <line x1="17.66" y1="6.34" x2="6.34" y2="17.66" stroke="#C0392B"/>
+          </svg>
+          Critical
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Hospital + City -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="hospital">Hospital Name</label>
+        <input id="hospital" type="text" placeholder="e.g. City General Hospital" />
+      </div>
+      <div class="form-group">
+        <label for="city">City</label>
+        <input id="city" type="text" placeholder="e.g. Chicago" />
+      </div>
+    </div>
+
+    <!-- Date + Relationship -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="date">Date Needed By</label>
+        <input id="date" type="date" />
+      </div>
+      <div class="form-group">
+        <label for="relationship">Relationship to Patient</label>
+        <select id="relationship">
+          <option value="" disabled selected>Select Relationship</option>
+          <option>Self</option>
+          <option>Spouse</option>
+          <option>Child</option>
+          <option>Parent</option>
+          <option>Sibling</option>
+          <option>Friend</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="form-row">
+      <div class="form-group full">
+        <label for="notes">Additional Notes</label>
+        <textarea id="notes"
+          placeholder="Mention any specific requirements or medical conditions..."></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button class="btn-submit" onclick="handleSubmit()">Submit Request</button>
+      <button class="btn-cancel">Cancel</button>
+    </div>
+
+  </div><!-- /card -->
+
+  <!-- INFO CARDS -->
+  <div class="info-row">
+    <div class="info-card">
+      <div class="info-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <h3>Verification Process</h3>
+        <p>Our team reviews all requests within 15 minutes to ensure authenticity.</p>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+      </div>
+      <div>
+        <h3>Privacy First</h3>
+        <p>Patient identities are never shared publicly; only essential donor info is exchanged.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANNER -->
+  <div class="banner">
+    <span class="banner-label">Medical Work</span>
+  </div>
+
+</main>
+
+<footer>© 2026 LifeLink Hematology Management. All rights reserved.</footer>
+
+<script src="requestBlood.js"></script>
+</body>
+</html>

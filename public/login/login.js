@@ -1,4 +1,6 @@
-// LifeLink – Login Script
+// LifeLink – Login Script (FINAL MERGED)
+
+const API_URL = 'http://localhost:5000/api';
 
 const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");
@@ -10,7 +12,12 @@ const eyeShow       = document.getElementById("eyeShow");
 const eyeHide       = document.getElementById("eyeHide");
 const forgotLink    = document.getElementById("forgotLink");
 
-// Toggle password visibility
+// Redirect if already logged in
+if (localStorage.getItem('token')) {
+  window.location.href = 'dashboard.html';
+}
+
+// Toggle password
 toggleBtn.addEventListener("click", () => {
   const show = passwordInput.type === "password";
   passwordInput.type = show ? "text" : "password";
@@ -18,7 +25,7 @@ toggleBtn.addEventListener("click", () => {
   eyeHide.style.display = show ? "block" : "none";
 });
 
-// Simple validation
+// Validation
 function validate() {
   let valid = true;
 
@@ -28,7 +35,6 @@ function validate() {
     valid = false;
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
     emailError.textContent = "Enter a valid email.";
-    emailInput.classList.add("is-error");
     valid = false;
   } else {
     emailError.textContent = "";
@@ -48,49 +54,89 @@ function validate() {
 }
 
 // Login
-loginBtn.addEventListener("click", () => {
+async function handleLogin() {
   if (!validate()) return;
+
   loginBtn.textContent = "Logging in…";
   loginBtn.disabled = true;
 
-  setTimeout(() => {
-    // Replace with real API call
-    if (emailInput.value === "demo@lifelink.com" && passwordInput.value === "password123") {
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: emailInput.value.trim(),
+        password: passwordInput.value
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       loginBtn.textContent = "✓ Success!";
+
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1000);
     } else {
-      passwordError.textContent = "Email or password is incorrect.";
+      passwordError.textContent =
+        data.message ||
+        (data.errors?.[0]?.msg) ||
+        "Login failed.";
+
       passwordInput.classList.add("is-error");
       loginBtn.textContent = "Log In →";
       loginBtn.disabled = false;
     }
-  }, 1200);
-});
+  } catch (error) {
+    passwordError.textContent = "Server error.";
+    loginBtn.textContent = "Log In →";
+    loginBtn.disabled = false;
+  }
+}
 
-// Enter key support
+// Events
+loginBtn.addEventListener("click", handleLogin);
+
 [emailInput, passwordInput].forEach(el => {
   el.addEventListener("keydown", e => {
-    if (e.key === "Enter") loginBtn.click();
+    if (e.key === "Enter") handleLogin();
   });
 });
 
-// Forgot password
-forgotLink.addEventListener("click", e => {
+// Forgot password (REAL)
+forgotLink.addEventListener("click", async (e) => {
   e.preventDefault();
-  if (emailInput.value.trim()) {
-    alert("Password reset sent to: " + emailInput.value);
-    window.location.href="/passwordReset";
-  } else {
+  const email = emailInput.value.trim();
+
+  if (!email) {
     emailError.textContent = "Enter your email first.";
-    emailInput.focus();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+    alert(data.message || "Reset link sent.");
+  } catch {
+    alert("Network error.");
   }
 });
 
-//Home Redirection 
-document.getElementById("home-logo").addEventListener("click",()=>{
-  window.location.href="/";
+// Home redirect
+document.getElementById("home-logo").addEventListener("click", () => {
+  window.location.href = "/";
 });
 
-//Signup Redirection
-document.getElementById("btn-register").addEventListener("click",function(){
+// Signup redirect
+document.getElementById("btn-register").addEventListener("click", () => {
   window.location.href = "/signup";
 });

@@ -1,67 +1,58 @@
 document.addEventListener('DOMContentLoaded', () => {
-  /* ── Notification Panel ── */
-  const notifBtn = document.getElementById('notifBtn');
-  const notifPanel = document.getElementById('notifPanel');
-  const notifClose = document.getElementById('notifClose');
-  const notifOverlay = document.getElementById('notifOverlay');
 
   let toastTimeout = null;
-  let activeToast = null;
+  let activeToast  = null;
 
   function showToast(message, type = 'default') {
     const colors = {
       default: { bg: '#ffffff', border: '#e2e8f0', text: '#1e293b' },
       success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
       warning: { bg: '#fff7ed', border: '#fdba74', text: '#92400e' },
-      danger: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-      info: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+      danger:  { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
+      info:    { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
     };
 
     const c = colors[type] || colors.default;
 
     if (toastTimeout) clearTimeout(toastTimeout);
-    if (activeToast) {
-      activeToast.remove();
-      activeToast = null;
-    }
+    if (activeToast) { activeToast.remove(); activeToast = null; }
 
     const toast = document.createElement('div');
     toast.className = 'll-toast';
     toast.textContent = message;
 
     Object.assign(toast.style, {
-      position: 'fixed',
-      bottom: '1.5rem',
-      right: '1.5rem',
-      background: c.bg,
-      border: `1px solid ${c.border}`,
-      color: c.text,
+      position:     'fixed',
+      bottom:       '1.5rem',
+      right:        '1.5rem',
+      background:   c.bg,
+      border:       `1px solid ${c.border}`,
+      color:        c.text,
       borderRadius: '10px',
-      padding: '.85rem 1.1rem',
-      fontFamily: "'Outfit', sans-serif",
-      fontWeight: '600',
-      fontSize: '.88rem',
-      boxShadow: '0 8px 24px rgba(0,0,0,.12)',
-      zIndex: '1000',
-      opacity: '0',
-      transform: 'translateY(20px)',
-      transition: 'opacity .3s, transform .3s',
-      maxWidth: '420px',
-      lineHeight: '1.4'
+      padding:      '.85rem 1.1rem',
+      fontFamily:   "'Outfit', sans-serif",
+      fontWeight:   '600',
+      fontSize:     '.88rem',
+      boxShadow:    '0 8px 24px rgba(0,0,0,.12)',
+      zIndex:       '9999',
+      opacity:      '0',
+      transform:    'translateY(20px)',
+      transition:   '0.3s',
+      maxWidth:     '420px',
+      pointerEvents:'none',
     });
 
     document.body.appendChild(toast);
     activeToast = toast;
 
     requestAnimationFrame(() => {
-      toast.style.opacity = '1';
+      toast.style.opacity   = '1';
       toast.style.transform = 'translateY(0)';
     });
 
     toastTimeout = setTimeout(() => {
-      toast.style.opacity = '0';
+      toast.style.opacity   = '0';
       toast.style.transform = 'translateY(20px)';
-
       setTimeout(() => {
         if (toast.parentNode) toast.remove();
         if (activeToast === toast) activeToast = null;
@@ -69,177 +60,143 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
-  function openNotif(e) {
-    if (e) e.preventDefault();
-    if (!notifPanel || !notifOverlay) return;
+  /* ─── Notification Panel ─── */
+  const notifBtn     = document.getElementById('notifBtn');
+  const notifPanel   = document.getElementById('notifPanel');
+  const notifClose   = document.getElementById('notifClose');
+  const notifOverlay = document.getElementById('notifOverlay');
 
-    notifPanel.classList.add('open');
-    notifOverlay.classList.add('show');
-  }
+  function openNotif()  { notifPanel?.classList.add('open');    notifOverlay?.classList.add('show'); }
+  function closeNotif() { notifPanel?.classList.remove('open'); notifOverlay?.classList.remove('show'); }
 
-  function closeNotif(e) {
-    if (e) e.preventDefault();
-    if (!notifPanel || !notifOverlay) return;
+  notifBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notifPanel?.classList.contains('open') ? closeNotif() : openNotif();
+  });
 
-    notifPanel.classList.remove('open');
-    notifOverlay.classList.remove('show');
-  }
-
-  if (notifBtn) {
-    notifBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (notifPanel.classList.contains('open')) {
-        closeNotif();
-      } else {
-        openNotif();
-      }
-    });
-  }
-
-  if (notifClose) {
-    notifClose.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeNotif();
-    });
-  }
-
-  if (notifOverlay) {
-    notifOverlay.addEventListener('click', closeNotif);
-  }
-
-  if (notifPanel) {
-    notifPanel.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-  }
+  notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
+  notifOverlay?.addEventListener('click', closeNotif);
+  notifPanel?.addEventListener('click', (e) => e.stopPropagation());
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && notifPanel && notifPanel.classList.contains('open')) {
-      closeNotif();
-    }
+    if (e.key === 'Escape' && notifPanel?.classList.contains('open')) closeNotif();
   });
 
-  /* ── Navbar ── */
-  const navLinks = document.querySelectorAll('.nav-links a');
-
-  navLinks.forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      navLinks.forEach((nav) => nav.classList.remove('active'));
-      link.classList.add('active');
-
-      const sectionName = link.dataset.section || link.textContent.trim();
-      showToast(`${sectionName} opened.`, 'info');
-    });
-  });
-
-  /* ── Availability Toggle ── */
-  const availToggle = document.getElementById('availToggle');
-  const statusBadge = document.querySelector('.status-badge');
-  const statusDot = document.querySelector('.status-dot');
-
-  if (availToggle && statusBadge && statusDot) {
-    availToggle.addEventListener('change', () => {
-      const statusText = statusBadge.querySelector('span:last-child');
-
-      if (availToggle.checked) {
-        if (statusText) statusText.textContent = 'Ready to Donate';
-        statusDot.classList.add('green');
-        statusDot.style.background = '';
-        statusDot.style.boxShadow = '';
-        showToast('Availability updated to Ready to Donate.', 'success');
-      } else {
-        if (statusText) statusText.textContent = 'Unavailable';
-        statusDot.classList.remove('green');
-        statusDot.style.background = '#94a3b8';
-        statusDot.style.boxShadow = 'none';
-        showToast('Availability updated to Unavailable.', 'warning');
-      }
-    });
-  }
-
-  /* ── Request Buttons ── */
-  document.querySelectorAll('.req-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const card = e.currentTarget.closest('.request-card');
-      if (!card) return;
-
-      const hospital = card.querySelector('.req-hospital')?.textContent.trim() || 'Hospital';
-      const bloodType = card.querySelector('.blood-type')?.textContent.trim() || '';
-      const buttonText = btn.textContent.trim();
-
-      if (buttonText === 'Donate Now') {
-        showToast(`Donation started for ${hospital} ${bloodType}.`, 'danger');
-      } else if (buttonText === 'Respond') {
-        showToast(`Response sent for ${hospital} ${bloodType}.`, 'warning');
-      } else if (buttonText === 'View Details') {
-        showToast(`Viewing details for ${hospital} ${bloodType}.`, 'info');
-      } else {
-        showToast(`Action completed for ${hospital}.`, 'default');
-      }
-    });
-  });
-
-  /* ── Submit Blood Request ── */
-  const submitBtn = document.querySelector('.submit-request-btn');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', () => {
-      showToast('Blood request submission opened.', 'danger');
-    });
-  }
-
-  /* ── Action Links ── */
-  document.querySelectorAll('.action-link').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const action = link.textContent.trim();
-
-      if (action === 'View Receipt') {
-        showToast('Opening receipt details.', 'success');
-      } else if (action === 'View History') {
-        showToast('Opening request history.', 'info');
-      } else {
-        showToast(`${action} opened.`, 'default');
-      }
-    });
-  });
-
-  /* ── Notification Items ── */
-  document.querySelectorAll('.notif-item').forEach((item) => {
+  /* ─── Notification items ─── */
+  document.querySelectorAll('.notif-item').forEach(item => {
     item.addEventListener('click', () => {
-      const text =
-        item.querySelector('.notif-text')?.textContent.trim() || 'Notification opened.';
+      const text = item.querySelector('.notif-text')?.textContent.trim() || 'Notification opened.';
       item.classList.remove('unread');
       showToast(text, 'info');
     });
   });
 
-  /* ── Avatar ── */
-  const avatar = document.querySelector('.avatar');
-  if (avatar) {
-    avatar.addEventListener('click', () => {
-      showToast('Profile opened.', 'info');
+  /* ─── Navbar links ─── */
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      showToast(`${link.dataset.section || link.textContent.trim()} opened.`, 'info');
     });
-  }
+  });
 
-  /* ── Animate Bars ── */
+  /* ─── Availability toggle ─── */
+  const availToggle  = document.getElementById('availToggle');
+  const statusBadge  = document.querySelector('.status-badge');
+  const statusDot    = document.querySelector('.status-dot');
+
+  availToggle?.addEventListener('change', () => {
+    const statusText = statusBadge?.querySelector('span:last-child');
+    if (availToggle.checked) {
+      if (statusText) statusText.textContent = 'Ready to Donate';
+      statusDot?.classList.add('green');
+      statusDot && (statusDot.style.background = '');
+      showToast('Availability set to Ready to Donate.', 'success');
+    } else {
+      if (statusText) statusText.textContent = 'Unavailable';
+      statusDot?.classList.remove('green');
+      statusDot && (statusDot.style.background = '#9CA3AF');
+      showToast('Availability set to Unavailable.', 'warning');
+    }
+  });
+
+  /* ─── Request buttons ─── */
+  document.querySelectorAll('.req-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card     = e.currentTarget.closest('.request-card');
+      const hospital = card?.querySelector('.req-hospital')?.textContent.trim() || 'Hospital';
+      const blood    = card?.querySelector('.blood-type')?.textContent.trim() || '';
+      const label    = btn.textContent.trim();
+
+      if (label === 'Donate Now') showToast(`Donation started for ${hospital} (${blood}).`, 'danger');
+      else if (label === 'Respond') showToast(`Response sent to ${hospital} (${blood}).`, 'warning');
+      else showToast(`Viewing details for ${hospital}.`, 'info');
+    });
+  });
+
+  /* ─── Submit blood request ─── */
+  document.querySelector('.submit-request-btn')?.addEventListener('click', () => {
+    showToast('Blood request submission opened.', 'danger');
+  });
+
+  /* ─── Action links ─── */
+  document.querySelectorAll('.action-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const label = link.textContent.trim();
+      if (label === 'View Receipt')  showToast('Opening receipt details.', 'success');
+      else if (label === 'View History') showToast('Opening request history.', 'info');
+      else showToast(`${label} opened.`, 'default');
+    });
+  });
+
+  /* ─── Avatar click ─── */
+  document.getElementById('navAvatar')?.addEventListener('click', () => {
+    
+    showToast('Profile opened.', 'info');
+    setTimeout(
+      () => {
+        window.location.href = "/userProfile";
+      },
+      1000
+    );
+  });
+
+  /* ─── Animate bars on scroll ─── */
   const bars = document.querySelectorAll('.stat-bar-fill, .req-stat-fill');
   if ('IntersectionObserver' in window && bars.length) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.style.animationPlayState = 'running';
-          observer.unobserve(entry.target);
+          obs.unobserve(entry.target);
         }
       });
     }, { threshold: 0.3 });
-
-    bars.forEach((bar) => {
-      bar.style.animationPlayState = 'paused';
-      observer.observe(bar);
-    });
+    bars.forEach(b => { b.style.animationPlayState = 'paused'; obs.observe(b); });
   }
+
 });
+
+// ───────── bloodRequest REDIRECT ─────────
+document.getElementById("blood-request").addEventListener("click", () => {
+    window.location.href = "/bloodRequest";
+});
+
+// ───────── userProfile REDIRECT ─────────
+document.getElementById("user-profile").addEventListener("click", () => {
+    window.location.href = "/userProfile";
+});
+
+// ───────── userProfile REDIRECT ─────────
+document.getElementById("home-logo").addEventListener("click", () => {
+    window.location.href = "/";
+});
+
+// ───────── submitRequest REDIRECT ─────────
+document.getElementById("submit-request").addEventListener("click", () => {
+    window.location.href = "/requestBlood";
+});
+
+
