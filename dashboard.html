@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f0f2f5;
+        }
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #C82020;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .welcome-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-logout {
+            background: #C82020;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-logout:hover {
+            background: #991B1B;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">LifeLink</div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </nav>
+    <div class="container">
+        <div class="welcome-card">
+            <h1>Welcome, <span id="userName"></span>!</h1>
+            <p>Blood Type: <strong id="bloodType"></strong></p>
+            <p>Location: <span id="location"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userName').textContent = user.fullname || 'User';
+        document.getElementById('bloodType').textContent = user.blood_type || 'Not specified';
+        document.getElementById('location').textContent = `${user.city || ''}, ${user.province || ''}`;
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
