@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About LifeLink - Blood Donation Platform</title>
+  <link rel="stylesheet" href="about-styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+   <!-- NAVBAR -->
+ <nav id="navbar">
+    <a href="#" class="nav-logo" id="home-logo">
+    <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
+    <span class="logo-text" data-key="navLogo">LifeLink</span>
+    </a>
+
+  <ul class="nav-links">
+    <li><a href="#"  id="home">Home</a></li>
+    <li><a href="#" class="active" >About</a></li>
+    <li><a href="#" id="active-request">Active Requests</a></li>
+    <li><a href="#" >Events</a></li>
+  </ul>
+
+      <div class="nav-right">
+      <span class="nav-bell">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+          viewBox="0 0 24 24" fill="none"
+          stroke="white" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </span>
+
+      <button class="btn-login" data-key="login" id="btn-login">Log In</button>
+      <button class="btn-register" data-key="register" id="btn-register">Register</button>
+
+      <div class="settings-wrap">
+        <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06
+            a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+            1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09
+            a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06
+            a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82
+            1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09
+            a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06
+            a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01
+            a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09
+            a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+            a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01
+            a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09
+            a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <div class="settings-menu" id="settingsMenu">
+          <div class="settings-group">
+            <label for="themeSelect" data-key="theme">Theme</label>
+            <select id="themeSelect">
+              <option value="light" data-key="light">Light</option>
+              <option value="dark" data-key="dark">Dark</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label for="languageSelect" data-key="language">Language</label>
+            <select id="languageSelect">
+              <option value="en" data-key="langEnglish">English</option>
+              <option value="np" data-key="langNepali">Nepali</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+ <div class="mobile-menu" id="mobileMenu">
+    <a href="../Landing_Page/index.html" data-key="navHome">Home</a>
+    <a href="about.html" data-key="navAbout">About</a>
+    <a href="#donors" data-key="aboutDonors">For Donors</a>
+    <a href="#contact" data-key="aboutContact">Contact</a>
+  </div>
+
+   <!-- ABOUT HERO -->
+  <section class="about-hero">
+  <div class="about-hero-content">
+    <h1 data-key="aboutHeroTitle">About LifeLink</h1>
+    <p data-key="aboutHeroDesc">A platform and ecosystem built by bridging the gap between blood donors and recipients, making blood donation more accessible and helping save lives.</p>
+  </div>
+</section>
+
+  <!-- MISSION SECTION -->
+<section class="mission-section">
+  <div class="mission-container">
+    <div class="mission-text">
+      <h2 data-key="aboutMissionTitle">The Clinical Curator's Mission</h2>
+      <p data-key="aboutMissionP1">Our mission is to create a seamless and efficient blood donation ecosystem that connects donors with recipients in real-time. We strive to make the process of finding and donating blood as simple and accessible as possible, ultimately saving more lives.</p>
+      <p data-key="aboutMissionP2">LifeLink was born from the understanding that every second counts in medical emergencies. By leveraging technology, we've built a platform that breaks down barriers, reduces wait times, and ensures that life-saving blood reaches those who need it most.</p>
+      <p data-key="aboutMissionP3">We believe in the power of community and the generosity of donors. Our platform not only facilitates donations but also educates, encourages, and celebrates every individual who chooses to give the gift of life.</p>
+
+      <div class="mission-btns">
+        <button class="btn-primary" data-key="aboutRead">
+          <i class="fas fa-info-circle"></i> READ ABOUT US
+        </button>
+        <button class="btn-outline" data-key="aboutTeamBtn">
+          <i class="fas fa-book"></i> LEARN ABOUT OUR TEAM
+        </button>
+      </div>
+    </div>
+
+    <div class="mission-visual">
+      <div class="lab-illustration">
+        <div class="lab-card">
+          <div class="lab-beakers">
+            <div class="beaker beaker-1"></div>
+            <div class="beaker beaker-2"></div>
+            <div class="beaker beaker-3"></div>
+            <div class="beaker beaker-4"></div>
+          </div>
+          <div class="lab-title" data-key="aboutLabTitle">LABORATORY</div>
+          <div class="lab-subtitle" data-key="aboutLabSubtitle">EXCELLENCE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+   <!-- HOW MATCHING WORKS -->
+<section class="matching-section">
+  <h2 class="section-title" data-key="aboutMatchTitle">How Matching Works</h2>
+  <p class="section-subtitle" data-key="aboutMatchSubtitle">4 foundational steps to connect donors and recipients</p>
+
+  <div class="matching-grid">
+    <div class="match-card reveal">
+      <div class="match-icon" style="background: #FEE2E2;">
+        <i class="fas fa-user-plus" style="color: #DC2626;"></i>
+      </div>
+      <h3 data-key="aboutCard1Title">Register Safely</h3>
+      <p data-key="aboutCard1Desc">Create your profile with secure verification. Your information is protected and used only to save lives. Complete health screening ensures safe donations.</p>
+    </div>
+
+    <div class="match-card reveal">
+      <div class="match-icon" style="background: #DBEAFE;">
+        <i class="fas fa-hospital" style="color: #2563EB;"></i>
+      </div>
+      <h3 data-key="aboutCard2Title">Request Approved</h3>
+      <p data-key="aboutCard2Desc">Hospitals and recipients submit verified blood requests. Our system validates each request and matches based on blood type, location, and urgency.</p>
+    </div>
+
+    <div class="match-card reveal">
+      <div class="match-icon" style="background: #FEF3C7;">
+        <i class="fas fa-bell" style="color: #D97706;"></i>
+      </div>
+      <h3 data-key="aboutCard3Title">Get Notified</h3>
+      <p data-key="aboutCard3Desc">Receive real-time notifications when you're matched with a recipient. Instant alerts via SMS, email, and app ensure you never miss an opportunity to help.</p>
+    </div>
+
+    <div class="match-card reveal">
+      <div class="match-icon" style="background: #D1FAE5;">
+        <i class="fas fa-hands-helping" style="color: #059669;"></i>
+      </div>
+      <h3 data-key="aboutCard4Title">Donor Arrives</h3>
+      <p data-key="aboutCard4Desc">Head to the specified location and complete the donation process. Our support team guides you every step of the way, making it simple and comfortable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COLLABORATIVE DEVELOPMENT -->
+<section class="collab-section">
+  <div class="collab-tag" data-key="aboutOpenSource">OPEN SOURCE</div>
+
+  <h2 class="collab-title" data-key="aboutCollabTitle">
+    Built as part of a collaborative<br>development project.
+  </h2>
+
+  <p class="collab-subtitle" data-key="aboutCollabSubtitle">
+    LifeLink is the result of collaborative efforts between healthcare experts, developers, and community advocates to revolutionize blood donation.
+  </p>
+
+  <div class="collab-grid">
+    <div class="collab-card reveal">
+      <div class="collab-icon" style="background: #DBEAFE;">
+        <i class="fas fa-globe" style="color: #2563EB;"></i>
+      </div>
+      <h3 data-key="aboutCollab1Title">Community Driven</h3>
+      <p data-key="aboutCollab1Desc">Built by volunteers and contributors who believe in accessible healthcare for all.</p>
+    </div>
+
+    <div class="collab-card reveal">
+      <div class="collab-icon" style="background: #D1FAE5;">
+        <i class="fas fa-shield-alt" style="color: #059669;"></i>
+      </div>
+      <h3 data-key="aboutCollab2Title">Privacy First</h3>
+      <p data-key="aboutCollab2Desc">Your data is encrypted and protected with industry-leading security standards.</p>
+    </div>
+
+    <div class="collab-card reveal">
+      <div class="collab-icon" style="background: #FEE2E2;">
+        <i class="fas fa-code" style="color: #DC2626;"></i>
+      </div>
+      <h3 data-key="aboutCollab3Title">Open Source</h3>
+      <p data-key="aboutCollab3Desc">Transparent codebase allows continuous improvement and community contributions.</p>
+    </div>
+
+    <div class="collab-card reveal">
+      <div class="collab-icon" style="background: #FEF3C7;">
+        <i class="fas fa-hospital-user" style="color: #D97706;"></i>
+      </div>
+      <h3 data-key="aboutCollab4Title">Medical Partnership</h3>
+      <p data-key="aboutCollab4Desc">Partnered with certified hospitals and blood banks to ensure quality and safety.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="brand-name" data-key="navLogo">LifeLink</span>
+      <p data-key="aboutFooterDesc">A blood donation ecosystem built to save lives by connecting donors with recipients in real-time.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerPlatform">Platform</h4>
+      <ul>
+        <li><a href="#" data-key="footerHowItWorks">How it Works</a></li>
+        <li><a href="#" data-key="aboutFooterDonorPortal">Donor Portal</a></li>
+        <li><a href="#" data-key="aboutFooterHospitalLogin">Hospital Login</a></li>
+        <li><a href="#" data-key="footerBloodBanks">Blood Banks</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerCompany">Company</h4>
+      <ul>
+        <li><a href="#" data-key="navAbout">About Us</a></li>
+        <li><a href="#" data-key="footerPrivacy">Privacy Policy</a></li>
+        <li><a href="#" data-key="footerTerms">Terms of Service</a></li>
+        <li><a href="#" data-key="aboutFooterCareers">Careers</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-key="footerConnect">Connect</h4>
+
+      <div class="social-row">
+        <button class="social-btn"><i class="fab fa-facebook-f"></i></button>
+        <button class="social-btn"><i class="fab fa-twitter"></i></button>
+        <button class="social-btn"><i class="fab fa-instagram"></i></button>
+        <button class="social-btn"><i class="fab fa-linkedin-in"></i></button>
+      </div>
+
+      <div class="footer-sub-label" data-key="aboutNewsletter">Newsletter</div>
+
+      <div class="newsletter-row">
+        <input type="email" data-key="emailPlaceholder" placeholder="Your email">
+        <button id="newsletterBtn">&#10148;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span data-key="aboutFooterCopyright">© 2026 LifeLink. All rights reserved.</span>
+
+    <div class="footer-bottom-links">
+      <a href="#" data-key="footerPrivacy">Privacy</a>
+      <a href="#" data-key="footerTerms">Terms</a>
+      <a href="#" data-key="footerCookies">Cookies</a>
+    </div>
+  </div>
+</footer>
+   <script src="../Landing_Page/language.js"></script>
+  <script src="about-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+/* LifeLink – Email Verified Styles */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #eef0f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+/* ── Top Nav ── */
+.topnav {
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topnav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.topnav-logo span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+}
+.topnav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.topnav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6B7280;
+  transition: color .15s;
+}
+.topnav-links a:hover { color: #111827; }
+
+/* Login button in nav */
+.btn-login-nav {
+  padding: 8px 22px;
+  border: 1.5px solid #111827 !important;
+  border-radius: 50px;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  transition: background .15s, color .15s !important;
+}
+.btn-login-nav:hover {
+  background: #111827;
+  color: #fff !important;
+}
+
+/* ── Page ── */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px 24px;
+  gap: 0;
+}
+
+/* ── Verified Card ── */
+.verified-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 52px 56px 44px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.09);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Check icon */
+.check-wrap {
+  margin-bottom: 28px;
+}
+.check-outer {
+  width: 88px;
+  height: 88px;
+  background: #dde6f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.check-inner {
+  width: 56px;
+  height: 56px;
+  background: #1d6a7a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Heading */
+.verified-card h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #6B7280;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* Continue button */
+.btn-continue {
+  width: 100%;
+  background: linear-gradient(135deg, #C82020, #991B1B);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 16px;
+  border-radius: 50px;
+  box-shadow: 0 4px 18px rgba(185,28,28,.35);
+  transition: background .18s, transform .12s, box-shadow .18s;
+  margin-bottom: 14px;
+}
+.btn-continue:hover {
+  background: linear-gradient(135deg, #B91C1C, #7F1D1D);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(185,28,28,.45);
+}
+.btn-continue:active { transform: translateY(0); }
+
+/* Redirect note */
+.redirect-note {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+/* Security badge */
+.security-badge {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f8f9fc;
+  border-radius: 12px;
+  padding: 16px 18px;
+  text-align: left;
+}
+.shield-icon {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.badge-text strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #111827;
+  display: block;
+  margin-bottom: 4px;
+}
+.badge-text p {
+  font-size: 0.85rem;
+  color: #6B7280;
+  line-height: 1.5;
+}
+
+/* ── Below card ── */
+.contact-note {
+  margin-top: 24px;
+  font-size: 0.9rem;
+  color: #6B7280;
+}
+.contact-note a {
+  color: #B91C1C;
+  font-weight: 700;
+}
+.contact-note a:hover { text-decoration: underline; }
+
+/* ── Footer ── */
+footer {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 24px 24px 18px;
+  font-size: 0.68rem;
+  color: #9CA3AF;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  margin-top: auto;
+}
+footer nav { display: flex; gap: 24px; }
+footer a { color: #9CA3AF; }
+footer a:hover { color: #374151; }
+
+@media (max-width: 560px) {
+  .verified-card { padding: 40px 24px 36px; }
+  .topnav { padding: 14px 20px; }
+  footer { flex-direction: column; align-items: center; }
+  .verified-card h1 { font-size: 1.6rem; }
+}

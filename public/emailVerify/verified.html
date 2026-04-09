@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink – Email Verified</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/emailVerify/verified.css" />
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="topnav">
+    <div class="topnav-logo">
+      <img src="/images/lifelink_logo.svg" alt="LifeLink Logo" class="nav-logo-img" />
+      <span>LifeLink</span>
+    </div>
+    <nav class="topnav-links">
+      <a href="#">Support</a>
+      <a href="#">About</a>
+      <a href="/login" class="btn-login-nav">Login</a>
+    </nav>
+  </header>
+
+  <div class="page">
+
+    <!-- Verified Card -->
+    <div class="verified-card">
+
+      <!-- Check icon -->
+      <div class="check-wrap">
+        <div class="check-outer">
+          <div class="check-inner">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <h1>Email Verified!</h1>
+      <p class="subtitle">Your account is now active and ready<br>for your first donation journey.</p>
+
+      <!-- CTA Button -->
+      <button class="btn-continue" id="continueBtn" onclick="handleContinue()">
+        Continue to Setup
+      </button>
+
+      <p class="redirect-note" id="redirectNote">REDIRECTING IN <span id="countdown">5</span> SECONDS...</p>
+
+      <!-- Security badge -->
+      <div class="security-badge">
+        <div class="shield-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L4 6v6c0 5.25 3.5 10.14 8 11.29C16.5 22.14 20 17.25 20 12V6l-8-4z" stroke="#B91C1C" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M9 12l2 2 4-4" stroke="#B91C1C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="badge-text">
+          <strong>Security Confirmed</strong>
+          <p>Your identity has been cross-referenced with our secure medical database.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Below card -->
+    <p class="contact-note">
+      Didn't mean to verify this email? <a href="#">Contact Security</a>
+    </p>
+
+    <footer>
+      <span>© 2026 LIFELINK. ALL RIGHTS RESERVED.</span>
+      <nav>
+        <a href="#">PRIVACY POLICY</a>
+        <a href="#">TERMS OF SERVICE</a>
+        <a href="#">HELP CENTER</a>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="/emailVerify/verified.js"></script>
+</body>
+</html>
