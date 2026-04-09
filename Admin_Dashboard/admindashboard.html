@@ -7,103 +7,138 @@
   <link rel="stylesheet" href="admindashboard.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <a href="#" class="nav-logo">
-        <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
-        <span class="logo-text">LifeLink</span>
-      </a>
-      <div class="sidebar-sub">HEMATOLOGY<br>MANAGEMENT</div>
+  <!-- ─── NAVBAR (matches notifications page) ─── -->
+  <nav class="navbar">
+    <a href="#" class="nav-logo">
+      <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+      <div class="logo-fallback" style="display:none;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2C14 2 4 11 4 17.5a10 10 0 0 0 20 0C24 11 14 2 14 2z" fill="#C0281C"/>
+        </svg>
+      </div>
+      <span class="logo-text">LifeLink</span>
+    </a>
+
+    <div class="nav-right">
+      <button class="nav-bell" aria-label="Notifications" id="notifBtn">
+        <span class="bell-badge">3</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <div class="nav-avatar" id="navAvatar">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Dr. Sarah Chen"/>
+        <span class="nav-avatar-name">Admin</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
     </div>
+  </nav>
 
-    <nav class="sidebar-nav">
-      <a href="#" class="sidebar-link active" data-page="dashboard" data-tooltip="Dashboard">
-        <i class="fas fa-th-large"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="#" class="sidebar-link" data-page="pending" data-tooltip="Pending Requests">
-        <i class="fas fa-clock"></i>
-        <span>Pending Requests</span>
-        <span class="badge" id="pendingBadge">12</span>
-      </a>
-      <a href="#" class="sidebar-link" data-page="myrequests" data-tooltip="My Requests">
-        <i class="fas fa-file-medical"></i>
-        <span>My Requests</span>
-      </a>
-      <a href="#" class="sidebar-link" data-page="users" data-tooltip="User Management">
-        <i class="fas fa-users"></i>
-        <span>User Management</span>
-      </a>
-      <a href="#" class="sidebar-link" data-page="logs" data-tooltip="Logs">
-        <i class="fas fa-list-alt"></i>
-        <span>Logs</span>
-      </a>
-    </nav>
+  <!-- ─── MAIN LAYOUT  ─── -->
+  <div class="dash-layout">
 
-    <div class="sidebar-footer">
-      <a href="#" class="sidebar-link" id="settingsLink" data-tooltip="Settings">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
-      <a href="#" class="sidebar-link logout-link" id="logoutBtn" data-tooltip="Logout">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <div class="main-wrapper">
-
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-          <i class="fas fa-bars"></i>
-        </button>
-        <div class="topbar-title">
-          <h1 id="pageTitle">Admin Dashboard</h1>
-          <p id="pageSubtitle">Overview of LifeLink platform activity</p>
+    <!-- ─── LEFT SIDEBAR ─── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-user">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Dr. Sarah Chen" class="sidebar-avatar"/>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">Admin User</span>
+          <span class="sidebar-user-role">Hematology Lead</span>
         </div>
       </div>
 
-      <div class="topbar-right">
-        
-        <button class="icon-btn notif-btn" id="notifBtn" aria-label="Notifications">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-page="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
           </svg>
-          <span class="notif-dot"></span>
-        </button>
+          Dashboard
+        </a>
+        <a href="#" class="sidebar-link" data-page="pending">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Pending Requests
+          <span class="sidebar-badge" id="pendingBadge">12</span>
+        </a>
+        <a href="#" class="sidebar-link" data-page="myrequests">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          My Requests
+        </a>
+        <a href="#" class="sidebar-link" data-page="users">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          User Management
+        </a>
+        <a href="#" class="sidebar-link" data-page="logs">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Logs
+        </a>
+      </nav>
 
-        <div class="topbar-user">
-          <div class="user-info">
-            <span class="user-name">Dr. Sarah Chen</span>
-            <span class="user-role">System Admin</span>
-          </div>
-          <div class="user-avatar">
-            <i class="fas fa-user-circle"></i>
-          </div>
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-link" id="settingsLink">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </a>
+        <a href="#" class="sidebar-link logout-link" id="logoutBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- ─── RIGHT CONTENT ─── -->
+    <main class="dash-content page active" id="page-dashboard">
+
+      <!-- Page Header -->
+      <div class="dash-page-header">
+        <div>
+          <h1 class="dash-title" id="pageTitle">Admin Dashboard</h1>
+          <p class="dash-subtitle" id="pageSubtitle">Overview of LifeLink platform activity</p>
         </div>
       </div>
-    </header>
-
-    <!-- DASHBOARD PAGE -->
-    <main class="page active" id="page-dashboard">
 
       <!-- STAT CARDS -->
       <section class="stats-row">
         <div class="stat-card reveal">
           <div class="stat-icon blue">
-            <i class="fas fa-users"></i>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
           </div>
           <div class="stat-body">
             <span class="stat-label">Total Users</span>
@@ -114,7 +149,9 @@
 
         <div class="stat-card reveal urgent">
           <div class="stat-icon red">
-            <i class="fas fa-tint"></i>
+            <svg width="20" height="20" viewBox="0 0 18 22" fill="none">
+              <path d="M9 1C9 1 1 9.5 1 14.5a8 8 0 0 0 16 0C17 9.5 9 1 9 1z" fill="#DC2626"/>
+            </svg>
           </div>
           <div class="stat-body">
             <span class="stat-label">Pending Requests</span>
@@ -125,7 +162,9 @@
 
         <div class="stat-card reveal">
           <div class="stat-icon teal">
-            <i class="fas fa-hospital"></i>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
           </div>
           <div class="stat-body">
             <span class="stat-label">Open Requests</span>
@@ -135,7 +174,9 @@
 
         <div class="stat-card reveal">
           <div class="stat-icon green">
-            <i class="fas fa-heartbeat"></i>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
           </div>
           <div class="stat-body">
             <span class="stat-label">Donations Today</span>
@@ -151,7 +192,9 @@
         <section class="card reveal" id="pendingTable">
           <div class="card-header">
             <div class="card-title">
-              <i class="fas fa-tint" style="color:var(--red)"></i>
+              <svg width="16" height="16" viewBox="0 0 18 22" fill="none">
+                <path d="M9 1C9 1 1 9.5 1 14.5a8 8 0 0 0 16 0C17 9.5 9 1 9 1z" fill="#C0281C"/>
+              </svg>
               Pending Blood Requests
             </div>
             <button class="view-all-btn" id="viewAllBtn">View All</button>
@@ -175,11 +218,13 @@
                     <div class="patient-req">Request #RQ-9012</div>
                   </td>
                   <td><span class="blood-tag o-neg">O-</span></td>
-                  <td><span class="urgency critical"><i class="fas fa-circle"></i> Critical</span></td>
+                  <td><span class="urgency critical">
+                    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+                    Critical</span></td>
                   <td><strong>4 Units</strong></td>
                   <td>
                     <button class="row-action-btn" data-id="RQ-9012" data-facility="City General Hospital" data-type="O-" data-urgency="Critical" data-units="4">
-                      <i class="fas fa-chevron-right"></i>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -189,25 +234,29 @@
                     <div class="patient-req">Request #RQ-9015</div>
                   </td>
                   <td><span class="blood-tag a-pos">A+</span></td>
-                  <td><span class="urgency standard"><i class="fas fa-circle"></i> Standard</span></td>
+                  <td><span class="urgency standard">
+                    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+                    Standard</span></td>
                   <td><strong>2 Units</strong></td>
                   <td>
                     <button class="row-action-btn" data-id="RQ-9015" data-facility="St. Jude Medical" data-type="A+" data-urgency="Standard" data-units="2">
-                      <i class="fas fa-chevron-right"></i>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </td>
                 </tr>
                 <tr data-id="RQ-9018">
                   <td>
-                    <div class="patient-name">Regional Trauma Center</div>
+                    <div class="patient-name">Metro Blood Bank</div>
                     <div class="patient-req">Request #RQ-9018</div>
                   </td>
                   <td><span class="blood-tag b-neg">B-</span></td>
-                  <td><span class="urgency critical"><i class="fas fa-circle"></i> Critical</span></td>
+                  <td><span class="urgency expedited">
+                    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+                    Expedited</span></td>
                   <td><strong>6 Units</strong></td>
                   <td>
-                    <button class="row-action-btn" data-id="RQ-9018" data-facility="Regional Trauma Center" data-type="B-" data-urgency="Critical" data-units="6">
-                      <i class="fas fa-chevron-right"></i>
+                    <button class="row-action-btn" data-id="RQ-9018" data-facility="Metro Blood Bank" data-type="B-" data-urgency="Expedited" data-units="6">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -217,11 +266,13 @@
                     <div class="patient-req">Request #RQ-9021</div>
                   </td>
                   <td><span class="blood-tag ab-pos">AB+</span></td>
-                  <td><span class="urgency standard"><i class="fas fa-circle"></i> Standard</span></td>
+                  <td><span class="urgency standard">
+                    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+                    Standard</span></td>
                   <td><strong>1 Unit</strong></td>
                   <td>
                     <button class="row-action-btn" data-id="RQ-9021" data-facility="Children's Wellness" data-type="AB+" data-urgency="Standard" data-units="1">
-                      <i class="fas fa-chevron-right"></i>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -231,11 +282,13 @@
                     <div class="patient-req">Request #RQ-9025</div>
                   </td>
                   <td><span class="blood-tag o-pos">O+</span></td>
-                  <td><span class="urgency expedited"><i class="fas fa-circle"></i> Expedited</span></td>
+                  <td><span class="urgency expedited">
+                    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+                    Expedited</span></td>
                   <td><strong>3 Units</strong></td>
                   <td>
                     <button class="row-action-btn" data-id="RQ-9025" data-facility="Sunset Care Facility" data-type="O+" data-urgency="Expedited" data-units="3">
-                      <i class="fas fa-chevron-right"></i>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -248,7 +301,9 @@
         <aside class="card reveal" id="activityPanel">
           <div class="card-header">
             <div class="card-title">
-              <i class="fas fa-bolt" style="color:var(--red)"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0281C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
               Recent Activity
             </div>
           </div>
@@ -297,7 +352,12 @@
           </ul>
 
           <button class="full-audit-btn" id="auditBtn">
-            <i class="fas fa-scroll"></i> Full Audit Log
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Full Audit Log
           </button>
         </aside>
 
@@ -310,7 +370,10 @@
         <section class="card reveal stock-card">
           <div class="card-header">
             <div class="card-title">
-              <i class="fas fa-database" style="color:var(--teal)"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
               Available Stock
             </div>
           </div>
@@ -338,7 +401,10 @@
         <section class="card reveal donors-card">
           <div class="card-header">
             <div class="card-title">
-              <i class="fas fa-user-check" style="color:#2563EB"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                <polyline points="16 11 18 13 22 9"/>
+              </svg>
               Active Donors
             </div>
           </div>
@@ -347,14 +413,26 @@
             <span class="donors-verified">Verified</span>
           </div>
           <div class="donor-avatars">
-            <div class="d-av av1"><i class="fas fa-user"></i></div>
-            <div class="d-av av2"><i class="fas fa-user"></i></div>
-            <div class="d-av av3"><i class="fas fa-user"></i></div>
-            <div class="d-av av4"><i class="fas fa-user"></i></div>
+            <div class="d-av av1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            </div>
+            <div class="d-av av2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            </div>
+            <div class="d-av av3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            </div>
+            <div class="d-av av4">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            </div>
             <div class="d-av more">+350</div>
           </div>
           <button class="manage-donors-btn" id="manageDonorsBtn">
-            <i class="fas fa-user-cog"></i> Manage Donors
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Manage Donors
           </button>
         </section>
 
@@ -362,7 +440,9 @@
         <section class="card reveal chart-card">
           <div class="card-header">
             <div class="card-title">
-              <i class="fas fa-chart-pie" style="color:#D97706"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+              </svg>
               Blood Type Distribution
             </div>
           </div>
@@ -384,22 +464,60 @@
       <!-- EMERGENCY BROADCAST BANNER -->
       <div class="emergency-banner reveal" id="emergencyBanner">
         <div class="emergency-content">
-          <i class="fas fa-broadcast-tower"></i>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="animation: transmit 2s ease-in-out infinite; flex-shrink:0;">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+          </svg>
           <div>
             <strong>Emergency Broadcast</strong>
             <p>Instantly notify all matched donors of an urgent O-Negative requirement.</p>
           </div>
         </div>
         <button class="broadcast-btn" id="broadcastBtn">
-          <i class="fas fa-satellite-dish"></i> ACTIVATE BROADCAST
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+          </svg>
+          ACTIVATE BROADCAST
         </button>
       </div>
 
     </main>
 
-  
+  </div><!-- /dash-layout -->
 
-  </div><!-- /main-wrapper -->
+  <!-- ─── SETTINGS MODAL ─── -->
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C0281C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </h3>
+        <button class="modal-close" id="closeSettings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      
+
+      <div class="settings-group">
+        <label>Notifications</label>
+        <select>
+          <option>All Alerts</option>
+          <option>Critical Only</option>
+          <option>None</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TOAST ─── -->
+  <div class="ll-toast" id="toastEl"></div>
 
   <script src="admindashboard.js"></script>
 </body>
