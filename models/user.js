@@ -1,15 +1,16 @@
-const db = require('../config/database');
-const bcrypt = require('bcryptjs');
+const { db } = require('../config/database');
+const bcrypt = require('bcrypt');
 
 class User {
     // Create new user
     static async create(userData) {
         const { fullname, email, password, phone, province, city, blood_type } = userData;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
+        const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 10;
+        const hashedPassword = await bcrypt.hash(password, rounds);
+
         const [result] = await db.execute(
             'INSERT INTO users (fullname, email, password, phone, province, city, blood_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [fullname, email, hashedPassword, phone, province, city, blood_type]
+            [fullname, email, hashedPassword, phone || null, province, city, blood_type]
         );
         return result.insertId;
     }
@@ -17,16 +18,19 @@ class User {
     // Find user by email
     static async findByEmail(email) {
         const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        return rows[0];
+        return rows[0] || null;
     }
 
     // Find user by ID
     static async findById(id) {
-        const [rows] = await db.execute('SELECT id, fullname, email, phone, province, city, blood_type, role, is_verified, created_at FROM users WHERE id = ?', [id]);
-        return rows[0];
+        const [rows] = await db.execute(
+            'SELECT id, fullname, email, phone, province, city, blood_type, role, is_verified, created_at FROM users WHERE id = ?',
+            [id]
+        );
+        return rows[0] || null;
     }
 
-    // Update user
+    // Update user profile
     static async update(id, userData) {
         const { fullname, phone, province, city, blood_type } = userData;
         const [result] = await db.execute(
@@ -38,8 +42,12 @@ class User {
 
     // Update password
     static async updatePassword(id, newPassword) {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        const [result] = await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id]);
+        const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 10;
+        const hashedPassword = await bcrypt.hash(newPassword, rounds);
+        const [result] = await db.execute(
+            'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+            [hashedPassword, id]
+        );
         return result.affectedRows > 0;
     }
 
@@ -52,13 +60,13 @@ class User {
         return result.affectedRows > 0;
     }
 
-    // Find by reset token
+    // Find by reset token (only valid non-expired tokens)
     static async findByResetToken(token) {
         const [rows] = await db.execute(
             'SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()',
             [token]
         );
-        return rows[0];
+        return rows[0] || null;
     }
 
     // Verify password

@@ -43,7 +43,7 @@ const nepalData = {
 // Check if user is already logged in
 if (localStorage.getItem('token')) {
     // Redirect to dashboard if already logged in
-    window.location.href = 'dashboard.html';
+    window.location.href = '/userdashboard';
 }
 
 // Populate provinces
@@ -358,7 +358,7 @@ signupForm.addEventListener('submit', async (e) => {
             
             // Redirect to dashboard after success
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = '/userdashboard';
             }, 1500);
         } else {
             // Show error message
@@ -388,33 +388,7 @@ signupForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Helper function for setting field errors
-function setFieldError(input, errorId, message) {
-    let errorEl = document.getElementById(errorId);
-    
-    if (!errorEl && message) {
-        errorEl = document.createElement('span');
-        errorEl.id = errorId;
-        errorEl.className = 'field-error';
-        const formGroup = input.closest('.form-group');
-        if (formGroup) {
-            formGroup.appendChild(errorEl);
-        } else if (input.parentElement) {
-            input.parentElement.appendChild(errorEl);
-        }
-    }
-    
-    if (errorEl) {
-        if (input.tagName === 'SELECT') {
-            input.style.borderColor = message ? '#EF4444' : '';
-        } else {
-            input.classList.toggle('input-error', !!message);
-            input.classList.toggle('input-valid', !message && input.value && input.value.length > 0);
-        }
-        errorEl.textContent = message;
-        errorEl.style.display = message ? 'block' : 'none';
-    }
-}
+
 // Navigation
 document.getElementById("btn-login").onclick = () => window.location.href = "/login";
 document.getElementById("home-logo").onclick = () => window.location.href = "/";

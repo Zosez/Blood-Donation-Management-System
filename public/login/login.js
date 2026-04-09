@@ -14,7 +14,7 @@ const forgotLink    = document.getElementById("forgotLink");
 
 // Redirect if already logged in
 if (localStorage.getItem('token')) {
-  window.location.href = 'dashboard.html';
+  window.location.href = '/userdashboard';
 }
 
 // Toggle password
@@ -79,7 +79,7 @@ async function handleLogin() {
       loginBtn.textContent = "✓ Success!";
 
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/userdashboard';
       }, 1000);
     } else {
       passwordError.textContent =
