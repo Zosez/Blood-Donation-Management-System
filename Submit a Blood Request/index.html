@@ -129,15 +129,34 @@
       </div>
     </div>
 
-    <!-- Hospital + City -->
+    <!-- Hospital -->
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group full">
         <label for="hospital">Hospital Name</label>
-        <input id="hospital" type="text" placeholder="e.g. City General Hospital" />
+        <input id="hospital" type="text" placeholder="e.g. Bir Hospital" />
       </div>
-      <div class="form-group">
-        <label for="city">City</label>
-        <input id="city" type="text" placeholder="e.g. Chicago" />
+    </div>
+
+    <!-- Province + City (combined box) -->
+    <div class="form-row">
+      <div class="form-group full">
+        <label>Province &amp; City / District</label>
+        <div class="location-group">
+          <select id="province" onchange="updateCities()">
+            <option value="" disabled selected>Select Province</option>
+            <option value="koshi">Koshi Province</option>
+            <option value="madhesh">Madhesh Province</option>
+            <option value="bagmati">Bagmati Province</option>
+            <option value="gandaki">Gandaki Province</option>
+            <option value="lumbini">Lumbini Province</option>
+            <option value="karnali">Karnali Province</option>
+            <option value="sudurpashchim">Sudurpashchim Province</option>
+          </select>
+          <div class="location-divider"></div>
+          <select id="city" disabled>
+            <option value="" disabled selected>Select Province first</option>
+          </select>
+        </div>
       </div>
     </div>
 

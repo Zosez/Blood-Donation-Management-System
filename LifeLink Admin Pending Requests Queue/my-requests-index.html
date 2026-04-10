@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink – My Blood Requests</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="my-requests-styles.css"/>
+</head>
+<body>
+
+<!-- ═══ TOP NAV ═══ -->
+<nav class="topnav">
+  <div class="topnav-left">
+    <a href="#" class="logo-link">
+      <img src="data:image/jpeg;base64,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" alt="LifeLink" class="logo-img"/>
+      <span class="logo-text">LifeLink</span>
+    </a>
+    <a href="#" class="nav-link">Dashboard</a>
+    <a href="#" class="nav-link active">My Requests</a>
+    <a href="#" class="nav-link">Donations</a>
+  </div>
+  <div class="topnav-right">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search requests…"/>
+    </div>
+    <button class="icon-btn" title="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+    <button class="icon-btn" title="Profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ PAGE BODY ═══ -->
+<div class="page-body">
+
+  <a href="#" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Dashboard
+  </a>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>My Blood Requests</h1>
+      <p>Track and manage your submitted hematology requests.</p>
+    </div>
+    <button class="btn-new">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      New Blood Request
+    </button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-left">
+      <span class="filter-label">STATUS:</span>
+      <div class="filter-pills">
+        <button class="pill active" onclick="filterBy('all', this)">All</button>
+        <button class="pill" onclick="filterBy('pending', this)">Pending</button>
+        <button class="pill" onclick="filterBy('open', this)">Open</button>
+        <button class="pill" onclick="filterBy('fulfilled', this)">Fulfilled</button>
+        <button class="pill" onclick="filterBy('expired', this)">Expired</button>
+        <button class="pill" onclick="filterBy('rejected', this)">Rejected</button>
+      </div>
+    </div>
+    <div class="sort-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+       Date: Newest first 
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table class="requests-table">
+      <thead>
+        <tr>
+          <th>Submitted</th>
+          <th>Blood Type</th>
+          <th>Donation Type</th>
+          <th>Units</th>
+          <th>Urgency</th>
+          <th>City</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr data-status="open">
+          <td class="td-date"><span class="date">Oct 24, 2023</span><span class="time">10:45 AM</span></td>
+          <td><span class="blood-badge teal">O-</span></td>
+          <td>Whole Blood</td>
+          <td><strong>2 Units</strong></td>
+          <td><span class="urgency critical">! CRITICAL</span></td>
+          <td>New York</td>
+          <td><span class="status-badge open">OPEN</span></td>
+          <td><a href="#" class="view-link">View Details</a></td>
+        </tr>
+        <tr data-status="fulfilled">
+          <td class="td-date"><span class="date">Oct 20, 2023</span><span class="time">02:15 PM</span></td>
+          <td><span class="blood-badge teal">A+</span></td>
+          <td>Platelets</td>
+          <td><strong>1 Unit</strong></td>
+          <td><span class="urgency standard">Standard</span></td>
+          <td>Brooklyn</td>
+          <td><span class="status-badge fulfilled">FULFILLED</span></td>
+          <td><a href="#" class="view-link">View Details</a></td>
+        </tr>
+        <tr data-status="pending">
+          <td class="td-date"><span class="date">Oct 22, 2023</span><span class="time">09:30 AM</span></td>
+          <td><span class="blood-badge navy">B-</span></td>
+          <td>Plasma</td>
+          <td><strong>3 Units</strong></td>
+          <td><span class="urgency urgent">URGENT</span></td>
+          <td>Queens</td>
+          <td><span class="status-badge pending">PENDING</span></td>
+          <td><a href="#" class="view-link">View Details</a></td>
+        </tr>
+        <tr data-status="expired">
+          <td class="td-date"><span class="date">Oct 15, 2023</span><span class="time">11:00 AM</span></td>
+          <td><span class="blood-badge gray">O+</span></td>
+          <td>Whole Blood</td>
+          <td><strong>1 Unit</strong></td>
+          <td><span class="urgency standard muted">Standard</span></td>
+          <td class="muted-text">Bronx</td>
+          <td><span class="status-badge expired">EXPIRED</span></td>
+          <td><a href="#" class="view-link">View Details</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Impact Row -->
+  <div class="impact-row">
+    <div class="impact-card red">
+      <div class="impact-label">IMPACT SUMMARY</div>
+      <div class="impact-headline">7 Lives Touched</div>
+      <p class="impact-desc">Your past requests have successfully connected with donors across the tri-state area.</p>
+      <div class="impact-watermark">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 5C40 5 22 25 22 40C22 49.94 30.06 58 40 58C49.94 58 58 49.94 58 40C58 25 40 5 40 5Z" fill="rgba(255,255,255,0.12)"/>
+          <path d="M24 70C24 62 31.16 56 40 56C48.84 56 56 62 56 70" stroke="rgba(255,255,255,0.1)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="impact-card light">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-label">AVG. FULFILLMENT</div>
+      <div class="stat-value">4.2<span class="stat-unit">hours</span></div>
+    </div>
+    <div class="impact-card light">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+      </div>
+      <div class="stat-label">SUCCESS RATE</div>
+      <div class="stat-value">94<span class="stat-unit">%</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <div class="footer-left">
+    <div class="footer-logo">
+      <img src="data:image/jpeg;base64,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" alt="LifeLink" style="height:20px;mix-blend-mode:multiply;"/>
+      LifeLink
+    </div>
+    <p>© 2026 LifeLink Hematology Network. All rights reserved.</p>
+  </div>
+  <div class="footer-right">
+    <a href="#">Support</a>
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+  </div>
+</footer>
+
+<script src="my-requests-script.js"></script>
+</body>
+</html>

@@ -152,6 +152,43 @@ select {
   padding-right: 40px;
   cursor: pointer;
 }
+select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+/* ─── LOCATION GROUP (combined province + city box) ─── */
+.location-group {
+  display: flex;
+  align-items: stretch;
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.location-group:focus-within {
+  border-color: #818CF8;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  background: #FFFFFF;
+}
+.location-group select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 11px 36px 11px 14px;
+}
+.location-group select:focus {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+.location-divider {
+  width: 1px;
+  background: var(--input-border);
+  flex-shrink: 0;
+}
 textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
 
 /* ─── URGENCY ─── */
