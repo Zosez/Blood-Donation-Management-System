@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const notifClose   = document.getElementById('notifClose');
   const notifOverlay = document.getElementById('notifOverlay');
 
-  function openNotif()  { notifPanel?.classList.add('open');    notifOverlay?.classList.add('show'); }
-  function closeNotif() { notifPanel?.classList.remove('open'); notifOverlay?.classList.remove('show'); }
+  function openNotif()  { notifPanel?.classList.add('open'); }
+  function closeNotif() { notifPanel?.classList.remove('open'); }
 
   notifBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -75,8 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
-  notifOverlay?.addEventListener('click', closeNotif);
-  notifPanel?.addEventListener('click', (e) => e.stopPropagation());
+  
+  document.addEventListener('click', (e) => {
+    if (notifPanel && notifBtn) {
+      if (!notifPanel.contains(e.target) && !notifBtn.contains(e.target)) {
+        closeNotif();
+      }
+    }
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && notifPanel?.classList.contains('open')) closeNotif();
@@ -151,17 +157,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── Avatar click ─── */
-  document.getElementById('navAvatar')?.addEventListener('click', () => {
-    
-    showToast('Profile opened.', 'info');
-    setTimeout(
-      () => {
-        window.location.href = "/userProfile";
-      },
-      1000
-    );
-  });
+  /* ─── Hamburger Menu and Avatar Dropdown ─── */
+  const hamburger = document.getElementById('navHamburger');
+  const navLinks = document.querySelector('.nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  }
+
+  const navAvatar = document.getElementById('navAvatar');
+  const avatarDropdown = document.getElementById('avatarDropdown');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  if (navAvatar && avatarDropdown) {
+    navAvatar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
+        avatarDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      avatarDropdown.classList.remove('show');
+      showToast('Successfully logged out.', 'info');
+    });
+  }
 
   /* ─── Animate bars on scroll ─── */
   const bars = document.querySelectorAll('.stat-bar-fill, .req-stat-fill');
@@ -178,25 +205,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
-
-// ───────── bloodRequest REDIRECT ─────────
-document.getElementById("blood-request").addEventListener("click", () => {
-    window.location.href = "/bloodRequest";
-});
-
-// ───────── userProfile REDIRECT ─────────
-document.getElementById("user-profile").addEventListener("click", () => {
-    window.location.href = "/userProfile";
-});
-
-// ───────── userProfile REDIRECT ─────────
-document.getElementById("home-logo").addEventListener("click", () => {
-    window.location.href = "/";
-});
-
-// ───────── submitRequest REDIRECT ─────────
-document.getElementById("submit-request").addEventListener("click", () => {
-    window.location.href = "/requestBlood";
-});
-
-
