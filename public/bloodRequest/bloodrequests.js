@@ -1,5 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* ─── 0.5. HAMBURGER MENU TOGGLE ─── */
+  const hamburger = document.getElementById('navHamburger');
+  const navLinks = document.querySelector('.nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  }
+
+  /* ─── 0.6. AVATAR DROPDOWN AND LOGOUT ─── */
+  const navAvatar = document.getElementById('navAvatar');
+  const avatarDropdown = document.getElementById('avatarDropdown');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  if (navAvatar && avatarDropdown) {
+    navAvatar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdown.classList.toggle('show');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
+        avatarDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      avatarDropdown.classList.remove('show');
+      if (typeof showToast === 'function') {
+        showToast('Successfully logged out.', 'info');
+      }
+    });
+  }
+
   /* ─── 1. STATUS FILTER PILLS ─── */
   const pills = document.querySelectorAll('.pill');
   const rows  = document.querySelectorAll('#requestsBody tr');
@@ -41,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (newRequestBtn) {
     newRequestBtn.addEventListener('click', () => {
       showToast(' New request form coming soon!', 'info');
-      window.location.href = "/requestBlood";
     });
   }
 
@@ -164,24 +200,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
-});
-
-// ───────── Home REDIRECT ─────────
-document.getElementById("home-logo").addEventListener("click", () => {
-    window.location.href = "/";
-});
-
-// ───────── bloodRequest REDIRECT ─────────
-document.getElementById("user-profile").addEventListener("click", () => {
-    window.location.href = "/userProfile";
-});
-
-// ───────── userDashboard REDIRECT ─────────
-document.getElementById("dashboard").addEventListener("click", () => {
-    window.location.href = "/userDashboard";
-});
-
-// ───────── userDashboard REDIRECT ─────────
-document.getElementById("back-dashboard").addEventListener("click", () => {
-    window.location.href = "/userDashboard";
 });
