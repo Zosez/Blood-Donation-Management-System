@@ -329,8 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ─── HAMBURGER ─── */
-  document.getElementById('hamburger')?.addEventListener('click', () => {
-    document.getElementById('mobileMenu')?.classList.toggle('open');
+  document.getElementById('navHamburger')?.addEventListener('click', () => {
+    document.querySelector('.nav-links')?.classList.toggle('active');
   });
 
   /* ─── NAVBAR SCROLL EFFECT ─── */
@@ -345,30 +345,4 @@ document.addEventListener('DOMContentLoaded', () => {
       if (navbar) navbar.style.boxShadow = 'none';
     }
   });
-});
-
-//Login Redirection 
-
-document.getElementById("btn-login").addEventListener("click",function(){
-  window.location.href = "/login";
-});
-
-//Signup Redirection
-document.getElementById("btn-register").addEventListener("click",function(){
-  window.location.href = "/signup";
-});
-
-//Home Redirection
-document.getElementById("home-logo").addEventListener("click",function(){
-  window.location.href = "/";
-});
-
-//Home Redirection
-document.getElementById("home").addEventListener("click",function(){
-  window.location.href = "/";
-});
-
-//AboutUS Redirection
-document.getElementById("about-us").addEventListener("click",function(){
-  window.location.href = "/aboutUs";
 });

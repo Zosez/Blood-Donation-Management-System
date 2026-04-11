@@ -14,15 +14,15 @@
 
   <!-- NAVBAR -->
   <nav id="navbar">
-    <a href="#" class="nav-logo" id="home-logo">
+    <a href="../Landing_Page/index.html" class="nav-logo">
       <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
       <span class="logo-text" data-key="navLogo">LifeLink</span>
     </a>
 
     <ul class="nav-links">
-      <li><a href="#" data-key="navHome" id="home">Home</a></li>
-      <li><a href="#" data-key="navAbout" id="about-us">About</a></li>
-      <li><a href="#" class="active" data-key="navRequests">Active Requests</a></li>
+      <li><a href="../Landing_Page/index.html" data-key="navHome">Home</a></li>
+      <li><a href="../About_us_page/about.html" data-key="navAbout">About</a></li>
+      <li><a href="active-requests.html" class="active" data-key="navRequests">Active Requests</a></li>
       <li><a href="#" data-key="navEvents">Events</a></li>
     </ul>
 
@@ -36,8 +36,8 @@
         </svg>
       </span>
 
-      <button class="btn-login" data-key="login" id="btn-login">Log In</button>
-      <button class="btn-register" data-key="register" id="btn-register">Register</button>
+      <button class="btn-login" data-key="login">Log In</button>
+      <button class="btn-register" data-key="register">Register</button>
 
       <div class="settings-wrap">
         <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
@@ -83,20 +83,18 @@
           </div>
         </div>
       </div>
+
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
-    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
-    </button>
   </nav>
-
-  <!-- MOBILE MENU -->
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="../Landing_Page/index.html" data-key="navHome">Home</a>
-    <a href="../About_us_page/about.html" data-key="navAbout">About</a>
-    <a href="active-requests.html" data-key="navRequests">Active Requests</a>
-    <a href="#" data-key="navEvents">Events</a>
-  </div>
 
   <div class="page-wrapper">
 
@@ -260,7 +258,7 @@
 
   </div>
 
-  <script src="../Landing_Page/language.js"></script>
+  <script src="../language.js"></script>
   <script src="activeRequests.js"></script>
 </body>
 </html>
