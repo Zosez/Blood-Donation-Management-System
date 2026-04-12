@@ -166,11 +166,13 @@ input:focus, select:focus {
 }
 
 /* ── Email validation states ── */
-input.input-error {
+input.input-error,
+select.input-error {
   border-color: #EF4444 !important;
   background: #FFF5F5;
 }
-input.input-valid {
+input.input-valid,
+select.input-valid {
   border-color: #16A34A !important;
   background: #F0FDF4;
 }

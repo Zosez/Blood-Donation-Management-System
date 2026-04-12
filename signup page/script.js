@@ -184,6 +184,29 @@ function validateBirthDate() {
 birthDateInput.addEventListener('blur',  validateBirthDate);
 birthDateInput.addEventListener('change', validateBirthDate);
 
+// ── Blood Type validation ──
+const bloodTypeSelect = document.getElementById('bloodType');
+const bloodTypeError  = document.getElementById('bloodTypeError');
+
+function setBloodTypeError(msg) {
+  bloodTypeSelect.classList.toggle('input-error', !!msg);
+  bloodTypeSelect.classList.toggle('input-valid', !msg && !!bloodTypeSelect.value);
+  bloodTypeError.textContent = msg;
+  bloodTypeError.style.display = msg ? 'block' : 'none';
+}
+
+function validateBloodType() {
+  if (!bloodTypeSelect.value) {
+    setBloodTypeError('Please select your blood type.');
+    return false;
+  }
+  setBloodTypeError('');
+  return true;
+}
+
+bloodTypeSelect.addEventListener('change', validateBloodType);
+bloodTypeSelect.addEventListener('blur',   validateBloodType);
+
 // Form submit
 document.getElementById('signupForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -224,6 +247,11 @@ document.getElementById('signupForm').addEventListener('submit', e => {
   // Birth date validation
   if (!validateBirthDate()) {
     if (!hasError) { birthDateInput.focus(); hasError = true; }
+  }
+
+  // Blood type validation
+  if (!validateBloodType()) {
+    if (!hasError) { bloodTypeSelect.focus(); hasError = true; }
   }
 
   if (hasError) return;
