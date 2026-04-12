@@ -142,6 +142,48 @@ confirmInput.addEventListener('blur', () => {
   }
 });
 
+// ── Birth Date validation ──
+const birthDateInput = document.getElementById('birthDate');
+const birthDateError = document.getElementById('birthDateError');
+
+// Set max date to today (no future births)
+(function() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm   = String(today.getMonth() + 1).padStart(2, '0');
+  const dd   = String(today.getDate()).padStart(2, '0');
+  birthDateInput.max = `${yyyy}-${mm}-${dd}`;
+})();
+
+function setBirthDateError(msg) {
+  birthDateInput.classList.toggle('input-error', !!msg);
+  birthDateInput.classList.toggle('input-valid', !msg && !!birthDateInput.value);
+  birthDateError.textContent = msg;
+  birthDateError.style.display = msg ? 'block' : 'none';
+}
+
+function validateBirthDate() {
+  const val = birthDateInput.value;
+  if (!val) {
+    setBirthDateError('Date of Birth is required.');
+    return false;
+  }
+  const dob   = new Date(val);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  if (age < 18) {
+    setBirthDateError('You must be at least 18 years old to register.');
+    return false;
+  }
+  setBirthDateError('');
+  return true;
+}
+
+birthDateInput.addEventListener('blur',  validateBirthDate);
+birthDateInput.addEventListener('change', validateBirthDate);
+
 // Form submit
 document.getElementById('signupForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -177,6 +219,11 @@ document.getElementById('signupForm').addEventListener('submit', e => {
     if (!hasError) { confirmInput.focus(); hasError = true; }
   } else {
     setPasswordError(confirmInput, 'confirmPasswordError', '');
+  }
+
+  // Birth date validation
+  if (!validateBirthDate()) {
+    if (!hasError) { birthDateInput.focus(); hasError = true; }
   }
 
   if (hasError) return;

@@ -136,6 +136,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="tel"],
+input[type="date"],
 select {
   width: 100%;
   background: var(--input-bg);
@@ -149,6 +150,14 @@ select {
   transition: border-color .2s, background .2s;
   appearance: none;
   -webkit-appearance: none;
+}
+
+/* Required asterisk */
+.required-star {
+  color: var(--red);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: 2px;
 }
 input::placeholder { color: #A0AABA; }
 input:focus, select:focus {
