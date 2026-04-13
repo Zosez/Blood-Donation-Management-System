@@ -23,10 +23,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Import routes
 const authRoutes = require('./routes/auth');
 const donationRoutes = require('./routes/donations');
+const bloodRequestRoutes = require('./routes/bloodRequests');
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/blood-requests', bloodRequestRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
