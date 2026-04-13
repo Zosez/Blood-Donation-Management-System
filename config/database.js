@@ -7,7 +7,7 @@ const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'lifelink_db1',
+    database: process.env.DB_NAME || 'lifelink_db',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -30,6 +30,9 @@ async function initializeDatabase() {
 
         await tempPool.execute(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'lifelink_db'}\``);
         await tempPool.end();
+
+        // Disable foreign key checks during table creation
+        await db.execute('SET FOREIGN_KEY_CHECKS=0');
 
         // Create users table
         await db.execute(`
@@ -100,6 +103,9 @@ async function initializeDatabase() {
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN is_available_donor TINYINT(1) DEFAULT 1`);
         } catch (e) { /* column already exists */ }
+
+        // Re-enable foreign key checks
+        await db.execute('SET FOREIGN_KEY_CHECKS=1');
 
         console.log('Database tables initialized successfully');
     } catch (error) {

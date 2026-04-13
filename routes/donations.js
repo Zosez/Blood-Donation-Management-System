@@ -23,6 +23,13 @@ router.post(
                 return res.status(400).json({ errors: errors.array() });
             }
 
+            // Verify user exists before creating donation
+            const User = require('../models/user');
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(401).json({ message: 'User not found. Please login again.' });
+            }
+
             const { donation_date, blood_units, donation_center, next_eligible_date } = req.body;
 
             const donationId = await Donation.create({

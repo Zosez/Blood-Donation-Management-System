@@ -101,8 +101,8 @@ class BloodRequest {
 
     static async findMatchedRequests(bloodType) {
         const [rows] = await db.execute(
-            'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ? ORDER BY urgency DESC, created_at DESC',
-            ['active', bloodType]
+            'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ? ORDER BY FIELD(urgency_level, \'critical\', \'urgent\', \'normal\') ASC, created_at DESC',
+            ['pending', bloodType]
         );
         return rows;
     }

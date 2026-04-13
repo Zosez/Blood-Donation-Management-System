@@ -50,11 +50,6 @@ function showToast(message, type = 'success') {
   };
   const c = colors[type] || colors.info;
 
-async function handleSubmit() {
-  const bloodType = document.getElementById('blood-type').value;
-  const units     = document.getElementById('units').value;
-  const hospital  = document.getElementById('hospital').value;
-  const city      = document.getElementById('city').value;
   const toast = document.createElement('div');
   toast.textContent = message;
   Object.assign(toast.style, {
@@ -148,5 +143,10 @@ async function handleSubmit() {
 
 // ───────── userDashboard REDIRECT ─────────
 document.getElementById("back-dashboard").addEventListener("click", () => {
+    window.location.href = "/userDashboard";
+});
+
+// ───────── Cancel Button ─────────
+document.querySelector(".btn-cancel").addEventListener("click", () => {
     window.location.href = "/userDashboard";
 });

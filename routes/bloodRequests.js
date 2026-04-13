@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const BloodRequest = require('../models/BloodRequest');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -10,7 +10,7 @@ const { authenticateToken } = require('../middleware/auth');
 // This can be public since Active Requests is typically a public board
 router.get('/', async (req, res) => {
     try {
-        const requests = await BloodRequest.findAllActive();
+        const requests = await BloodRequest.findAll({ status: 'pending' });
         res.json({ requests });
     } catch (error) {
         console.error('Get all active requests error:', error);
@@ -20,6 +20,19 @@ router.get('/', async (req, res) => {
 
 // All following routes require authentication
 router.use(authenticateToken);
+
+// ──────────────────────────────────────────────
+// GET /api/blood-requests/my  — get current user's blood requests
+// ──────────────────────────────────────────────
+router.get('/my', async (req, res) => {
+    try {
+        const requests = await BloodRequest.findByUserId(req.user.id);
+        res.json({ requests });
+    } catch (error) {
+        console.error('Get user blood requests error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 // ──────────────────────────────────────────────
 // POST /api/blood-requests  — create a new blood request
@@ -37,6 +50,13 @@ router.post(
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
+            }
+
+            // Verify user exists before creating blood request
+            const User = require('../models/user');
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(401).json({ message: 'User not found. Please login again.' });
             }
 
             const {
@@ -68,24 +88,6 @@ router.post(
         }
     }
 );
-
-// ──────────────────────────────────────────────
-// GET /api/blood-requests  — list all active requests
-// Supports optional query filters: ?blood_type=A+&status=pending
-// ──────────────────────────────────────────────
-router.get('/', async (req, res) => {
-    try {
-        const filters = {};
-        if (req.query.blood_type) filters.blood_type = req.query.blood_type;
-        if (req.query.status) filters.status = req.query.status;
-
-        const requests = await BloodRequest.findAll(filters);
-        res.json({ requests });
-    } catch (error) {
-        console.error('Get blood requests error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
 
 // ──────────────────────────────────────────────
 // GET /api/blood-requests/matched  — get matched active requests

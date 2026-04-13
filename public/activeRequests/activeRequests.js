@@ -15,14 +15,21 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Map database fields to the structure expected by the UI
       allRequests = data.requests.map(r => {
-        // Calculate remaining time
-        let expiresStr = 'Expired';
-        if (r.expires_at) {
-          const diff = new Date(r.expires_at) - new Date();
+        // Calculate remaining time until date_needed
+        let expiresStr = 'Not specified';
+        if (r.date_needed) {
+          const diff = new Date(r.date_needed) - new Date();
           if (diff > 0) {
-            const h = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            expiresStr = `${h}h : ${m}m`;
+            if (days > 0) {
+              expiresStr = `${days}d : ${h}h`;
+            } else {
+              expiresStr = `${h}h : ${m}m`;
+            }
+          } else {
+            expiresStr = 'Urgent!';
           }
         }
 
@@ -31,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
           badgeClass: `type-${r.blood_type.toLowerCase().replace('+', '').replace('-', '')}`,
           hospitalKey: r.hospital_name,
           cityKey: r.city,
-          units: r.units,
-          urgency: r.urgency,
+          units: r.units_required,
+          urgency: r.urgency_level,
           expires: expiresStr
         };
       });
@@ -202,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <button
           class="btn-respond"
-          onclick="showToast('${t('respondNow', 'Register to Respond')}', 'info')"
+          onclick="window.location.href='/signup'"
         >
           ${t('respondNow', 'Register to Respond')}
         </button>
