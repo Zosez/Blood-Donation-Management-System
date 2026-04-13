@@ -8,6 +8,8 @@ const urgencyConfig = {
 
 const inactive = { bg: '#EEF2FF', border: '#D8DEF0', color: '#94A3B8', shadow: 'none' };
 
+let currentUrgency = 'normal';
+
 function selectUrgency(level) {
   ['normal', 'urgent', 'critical'].forEach(l => {
     const el  = document.getElementById('urg-' + l);
@@ -17,6 +19,7 @@ function selectUrgency(level) {
     el.style.color       = cfg.color;
     el.style.boxShadow   = l === level ? `0 0 0 3px ${cfg.shadow}` : 'none';
   });
+  currentUrgency = level;
 }
 
 // ─── Init: Normal selected by default, others shown in their tinted colours ─
@@ -38,7 +41,7 @@ function selectUrgency(level) {
 
 // ─── Form Submit Validation ────────────────────────────────────────────────
 
-function handleSubmit() {
+async function handleSubmit() {
   const bloodType = document.getElementById('blood-type').value;
   const units     = document.getElementById('units').value;
   const hospital  = document.getElementById('hospital').value;
@@ -49,7 +52,40 @@ function handleSubmit() {
     return;
   }
 
-  alert('✅ Blood request submitted!\nAn admin will review it within 15 minutes.');
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Please log in to submit a request.');
+    window.location.href = '/login';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/blood-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        blood_type: bloodType,
+        units: parseInt(units),
+        hospital_name: hospital,
+        city: city,
+        urgency: currentUrgency
+      })
+    });
+
+    if (response.ok) {
+      alert('✅ Blood request submitted!');
+      window.location.href = '/bloodRequest'; // Or whatever your dashboard route is
+    } else {
+      const data = await response.json();
+      alert(`Error submitting request: ${data.message || 'Validation failed'}`);
+    }
+  } catch (err) {
+    console.error('Submit error:', err);
+    alert('Failed to submit request. Please try again.');
+  }
 }
 
 // ───────── userDashboard REDIRECT ─────────

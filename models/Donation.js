@@ -30,6 +30,17 @@ class Donation {
         );
         return result.affectedRows > 0;
     }
+
+    static async getUserStats(userId) {
+        const [rows] = await db.execute(
+            'SELECT COUNT(id) as total_donations, SUM(blood_units) as total_units FROM donations WHERE user_id = ? AND status != "cancelled"',
+            [userId]
+        );
+        return {
+            total_donations: rows[0].total_donations || 0,
+            total_units: Number(rows[0].total_units) || 0
+        };
+    }
 }
 
 module.exports = Donation;

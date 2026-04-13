@@ -24,7 +24,7 @@ class User {
     // Find user by ID
     static async findById(id) {
         const [rows] = await db.execute(
-            'SELECT id, fullname, email, phone, province, city, blood_type, role, is_verified, created_at FROM users WHERE id = ?',
+            'SELECT id, fullname, email, phone, province, city, blood_type, role, is_available_donor, is_verified, created_at FROM users WHERE id = ?',
             [id]
         );
         return rows[0] || null;
@@ -36,6 +36,15 @@ class User {
         const [result] = await db.execute(
             'UPDATE users SET fullname = ?, phone = ?, province = ?, city = ?, blood_type = ? WHERE id = ?',
             [fullname, phone, province, city, blood_type, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Update availability
+    static async updateAvailability(id, isAvailable) {
+        const [result] = await db.execute(
+            'UPDATE users SET is_available_donor = ? WHERE id = ?',
+            [isAvailable ? 1 : 0, id]
         );
         return result.affectedRows > 0;
     }

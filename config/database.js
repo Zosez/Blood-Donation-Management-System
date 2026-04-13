@@ -43,6 +43,7 @@ async function initializeDatabase() {
                 city VARCHAR(100),
                 blood_type VARCHAR(10),
                 role ENUM('donor', 'recipient', 'admin') DEFAULT 'donor',
+                is_available_donor TINYINT(1) DEFAULT 1,
                 is_verified TINYINT(1) DEFAULT 0,
                 reset_token VARCHAR(255),
                 reset_token_expiry DATETIME,
@@ -68,12 +69,32 @@ async function initializeDatabase() {
             )
         `);
 
+        // Create blood_requests table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS blood_requests (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                blood_type VARCHAR(10) NOT NULL,
+                units INT DEFAULT 1,
+                hospital_name VARCHAR(255) NOT NULL,
+                city VARCHAR(100) NOT NULL,
+                urgency ENUM('normal', 'urgent', 'critical', 'standard') DEFAULT 'normal',
+                expires_at DATETIME,
+                status ENUM('active', 'fulfilled', 'cancelled') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
         // Migrate: add verification columns if missing (safe for existing tables)
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN email_verification_token VARCHAR(255)`);
         } catch (e) { /* column already exists */ }
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN email_verification_expiry DATETIME`);
+        } catch (e) { /* column already exists */ }
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN is_available_donor TINYINT(1) DEFAULT 1`);
         } catch (e) { /* column already exists */ }
 
         console.log('Database tables initialized successfully');
