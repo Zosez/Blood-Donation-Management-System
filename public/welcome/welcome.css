@@ -1,0 +1,149 @@
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  background:linear-gradient(145deg,#EEF4FB 0%,#E2EDF8 40%,#F0E8F4 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:40px 16px;
+}
+
+
+
+/* ── CARD ── */
+.card{
+  background:rgba(235,244,253,0.75);
+  border:1px solid rgba(255,255,255,0.8);
+  border-radius:24px;
+  width:100%;max-width:600px;
+  padding:44px 40px 36px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+  backdrop-filter:blur(8px);
+  box-shadow:0 8px 40px rgba(100,140,180,0.12);
+}
+
+/* ── LOGO RING ── */
+.logo-ring-wrap{
+  position:relative;
+  width:100px;height:100px;
+  margin-bottom:28px;
+}
+.logo-ring{
+  width:100px;height:100px;border-radius:50%;
+  background:#fff;
+  border:2.5px solid #E0E8F0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(100,140,180,0.15);
+}
+.logo-ring img{
+  width:58px;height:58px;object-fit:contain;
+}
+.heart-badge{
+  position:absolute;top:2px;right:2px;
+  width:28px;height:28px;border-radius:50%;
+  background:#2B8AC7;
+  display:flex;align-items:center;justify-content:center;
+  border:2.5px solid #fff;
+  box-shadow:0 2px 8px rgba(43,138,199,.35);
+}
+.heart-badge svg{width:14px;height:14px;fill:white}
+
+/* ── HEADING ── */
+.welcome-title{
+  font-size:34px;font-weight:800;
+  color:#1B2340;
+  line-height:1.2;
+  margin-bottom:16px;
+  letter-spacing:-.5px;
+}
+.welcome-title .brand{color:#C0392B}
+.welcome-sub{
+  font-size:15px;color:#6B82A0;
+  line-height:1.7;max-width:380px;
+  margin-bottom:32px;
+}
+
+/* ── ACTION CARDS ── */
+.action-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  width:100%;
+  margin-bottom:32px;
+}
+.action-card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #E8EFF7;
+  padding:22px 20px 22px;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+  position:relative;
+  overflow:hidden;
+}
+.action-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(100,140,180,.15);
+}
+.ac-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ac-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ac-icon.red{background:#FEF2F2}
+.ac-icon.blue{background:#EBF5FC}
+.ac-icon svg{width:22px;height:22px}
+.ac-arrow{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#B0BEC5;
+}
+.ac-arrow svg{width:16px;height:16px;stroke:currentColor}
+.ac-title{font-size:15px;font-weight:700;color:#1B2340;margin-bottom:7px}
+.ac-desc{font-size:12.5px;color:#7A90AA;line-height:1.6}
+
+/* ── NEXT BTN ── */
+.next-btn{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#C0392B,#9B2335);
+  color:#fff;border:none;
+  border-radius:50px;
+  padding:15px 44px;
+  font-family:'Inter',sans-serif;
+  font-size:16px;font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 22px rgba(192,57,43,.35);
+  transition:transform .15s, box-shadow .15s;
+  margin-bottom:16px;
+  letter-spacing:.01em;
+}
+.next-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 28px rgba(192,57,43,.4);
+}
+.next-btn svg{width:18px;height:18px;stroke:white;stroke-width:2.5}
+.skip-link{
+  font-size:13.5px;font-weight:600;color:#7A90AA;
+  cursor:pointer;background:none;border:none;
+  font-family:'Inter',sans-serif;
+  transition:color .15s;
+}
+.skip-link:hover{color:#1B2340}
+
+/* ── FOOTER ── */
+.footer-label{
+  margin-top:28px;
+  font-size:10.5px;font-weight:600;
+  color:#A0B4C8;letter-spacing:.18em;text-transform:uppercase;
+}
+
+@media(max-width:520px){
+  .card{padding:32px 20px 28px}
+  .action-row{grid-template-columns:1fr}
+  .welcome-title{font-size:26px}
+  .next-btn{padding:14px 36px;font-size:15px}
+}

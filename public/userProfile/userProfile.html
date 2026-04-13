@@ -39,14 +39,27 @@
       </svg>
     </button>
 
-    <!-- User avatar + name + chevron -->
-    <div class="nav-avatar" id="navAvatar">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Julian&backgroundColor=b6e3f4" alt="Julian Thorne"/>
-      <span class="nav-avatar-name">Julian</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>
+    <!-- Avatar pill with dropdown -->
+    <div class="nav-avatar-wrapper">
+      <div class="nav-avatar" id="navAvatar">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Julian&backgroundColor=b6e3f4" alt="User Avatar"/>
+        <span class="nav-avatar-name" id="nav-user-name">User</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+      <div class="avatar-dropdown" id="avatarDropdown">
+        <a href="/userProfile" class="dropdown-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          View Profile
+        </a>
+        <div class="avatar-dd-divider"></div>
+        <button class="dropdown-item dropdown-item-signout" id="logoutBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
     </div>
   </div>
 
@@ -97,16 +110,16 @@
       <div class="meta-list">
         <div class="meta-row">
           <span class="meta-key">Location</span>
-          <span class="meta-val">New York, NY</span>
+          <span class="meta-val" id="metaLocation">Loading...</span>
         </div>
         <div class="meta-row">
           <span class="meta-key">Member Since</span>
-          <span class="meta-val">Jan 2022</span>
+          <span class="meta-val" id="metaMemberSince">Loading...</span>
         </div>
         <div class="meta-row">
           <span class="meta-key">Status</span>
-          <span class="meta-val status-eligible">
-            <span class="status-dot"></span>Eligible
+          <span class="meta-val" id="metaStatus">
+            <span class="status-dot"></span><span id="statusText">Checking...</span>
           </span>
         </div>
       </div>
@@ -115,8 +128,8 @@
     <!-- Next Donation Card -->
     <div class="donation-window-card">
       <div class="dw-label">NEXT DONATION WINDOW</div>
-      <div class="dw-days">14 <span>Days</span></div>
-      <div class="dw-date">March 28, 2024</div>
+      <div class="dw-days"><span id="daysUntilEligible">--</span> <span>Days</span></div>
+      <div class="dw-date" id="nextEligibleDateDisplay">--</div>
       <div class="dw-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
           stroke="rgba(255,255,255,0.1)" stroke-width="1.2">
@@ -291,6 +304,10 @@
   </section>
 </main>
 
+<script src="../utils/protectedRoute.js"></script>
 <script src="userprofile.js"></script>
+<script>
+  initProtectedRoute(null);
+</script>
 </body>
 </html>

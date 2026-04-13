@@ -18,13 +18,17 @@ class User {
     // Find user by email
     static async findByEmail(email) {
         const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        return rows[0] || null;
+        const user = rows[0] || null;
+        if (user) {
+            console.log(`[USER MODEL findByEmail] Email: ${email}, User ID: ${user.id}, onboarded: ${user.onboarded}, type: ${typeof user.onboarded}`);
+        }
+        return user;
     }
 
     // Find user by ID
     static async findById(id) {
         const [rows] = await db.execute(
-            'SELECT id, fullname, email, phone, province, city, blood_type, role, is_available_donor, is_verified, created_at FROM users WHERE id = ?',
+            'SELECT id, fullname, email, password, phone, province, city, blood_type, role, is_available_donor, is_verified, onboarded, date_of_birth, created_at FROM users WHERE id = ?',
             [id]
         );
         return rows[0] || null;
@@ -32,10 +36,10 @@ class User {
 
     // Update user profile
     static async update(id, userData) {
-        const { fullname, phone, province, city, blood_type } = userData;
+        const { fullname, phone, province, city, blood_type, date_of_birth } = userData;
         const [result] = await db.execute(
-            'UPDATE users SET fullname = ?, phone = ?, province = ?, city = ?, blood_type = ? WHERE id = ?',
-            [fullname, phone, province, city, blood_type, id]
+            'UPDATE users SET fullname = ?, phone = ?, province = ?, city = ?, blood_type = ?, date_of_birth = ? WHERE id = ?',
+            [fullname, phone, province, city, blood_type, date_of_birth || null, id]
         );
         return result.affectedRows > 0;
     }
@@ -105,6 +109,15 @@ class User {
     static async markEmailVerified(userId) {
         const [result] = await db.execute(
             'UPDATE users SET is_verified = 1, email_verification_token = NULL, email_verification_expiry = NULL WHERE id = ?',
+            [userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Mark user as onboarded
+    static async markOnboarded(userId) {
+        const [result] = await db.execute(
+            'UPDATE users SET onboarded = 1 WHERE id = ?',
             [userId]
         );
         return result.affectedRows > 0;

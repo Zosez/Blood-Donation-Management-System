@@ -268,11 +268,33 @@ footer {
 
 main { padding: 0 16px; flex: 1; }
 
-@media (max-width: 580px) {
-  .card { padding: 24px 18px 28px; }
+/* Tablet (481px - 768px) */
+@media (max-width: 768px) {
+  .navbar { padding: 0 1.5rem; }
+  .nav-links { gap: 16px; font-size: 12px; }
+  .card { padding: 20px 16px; }
+  .form-row { grid-template-columns: 1fr; }
+  .page-header h1 { font-size: 1.5rem; }
+}
+
+/* Mobile (320px - 480px) */
+@media (max-width: 480px) {
+  .card { padding: 18px 12px; }
   .form-row { grid-template-columns: 1fr; }
   .info-row { grid-template-columns: 1fr; }
-  .page-header h1 { font-size: 24px; }
-  .urgency-card { padding: 14px 8px; font-size: 12.5px; }
-  nav { padding: 0 16px; }
+  .page-header h1 { font-size: 1.25rem; }
+  .urgency-card { padding: 12px 8px; font-size: 12px; }
+  nav { padding: 0 12px; }
+  button { padding: 10px 16px; font-size: 13px; }
+}
+
+/* Touch targets (min 44x44px) */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
+}
+
+/* Extra wide (1441px+) */
+@media (min-width: 1441px) {
+  .card { max-width: 900px; margin: 0 auto; }
+  .info-row { max-width: 900px; margin: 24px auto 0; }
 }

@@ -45,9 +45,11 @@ async function initializeDatabase() {
                 province VARCHAR(100),
                 city VARCHAR(100),
                 blood_type VARCHAR(10),
-                role ENUM('donor', 'recipient', 'admin') DEFAULT 'donor',
+                date_of_birth DATE,
+                role ENUM('user', 'admin') DEFAULT 'user',
                 is_available_donor TINYINT(1) DEFAULT 1,
                 is_verified TINYINT(1) DEFAULT 0,
+                onboarded TINYINT(1) DEFAULT 0,
                 reset_token VARCHAR(255),
                 reset_token_expiry DATETIME,
                 email_verification_token VARCHAR(255),
@@ -93,6 +95,27 @@ async function initializeDatabase() {
             )
         `);
 
+        // Create notifications table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT,
+                blood_request_id INT,
+                related_user_id INT,
+                is_read TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (blood_request_id) REFERENCES blood_requests(id) ON DELETE CASCADE,
+                FOREIGN KEY (related_user_id) REFERENCES users(id) ON DELETE SET NULL,
+                INDEX idx_user_id (user_id),
+                INDEX idx_created_at (created_at),
+                INDEX idx_is_read (is_read)
+            )
+        `);
+
         // Migrate: add verification columns if missing (safe for existing tables)
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN email_verification_token VARCHAR(255)`);
@@ -103,6 +126,32 @@ async function initializeDatabase() {
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN is_available_donor TINYINT(1) DEFAULT 1`);
         } catch (e) { /* column already exists */ }
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN onboarded TINYINT(1) DEFAULT 0`);
+            console.log('[DB] Added onboarded column to users table');
+        } catch (e) { 
+            console.log('[DB] Onboarded column already exists or skipped');
+        }
+
+        // Create indexes for frequently queried columns
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_email ON users(email)`);
+        } catch (e) { /* index already exists */ }
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_blood_type ON users(blood_type)`);
+        } catch (e) { /* index already exists */ }
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_br_blood_type ON blood_requests(blood_type)`);
+        } catch (e) { /* index already exists */ }
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_br_status ON blood_requests(status)`);
+        } catch (e) { /* index already exists */ }
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_donations_user ON donations(user_id)`);
+        } catch (e) { /* index already exists */ }
+        try {
+            await db.execute(`CREATE INDEX IF NOT EXISTS idx_donations_date ON donations(donation_date)`);
+        } catch (e) { /* index already exists */ }
 
         // Re-enable foreign key checks
         await db.execute('SET FOREIGN_KEY_CHECKS=1');

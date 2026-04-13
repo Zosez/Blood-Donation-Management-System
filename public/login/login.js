@@ -76,10 +76,18 @@ async function handleLogin() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
+      console.log('[LOGIN RESPONSE]', {
+        redirectUrl: data.redirectUrl,
+        isNewUser: data.isNewUser,
+        onboarded: data.user?.onboarded
+      });
+
       loginBtn.textContent = "✓ Success!";
 
       setTimeout(() => {
-        window.location.href = '/userdashboard';
+        const finalUrl = data.redirectUrl || '/userdashboard';
+        console.log('[LOGIN REDIRECT] Going to:', finalUrl);
+        window.location.href = finalUrl;
       }, 1000);
     } else {
       // Check if email is not verified (403)
@@ -121,27 +129,9 @@ loginBtn.addEventListener("click", handleLogin);
 });
 
 // Forgot password (REAL)
-forgotLink.addEventListener("click", async (e) => {
+forgotLink.addEventListener("click", (e) => {
   e.preventDefault();
-  const email = emailInput.value.trim();
-
-  if (!email) {
-    emailError.textContent = "Enter your email first.";
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_URL}/auth/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-
-    const data = await res.json();
-    alert(data.message || "Reset link sent.");
-  } catch {
-    alert("Network error.");
-  }
+  window.location.href = "/passwordReset";
 });
 
 // Home redirect
@@ -150,6 +140,13 @@ document.getElementById("home-logo").addEventListener("click", () => {
 });
 
 // Signup redirect
+const btnRegister = document.getElementById("btn-register");
+if (btnRegister) {
+  btnRegister.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/signup";
+  });
+}
 document.getElementById("btn-register").addEventListener("click", () => {
   window.location.href = "/signup";
 });

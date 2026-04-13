@@ -253,6 +253,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
+  /* ─── AVATAR DROPDOWN ─── */
+  const navAvatar      = document.getElementById('navAvatar');
+  const avatarDropdown = document.getElementById('avatarDropdown');
+  const logoutBtn      = document.getElementById('logoutBtn');
+  const nameEl         = document.getElementById('nav-user-name');
+
+  // Populate name from localStorage
+  const userData = localStorage.getItem('user');
+  if (userData && nameEl) {
+    const user = JSON.parse(userData);
+    nameEl.textContent = user.fullname?.split(' ')[0] || user.fullname || 'User';
+  }
+
+  navAvatar?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    avatarDropdown?.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (navAvatar && avatarDropdown) {
+      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
+        avatarDropdown.classList.remove('show');
+      }
+    }
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    avatarDropdown?.classList.remove('show');
+    showToast('Signed out successfully.', 'success');
+    setTimeout(() => { window.location.href = '/'; }, 1000);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') avatarDropdown?.classList.remove('show');
+  });
+
 });
 
 // ───────── Home REDIRECT ─────────

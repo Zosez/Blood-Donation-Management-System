@@ -99,12 +99,70 @@ class BloodRequest {
         return result.affectedRows > 0;
     }
 
-    static async findMatchedRequests(bloodType) {
-        const [rows] = await db.execute(
-            'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ? ORDER BY FIELD(urgency_level, \'critical\', \'urgent\', \'normal\') ASC, created_at DESC',
-            ['pending', bloodType]
-        );
+    static async findMatchedRequests(bloodType, userCity = null) {
+        let query = 'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ?';
+        let params = ['pending', bloodType];
+        
+        if (userCity) {
+            query += ' AND city = ?';
+            params.push(userCity);
+        }
+        
+        query += ' ORDER BY FIELD(urgency_level, \'critical\', \'urgent\', \'normal\') ASC, created_at DESC LIMIT 10';
+        
+        const [rows] = await db.execute(query, params);
         return rows;
+    }
+
+    // Get nearby matched requests (within same city or province)
+    static async findNearbyRequests(bloodType, userCity, compatibleTypes) {
+        const placeholders = compatibleTypes.map(() => '?').join(',');
+        const query = `
+            SELECT * FROM blood_requests 
+            WHERE status IN ('pending', 'open')
+            AND blood_type IN (${placeholders})
+            AND city = ?
+            ORDER BY FIELD(urgency_level, 'critical', 'urgent', 'normal') ASC, created_at DESC
+            LIMIT 10
+        `;
+        
+        const [rows] = await db.execute(query, [...compatibleTypes, userCity]);
+        return rows;
+    }
+
+    static async findEligibleDonors(requiredBloodType, compatibleTypes) {
+        const placeholders = compatibleTypes.map(() => '?').join(',');
+        const query = `
+            SELECT id, email, fullname, blood_type, city, is_available_donor
+            FROM users
+            WHERE blood_type IN (${placeholders})
+            AND is_verified = 1
+            AND is_available_donor = 1
+            AND role = 'user'
+        `;
+        
+        const [rows] = await db.execute(query, compatibleTypes);
+        return rows;
+    }
+
+    static async findEligibleDonorsForRequest(requestId) {
+        const request = await this.findById(requestId);
+        if (!request) return [];
+
+        const { db: dbModule } = require('../config/database');
+        const compatMap = {
+            'O-': ['O-'],
+            'O+': ['O-', 'O+'],
+            'A-': ['O-', 'A-'],
+            'A+': ['O-', 'O+', 'A-', 'A+'],
+            'B-': ['O-', 'B-'],
+            'B+': ['O-', 'O+', 'B-', 'B+'],
+            'AB-': ['O-', 'A-', 'B-', 'AB-'],
+            'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+        };
+
+        const compatibleTypes = compatMap[request.blood_type] || [];
+        return await this.findEligibleDonors(request.blood_type, compatibleTypes);
     }
 }
 

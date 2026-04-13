@@ -4,8 +4,10 @@ const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user');
+const Donation = require('../models/Donation');
 const { authenticateToken } = require('../middleware/auth');
-const { sendVerificationEmail } = require('../config/mailer');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../config/mailer');
+const { addToBlacklist } = require('../middleware/tokenBlacklist');
 
 // Helper: generate JWT token
 function generateToken(user) {
@@ -40,12 +42,13 @@ async function generateAndSendVerification(email) {
 router.post(
     '/signup',
     [
-        body('fullname').trim().notEmpty().withMessage('Full name is required'),
+        body('fullname').trim().notEmpty().isLength({ min: 2, max: 255 }).withMessage('Full name must be 2-255 characters'),
         body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-        body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-        body('blood_type').trim().notEmpty().withMessage('Blood type is required'),
-        body('province').trim().notEmpty().withMessage('Province is required'),
-        body('city').trim().notEmpty().withMessage('City is required'),
+        body('password').isLength({ min: 8, max: 128 }).withMessage('Password must be 8-128 characters'),
+        body('phone').optional().trim().matches(/^[\d\s\-\+\(\)]{10,20}$/).withMessage('Invalid phone format'),
+        body('blood_type').trim().isIn(['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']).withMessage('Invalid blood type'),
+        body('province').trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Valid province required'),
+        body('city').trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Valid city required'),
     ],
     async (req, res) => {
         try {
@@ -207,10 +210,17 @@ router.post(
             // Generate token only for verified users
             const token = generateToken(user);
 
+            // Check if user has completed onboarding (treat NULL as 0/false for new users)
+            const isNewUser = !user.onboarded || user.onboarded === 0;
+            
+            console.log(`[AUTH LOGIN] User: ${user.email}, onboarded value: ${user.onboarded}, isNewUser: ${isNewUser}`);
+
             res.json({
                 message: 'Login successful',
                 token,
-                user: sanitizeUser(user)
+                user: sanitizeUser(user),
+                isNewUser: isNewUser,
+                redirectUrl: isNewUser ? '/welcome' : '/userdashboard'
             });
         } catch (error) {
             console.error('Login error:', error);
@@ -239,7 +249,10 @@ router.post(
             // Find user
             const user = await User.findByEmail(email);
             if (!user) {
-                return res.json({ message: 'If this email is registered, a reset link has been sent.' });
+                // Security: Don't reveal if email exists
+                return res.json({ 
+                    message: 'If this email is registered, a password reset link has been sent to your inbox.' 
+                });
             }
 
             // Generate reset token
@@ -249,12 +262,17 @@ router.post(
             // Save token to database
             await User.saveResetToken(email, resetToken, expiry);
 
-            // In production you'd send an email here
-            console.log(`[DEV] Reset token for ${email}: ${resetToken}`);
+            // Send password reset email
+            const emailSent = await sendPasswordResetEmail(email, resetToken);
+
+            if (!emailSent) {
+                console.warn(`[AUTH] Email send failed for ${email}, but reset link created`);
+                // Still return success for security, but log the failure
+            }
 
             res.json({
-                message: 'If this email is registered, a reset link has been sent.',
-                resetToken // Remove in production
+                message: 'If this email is registered, a password reset link has been sent to your inbox.',
+                resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined // Only in dev
             });
         } catch (error) {
             console.error('Forgot password error:', error);
@@ -269,8 +287,8 @@ router.post(
 router.post(
     '/reset-password',
     [
-        body('token').notEmpty().withMessage('Reset token is required'),
-        body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+        body('token').notEmpty().isLength({ min: 32, max: 128 }).withMessage('Invalid reset token'),
+        body('newPassword').isLength({ min: 8, max: 128 }).withMessage('Password must be 8-128 characters'),
     ],
     async (req, res) => {
         try {
@@ -307,7 +325,18 @@ router.get('/me', authenticateToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ user: sanitizeUser(user) });
+
+        // Get donation eligibility info
+        const donationEligibility = await Donation.checkDonationEligibility(req.user.id);
+
+        const sanitized = sanitizeUser(user);
+        
+        // Add donation eligibility data
+        sanitized.next_eligible_date = donationEligibility.nextEligibleDate;
+        sanitized.is_donation_eligible = donationEligibility.eligible;
+        sanitized.days_until_eligible = donationEligibility.daysUntilEligible;
+
+        res.json({ user: sanitized });
     } catch (error) {
         console.error('Get user error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -334,6 +363,129 @@ router.put('/availability', authenticateToken, [
         res.json({ message: 'Availability updated successfully' });
     } catch (error) {
         console.error('Update availability error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// POST /api/auth/change-password  (protected)
+// ──────────────────────────────────────────────
+router.post('/change-password', authenticateToken, [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword').isLength({ min: 8, max: 128 }).withMessage('New password must be 8-128 characters'),
+    body('confirmPassword').notEmpty().withMessage('Confirm password is required')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: 'Passwords do not match' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify current password
+        const isPasswordValid = await User.verifyPassword(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+
+        // Update password
+        const success = await User.updatePassword(req.user.id, newPassword);
+        if (!success) {
+            return res.status(400).json({ message: 'Failed to update password' });
+        }
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// PUT /api/auth/profile  (protected)
+// ──────────────────────────────────────────────
+router.put('/profile', authenticateToken, [
+    body('fullname').optional().trim().isLength({ min: 2, max: 255 }).withMessage('Full name must be 2-255 characters'),
+    body('phone').optional().trim().matches(/^[\d\s\-\+\(\)]{10,20}$|^$/).withMessage('Invalid phone format'),
+    body('province').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Valid province required'),
+    body('city').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Valid city required'),
+    body('date_of_birth').optional().isISO8601().withMessage('Invalid date format'),
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update only provided fields
+        const updateData = {
+            fullname: req.body.fullname || user.fullname,
+            phone: req.body.phone !== undefined ? req.body.phone : user.phone,
+            province: req.body.province || user.province,
+            city: req.body.city || user.city,
+            blood_type: user.blood_type,
+            date_of_birth: req.body.date_of_birth || user.date_of_birth
+        };
+
+        const success = await User.update(req.user.id, updateData);
+        if (!success) {
+            return res.status(400).json({ message: 'Failed to update profile' });
+        }
+
+        const updatedUser = await User.findById(req.user.id);
+        res.json({ 
+            message: 'Profile updated successfully',
+            user: sanitizeUser(updatedUser)
+        });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// POST /api/auth/mark-onboarded  (protected)
+// ──────────────────────────────────────────────
+router.post('/mark-onboarded', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Update user onboarded status
+        await User.markOnboarded(userId);
+
+        res.json({ message: 'Onboarding completed successfully' });
+    } catch (error) {
+        console.error('Mark onboarded error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// POST /api/auth/logout  (protected)
+// ──────────────────────────────────────────────
+router.post('/logout', authenticateToken, async (req, res) => {
+    try {
+        if (req.token) {
+            addToBlacklist(req.token);
+        }
+        res.json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Logout error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

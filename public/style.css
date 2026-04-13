@@ -542,15 +542,34 @@ body.dark .logo-img {
   border: none;
   cursor: pointer;
   padding: 4px;
+  z-index: 1000;
 }
 
 .hamburger span {
   display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--white);
+  width: 26px;
+  height: 3px;
+  background: var(--dark);
   border-radius: 2px;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  origin: center;
+}
+
+.hamburger:hover span {
+  background: var(--red);
+}
+
+.hamburger.is-open span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger.is-open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger.is-open span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 /* Mobile menu */
@@ -1352,11 +1371,64 @@ footer {
 }
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 900px) {
-  .nav-links,
-  .nav-right { display: none; }
+/* Tablet & below */
+@media (max-width: 1024px) {
+  nav {
+    padding: 0 1.5rem;
+  }
 
-  .hamburger { display: flex; }
+  .nav-links {
+    gap: 16px;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+  }
+
+  .nav-right {
+    gap: 10px;
+  }
+
+  .btn-register {
+    padding: 6px 16px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile landscape & small tablets */
+@media (max-width: 768px) {
+  nav {
+    padding: 0 1rem;
+    height: 70px;
+  }
+
+  .nav-logo {
+    gap: 0.5rem;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-right {
+    gap: 8px;
+  }
+
+  .btn-login {
+    display: none;
+  }
+
+  .btn-register {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
 
   .hero-inner {
     grid-template-columns: 1fr;
@@ -1388,9 +1460,40 @@ footer {
   .section-header { flex-direction: column; gap: 8px; }
 }
 
-@media (max-width: 600px) {
+/* Small mobile phones */
+@media (max-width: 480px) {
+  nav {
+    padding: 0 0.75rem;
+    height: 65px;
+  }
+
+  .logo-img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logo-text {
+    font-size: 0.9rem;
+  }
+
+  .settings-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .settings-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hamburger span {
+    width: 22px;
+    height: 2.5px;
+  }
+
   .footer-grid { grid-template-columns: 1fr; }
   .steps { gap: 16px; }
-  .hero { padding: 80px 5% 60px; }
+  .hero { padding: 70px 4% 50px; }
+  .hero-text h1 { font-size: 1.8rem; }
 }
 

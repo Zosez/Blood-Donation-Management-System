@@ -8,13 +8,27 @@ const { authenticateToken } = require('../middleware/auth');
 router.use(authenticateToken);
 
 // ──────────────────────────────────────────────
+// GET /api/donations/eligibility  — check donation eligibility
+// ──────────────────────────────────────────────
+router.get('/eligibility', async (req, res) => {
+    try {
+        const eligibility = await Donation.checkDonationEligibility(req.user.id);
+        res.json({ eligibility });
+    } catch (error) {
+        console.error('Check eligibility error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
 // POST /api/donations  — record a new donation
 // ──────────────────────────────────────────────
 router.post(
     '/',
     [
-        body('donation_date').notEmpty().withMessage('Donation date is required'),
+        body('donation_date').notEmpty().isISO8601().withMessage('Valid donation date is required'),
         body('donation_center').trim().notEmpty().withMessage('Donation center is required'),
+        body('blood_units').optional().isFloat({ min: 0.5, max: 5 }).withMessage('Blood units must be between 0.5 and 5'),
     ],
     async (req, res) => {
         try {
@@ -28,6 +42,17 @@ router.post(
             const user = await User.findById(req.user.id);
             if (!user) {
                 return res.status(401).json({ message: 'User not found. Please login again.' });
+            }
+
+            // Check donation eligibility
+            const eligibility = await Donation.checkDonationEligibility(req.user.id);
+            if (!eligibility.eligible) {
+                return res.status(403).json({
+                    message: 'You are not eligible to donate yet',
+                    nextEligibleDate: eligibility.nextEligibleDate,
+                    lastDonationDate: eligibility.lastDonationDate,
+                    daysUntilEligible: eligibility.daysUntilEligible
+                });
             }
 
             const { donation_date, blood_units, donation_center, next_eligible_date } = req.body;

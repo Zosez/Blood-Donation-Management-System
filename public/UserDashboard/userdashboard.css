@@ -989,3 +989,302 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .dashboard { padding: calc(var(--nav-h) + 1rem) 1rem 2.5rem; }
   .card-section { padding: 1.1rem; }
 }
+
+/* ── Notif wrapper (inline dropdown) ── */
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 50px;
+  right: -80px;
+  width: 320px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.1);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .25s, transform .25s, visibility .25s;
+}
+
+.notif-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 86px;
+  width: 10px;
+  height: 10px;
+  background: var(--white);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+.notif-dropdown.open {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Avatar pill ── */
+.nav-avatar-wrapper {
+  position: relative;
+}
+
+.nav-avatar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 12px 5px 5px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  transition: border-color .2s, background .2s;
+}
+
+.nav-avatar:hover {
+  border-color: #CBD5E1;
+  background: var(--bg);
+}
+
+.nav-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg);
+}
+
+.nav-avatar-name {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+/* ── Avatar dropdown ── */
+.avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.1);
+  padding: 8px;
+  min-width: 170px;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .25s, transform .25s, visibility .25s;
+}
+
+.avatar-dropdown.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: .88rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: var(--dark);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+}
+
+.dropdown-item:hover {
+  background: var(--bg);
+  color: var(--dark);
+}
+
+.dropdown-item-signout { color: var(--red); }
+.dropdown-item-signout:hover { background: var(--red-light); color: var(--red); }
+
+.avatar-dd-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ── Hamburger ── */
+.nav-hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--gray-dark);
+  cursor: pointer;
+  padding: 4px;
+}
+
+@media (max-width: 600px) {
+  .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 74px;
+    left: 0;
+    width: 100%;
+    background: var(--white);
+    flex-direction: column;
+    padding: 24px;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,.05);
+    z-index: 998;
+  }
+  .nav-links.active { display: flex; }
+}
+
+/* -- Responsive: Tablet (481px � 768px) -- */
+@media (max-width: 768px) {
+  .navbar { padding: 0 1.5rem; }
+  .nav-links { gap: 16px; font-size: 12px; }
+  .dashboard { padding: calc(var(--nav-h) + 1.5rem) 1.5rem 2rem; }
+  .card-section { padding: 1.5rem; }
+  .section-title { font-size: 1.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-controls { gap: 0.5rem; }
+  .status-badge { padding: 0.3rem 0.7rem; font-size: 0.7rem; }
+}
+
+/* -- Responsive: Mobile (320px � 480px) -- */
+@media (max-width: 480px) {
+  :root { --nav-h: 64px; }
+  
+  .navbar { padding: 0 1rem; height: 64px; }
+  .logo-img { width: 28px; height: 28px; }
+  .logo-text { font-size: 1rem; }
+  
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex !important; }
+  
+  .nav-right { gap: 8px; }
+  .nav-bell svg { width: 16px; height: 16px; }
+  
+  .nav-avatar { gap: 0.4rem; font-size: 12px; padding: 0.4rem 0.7rem; }
+  .nav-avatar img { width: 28px; height: 28px; }
+  .nav-avatar svg { width: 12px; height: 12px; }
+  
+  .dashboard { padding: calc(var(--nav-h) + 1rem) 1rem 1.5rem; gap: 1rem; }
+  .card-section { padding: 1rem; border-radius: 12px; }
+  
+  .section-header { flex-direction: column; gap: 1rem; }
+  .section-title { font-size: 1.25rem; }
+  .section-subtitle { font-size: 0.8rem; }
+  .section-controls { width: 100%; flex-direction: column; }
+  
+  .status-badge { width: 100%; justify-content: space-between; }
+  .avatar-dropdown { right: -10px; width: 200px; }
+  
+  .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .stat-card { padding: 1rem; }
+  .stat-num { font-size: 1.5rem; }
+  .stat-label { font-size: 0.75rem; }
+  
+  .btn-primary, .btn-secondary { width: 100%; padding: 12px 16px; font-size: 13px; }
+  .toggle-switch { width: 40px; height: 22px; }
+  .slider::before { left: 2px; top: 2px; width: 16px; height: 16px; }
+  .toggle-switch input:checked + .slider::before { transform: translateX(18px); }
+  
+  .card-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .mini-card { padding: 1rem; }
+}
+
+/* -- Touch targets (min 44x44px) -- */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
+  .nav-bell, .nav-avatar, .toggle-switch { min-height: 44px; }
+}
+
+/* -- Extra wide (1441px+) -- */
+@media (min-width: 1441px) {
+  .dashboard { max-width: 1380px; padding-left: 3rem; padding-right: 3rem; }
+  .stats-grid { grid-template-columns: repeat(5, 1fr); }
+  .card-grid { grid-template-columns: repeat(4, 1fr); }
+}
+/* ── Responsive: Tablet (481px – 768px) ── */
+@media (max-width: 768px) {
+  .navbar { padding: 0 1.5rem; }
+  .nav-links { gap: 16px; font-size: 12px; }
+  .dashboard { padding: calc(var(--nav-h) + 1.5rem) 1.5rem 2rem; }
+  .card-section { padding: 1.5rem; }
+  .section-title { font-size: 1.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-controls { gap: 0.5rem; }
+  .status-badge { padding: 0.3rem 0.7rem; font-size: 0.7rem; }
+}
+
+/* ── Responsive: Mobile (320px – 480px) ── */
+@media (max-width: 480px) {
+  :root { --nav-h: 64px; }
+  
+  .navbar { padding: 0 1rem; height: 64px; }
+  .logo-img { width: 28px; height: 28px; }
+  .logo-text { font-size: 1rem; }
+  
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex !important; }
+  
+  .nav-right { gap: 8px; }
+  .nav-bell svg { width: 16px; height: 16px; }
+  
+  .nav-avatar { gap: 0.4rem; font-size: 12px; padding: 0.4rem 0.7rem; }
+  .nav-avatar img { width: 28px; height: 28px; }
+  .nav-avatar svg { width: 12px; height: 12px; }
+  
+  .dashboard { padding: calc(var(--nav-h) + 1rem) 1rem 1.5rem; gap: 1rem; }
+  .card-section { padding: 1rem; border-radius: 12px; }
+  
+  .section-header { flex-direction: column; gap: 1rem; }
+  .section-title { font-size: 1.25rem; }
+  .section-subtitle { font-size: 0.8rem; }
+  .section-controls { width: 100%; flex-direction: column; }
+  
+  .status-badge { width: 100%; justify-content: space-between; }
+  .avatar-dropdown { right: -10px; width: 200px; }
+  
+  .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .stat-card { padding: 1rem; }
+  .stat-num { font-size: 1.5rem; }
+  .stat-label { font-size: 0.75rem; }
+  
+  .btn-primary, .btn-secondary { width: 100%; padding: 12px 16px; font-size: 13px; }
+  .toggle-switch { width: 40px; height: 22px; }
+  .slider::before { left: 2px; top: 2px; width: 16px; height: 16px; }
+  .toggle-switch input:checked + .slider::before { transform: translateX(18px); }
+  
+  .card-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .mini-card { padding: 1rem; }
+}
+
+/* ── Touch targets (min 44x44px) ── */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
+  .nav-bell, .nav-avatar, .toggle-switch { min-height: 44px; }
+}
+
+/* ── Extra wide (1441px+) ── */
+@media (min-width: 1441px) {
+  .dashboard { max-width: 1380px; padding-left: 3rem; padding-right: 3rem; }
+  .stats-grid { grid-template-columns: repeat(5, 1fr); }
+  .card-grid { grid-template-columns: repeat(4, 1fr); }
+}

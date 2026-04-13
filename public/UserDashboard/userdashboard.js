@@ -60,36 +60,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
-  /* ─── Notification Panel ─── */
-  const notifBtn     = document.getElementById('notifBtn');
-  const notifPanel   = document.getElementById('notifPanel');
-  const notifClose   = document.getElementById('notifClose');
-  const notifOverlay = document.getElementById('notifOverlay');
+  
+      /* ─── Notification Panel ─── */
+    const notifBtn   = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const notifClose = document.getElementById('notifClose');
 
-  function openNotif()  { notifPanel?.classList.add('open');    notifOverlay?.classList.add('show'); }
-  function closeNotif() { notifPanel?.classList.remove('open'); notifOverlay?.classList.remove('show'); }
+    function openNotif()  { notifPanel?.classList.add('open'); }
+    function closeNotif() { notifPanel?.classList.remove('open'); }
 
-  notifBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    notifPanel?.classList.contains('open') ? closeNotif() : openNotif();
-  });
-
-  notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
-  notifOverlay?.addEventListener('click', closeNotif);
-  notifPanel?.addEventListener('click', (e) => e.stopPropagation());
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && notifPanel?.classList.contains('open')) closeNotif();
-  });
-
-  /* ─── Notification items ─── */
-  document.querySelectorAll('.notif-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const text = item.querySelector('.notif-text')?.textContent.trim() || 'Notification opened.';
-      item.classList.remove('unread');
-      showToast(text, 'info');
+    notifBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdown?.classList.remove('show'); // close other dropdown
+      notifPanel?.classList.contains('open') ? closeNotif() : openNotif();
     });
-  });
+
+    notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
+
+    document.addEventListener('click', (e) => {
+      if (notifPanel && notifBtn) {
+        if (!notifPanel.contains(e.target) && !notifBtn.contains(e.target)) closeNotif();
+      }
+    });
+
+    /* ─── Avatar dropdown ─── */
+    const navAvatar      = document.getElementById('navAvatar');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    const logoutBtn      = document.getElementById('logoutBtn');
+
+    navAvatar?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeNotif(); // close notif if open
+      avatarDropdown?.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (navAvatar && avatarDropdown) {
+        if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
+          avatarDropdown.classList.remove('show');
+        }
+      }
+    });
+
+    logoutBtn?.addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      
+      try {
+        await fetch('http://localhost:5000/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (err) {
+        console.error('Logout API error:', err);
+      }
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      avatarDropdown?.classList.remove('show');
+      showToast('Signed out successfully.', 'success');
+      
+      setTimeout(() => {
+        window.location.replace('/login');
+      }, 1000);
+    });
+
+    /* ─── Hamburger ─── */
+    const hamburger = document.getElementById('navHamburger');
+    const navLinks  = document.querySelector('.nav-links');
+
+    hamburger?.addEventListener('click', () => {
+      navLinks?.classList.toggle('active');
+    });
+
+    /* ─── Escape key closes both ─── */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeNotif();
+        avatarDropdown?.classList.remove('show');
+      }
+    });
 
   /* ─── Navbar links ─── */
   document.querySelectorAll('.nav-links a').forEach(link => {
@@ -146,10 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       try {
-          // 1. Fetch user info
-          const userRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
-          if (userRes.ok) {
-              const { user } = await userRes.json();
+          // 1. Get user info from localStorage
+          const userData = localStorage.getItem('user');
+          if (userData) {
+              const user = JSON.parse(userData);
+              // Update avatar name in navbar pill with actual username
+              const nameEl = document.getElementById('nav-user-name');
+              if (nameEl) nameEl.textContent = user.fullname?.split(' ')[0] || user.fullname || 'User';
               if (availToggle) {
                   availToggle.checked = user.is_available_donor === 1;
                   updateAvailabilityUI(availToggle.checked, false);
@@ -205,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p class="req-hospital">${r.hospital_name}</p>
           <p class="req-meta">
             <svg width="10" height="13" viewBox="0 0 12 16" fill="none"><path d="M6 1C3.79 1 2 2.79 2 5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/></svg>
-            ${r.city} &bull; ${r.units} Units Needed
+            ${r.city} &bull; ${r.units_required || r.units || '1'} Units Needed
           </p>
         </div>
         <button class="req-btn ${btnClass}" onclick="window.location.href='/bloodRequest'">${btnLabel}</button>
@@ -235,17 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── Avatar click ─── */
-  document.getElementById('navAvatar')?.addEventListener('click', () => {
-    
-    showToast('Profile opened.', 'info');
-    setTimeout(
-      () => {
-        window.location.href = "/userProfile";
-      },
-      1000
-    );
-  });
 
   /* ─── Animate bars on scroll ─── */
   const bars = document.querySelectorAll('.stat-bar-fill, .req-stat-fill');

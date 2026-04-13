@@ -12,10 +12,18 @@ initializeDatabase();
 
 const app = express();
 
+// Import middleware
+const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
+const { corsMiddleware } = require('./middleware/corsConfig');
+const { sanitizeInputs } = require('./middleware/sanitizer');
+const { errorHandler } = require('./middleware/errorHandler');
+
 // Middleware
-app.use(cors());
+app.use(globalLimiter);
+app.use(corsMiddleware());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(sanitizeInputs);
 
 // Serve static frontend files from /public
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,7 +34,7 @@ const donationRoutes = require('./routes/donations');
 const bloodRequestRoutes = require('./routes/bloodRequests');
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/blood-requests', bloodRequestRoutes);
 
@@ -85,16 +93,18 @@ app.get('/requestBlood', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/requestBlood/requestBlood.html'));
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something went wrong!' });
+app.get('/admindashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/admindashboard/admindashboard.html'));
 });
 
-// Start server
+app.get('/welcome', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/welcome/welcome.html'));
+});
+
+// Error handling middleware
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`\n  LifeLink Server running on http://localhost:${PORT}`);
-    console.log(`  API available at http://localhost:${PORT}/api`);
-    console.log(`  Frontend at http://localhost:${PORT}\n`);
+    console.log(`LifeLink API running on port ${PORT}`);
 });
