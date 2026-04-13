@@ -7,7 +7,7 @@ const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'lifelink_db',
+    database: process.env.DB_NAME || 'lifelink_db1',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -75,13 +75,17 @@ async function initializeDatabase() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT NOT NULL,
                 blood_type VARCHAR(10) NOT NULL,
-                units INT DEFAULT 1,
+                units_required INT NOT NULL DEFAULT 1,
+                urgency_level ENUM('normal', 'urgent', 'critical') DEFAULT 'normal',
                 hospital_name VARCHAR(255) NOT NULL,
-                city VARCHAR(100) NOT NULL,
-                urgency ENUM('normal', 'urgent', 'critical', 'standard') DEFAULT 'normal',
-                expires_at DATETIME,
-                status ENUM('active', 'fulfilled', 'cancelled') DEFAULT 'active',
+                city VARCHAR(100),
+                date_needed DATE,
+                relationship VARCHAR(50),
+                donation_type VARCHAR(50) DEFAULT 'Whole Blood',
+                notes TEXT,
+                status ENUM('pending', 'approved', 'fulfilled', 'cancelled') DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);

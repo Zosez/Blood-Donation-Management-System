@@ -11,6 +11,7 @@ const inactive = { bg: '#EEF2FF', border: '#D8DEF0', color: '#94A3B8', shadow: '
 let currentUrgency = 'normal';
 
 function selectUrgency(level) {
+  selectedUrgency = level;
   ['normal', 'urgent', 'critical'].forEach(l => {
     const el  = document.getElementById('urg-' + l);
     const cfg = l === level ? urgencyConfig[l] : inactive;
@@ -39,28 +40,73 @@ function selectUrgency(level) {
   });
 })();
 
-// ─── Form Submit Validation ────────────────────────────────────────────────
+// ─── Toast Notification ────────────────────────────────────────────────────
+
+function showToast(message, type = 'success') {
+  const colors = {
+    success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
+    error:   { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
+    info:    { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
+  };
+  const c = colors[type] || colors.info;
 
 async function handleSubmit() {
   const bloodType = document.getElementById('blood-type').value;
   const units     = document.getElementById('units').value;
   const hospital  = document.getElementById('hospital').value;
   const city      = document.getElementById('city').value;
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  Object.assign(toast.style, {
+    position: 'fixed', bottom: '1.5rem', right: '1.5rem',
+    background: c.bg, border: `1px solid ${c.border}`, color: c.text,
+    borderRadius: '10px', padding: '.85rem 1.1rem',
+    fontFamily: "'Outfit', sans-serif", fontWeight: '600', fontSize: '.88rem',
+    boxShadow: '0 8px 24px rgba(0,0,0,.12)', zIndex: '9999',
+    opacity: '0', transform: 'translateY(20px)', transition: '0.3s',
+    maxWidth: '420px',
+  });
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+  setTimeout(() => {
+    toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
 
+// ─── Form Submit — POST to API ─────────────────────────────────────────────
+
+async function handleSubmit() {
+  const bloodType    = document.getElementById('blood-type').value;
+  const units        = document.getElementById('units').value;
+  const hospital     = document.getElementById('hospital').value;
+  const city         = document.getElementById('city').value;
+  const dateNeeded   = document.getElementById('date') ? document.getElementById('date').value : null;
+  const relationship = document.getElementById('relationship') ? document.getElementById('relationship').value : null;
+  const donationType = document.getElementById('donation-type') ? document.getElementById('donation-type').value : null;
+  const notes        = document.getElementById('notes') ? document.getElementById('notes').value : null;
+
+  // Client-side validation
   if (!bloodType || !units || !hospital || !city) {
-    alert('Please fill in all required fields: Blood Type, Units, Hospital Name, and City.');
+    showToast('Please fill in all required fields: Blood Type, Units, Hospital Name, and City.', 'error');
     return;
   }
 
   const token = localStorage.getItem('token');
   if (!token) {
-    alert('Please log in to submit a request.');
-    window.location.href = '/login';
+    showToast('You must be logged in to submit a blood request.', 'error');
+    setTimeout(() => { window.location.href = '/login'; }, 1500);
     return;
   }
 
+  // Disable button while submitting
+  const submitBtn = document.querySelector('.btn-submit');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Submitting…';
+  submitBtn.disabled = true;
+
   try {
-    const response = await fetch('/api/blood-requests', {
+    const res = await fetch('/api/blood-requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,23 +114,35 @@ async function handleSubmit() {
       },
       body: JSON.stringify({
         blood_type: bloodType,
-        units: parseInt(units),
+        units_required: parseInt(units, 10),
+        urgency_level: selectedUrgency,
         hospital_name: hospital,
         city: city,
-        urgency: currentUrgency
+        date_needed: dateNeeded || null,
+        relationship: relationship || null,
+        donation_type: donationType || null,
+        notes: notes || null
       })
     });
 
-    if (response.ok) {
-      alert('✅ Blood request submitted!');
-      window.location.href = '/bloodRequest'; // Or whatever your dashboard route is
+    const data = await res.json();
+
+    if (res.ok) {
+      showToast('✅ Blood request submitted successfully!', 'success');
+      setTimeout(() => { window.location.href = '/bloodRequest'; }, 1500);
+    } else if (res.status === 401 || res.status === 403) {
+      showToast('Session expired. Please log in again.', 'error');
+      setTimeout(() => { window.location.href = '/login'; }, 1500);
     } else {
-      const data = await response.json();
-      alert(`Error submitting request: ${data.message || 'Validation failed'}`);
+      const msg = data.errors ? data.errors.map(e => e.msg).join(', ') : data.message;
+      showToast(msg || 'Failed to submit request.', 'error');
     }
   } catch (err) {
     console.error('Submit error:', err);
-    alert('Failed to submit request. Please try again.');
+    showToast('Network error. Please try again.', 'error');
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
   }
 }
 
