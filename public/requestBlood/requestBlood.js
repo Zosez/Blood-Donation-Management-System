@@ -8,7 +8,7 @@ const urgencyConfig = {
 
 const inactive = { bg: '#EEF2FF', border: '#D8DEF0', color: '#94A3B8', shadow: 'none' };
 
-let selectedUrgency = 'normal';
+let currentUrgency = 'normal';
 
 function selectUrgency(level) {
   selectedUrgency = level;
@@ -20,6 +20,7 @@ function selectUrgency(level) {
     el.style.color       = cfg.color;
     el.style.boxShadow   = l === level ? `0 0 0 3px ${cfg.shadow}` : 'none';
   });
+  currentUrgency = level;
 }
 
 // ─── Init: Normal selected by default, others shown in their tinted colours ─
@@ -49,6 +50,11 @@ function showToast(message, type = 'success') {
   };
   const c = colors[type] || colors.info;
 
+async function handleSubmit() {
+  const bloodType = document.getElementById('blood-type').value;
+  const units     = document.getElementById('units').value;
+  const hospital  = document.getElementById('hospital').value;
+  const city      = document.getElementById('city').value;
   const toast = document.createElement('div');
   toast.textContent = message;
   Object.assign(toast.style, {

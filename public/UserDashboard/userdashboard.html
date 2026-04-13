@@ -73,13 +73,13 @@
     <div class="stats-grid">
       <div class="stat-card">
         <p class="stat-label">TOTAL DONATIONS</p>
-        <div class="stat-value">12 <span class="stat-unit">Units</span></div>
-        <div class="stat-bar"><div class="stat-bar-fill" style="width:60%"></div></div>
+        <div class="stat-value" id="total-units-val">0 <span class="stat-unit">Units</span></div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:0%"></div></div>
       </div>
       <div class="stat-card">
         <p class="stat-label">LIVES IMPACTED</p>
-        <div class="stat-value">36 <span class="stat-unit">People</span></div>
-        <div class="stat-trend">
+        <div class="stat-value" id="lives-impacted-val">0 <span class="stat-unit">People</span></div>
+        <div class="stat-trend" style="display:none;">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           +3 this month
         </div>
@@ -104,54 +104,13 @@
 
     <div class="requests-header">
       <h3>Matched Requests</h3>
-      <span class="tag-red">3 Near You</span>
+      <span class="tag-red" id="matched-requests-count">0 Near You</span>
     </div>
 
-    <div class="requests-grid">
-      <div class="request-card critical">
-        <div class="req-top">
-          <span class="urgency-badge critical-badge">CRITICAL</span>
-          <span class="blood-type">AB+</span>
-        </div>
-        <div class="req-body">
-          <p class="req-hospital">City General Hospital</p>
-          <p class="req-meta">
-            <svg width="10" height="13" viewBox="0 0 12 16" fill="none"><path d="M6 1C3.79 1 2 2.79 2 5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/></svg>
-            1.2 km away &bull; Emergency Surgery
-          </p>
-        </div>
-        <button class="req-btn btn-red">Donate Now</button>
-      </div>
+    <div class="requests-grid" id="matched-requests-grid">
+      <!-- Populated by JS -->
+    </div>
 
-      <div class="request-card urgent">
-        <div class="req-top">
-          <span class="urgency-badge urgent-badge">URGENT</span>
-          <span class="blood-type">O-</span>
-        </div>
-        <div class="req-body">
-          <p class="req-hospital">St. Jude Medical Center</p>
-          <p class="req-meta">
-            <svg width="10" height="13" viewBox="0 0 12 16" fill="none"><path d="M6 1C3.79 1 2 2.79 2 5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/></svg>
-            4.5 km away &bull; Routine Procedure
-          </p>
-        </div>
-        <button class="req-btn btn-orange">Respond</button>
-      </div>
-
-      <div class="request-card normal">
-        <div class="req-top">
-          <span class="urgency-badge normal-badge">NORMAL</span>
-          <span class="blood-type">A+</span>
-        </div>
-        <div class="req-body">
-          <p class="req-hospital">North Wellness Clinic</p>
-          <p class="req-meta">
-            <svg width="10" height="13" viewBox="0 0 12 16" fill="none"><path d="M6 1C3.79 1 2 2.79 2 5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/></svg>
-            8.1 km away &bull; Stock Replenishment
-          </p>
-        </div>
-        <button class="req-btn btn-dark">View Details</button>
-      </div>
     </div>
   </section>
 

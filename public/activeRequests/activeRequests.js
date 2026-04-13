@@ -1,20 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── DATA ─── */
- const allRequests = [
-  { blood: 'O-',  badgeClass: 'type-o',  hospitalKey: 'hospitalStJude',         cityKey: 'cityChicago',     units: 4, urgency: 'critical', expires: '09h : 24m : 11s' },
-  { blood: 'A+',  badgeClass: 'type-a',  hospitalKey: 'hospitalMercyGeneral',   cityKey: 'citySeattle',     units: 2, urgency: 'urgent',   expires: '10h : 05m : 42s' },
-  { blood: 'B-',  badgeClass: 'type-b',  hospitalKey: 'hospitalCityHope',       cityKey: 'cityAustin',      units: 6, urgency: 'critical', expires: '02h : 18m : 05s' },
-  { blood: 'AB+', badgeClass: 'type-ab', hospitalKey: 'hospitalNorthside',      cityKey: 'cityDenver',      units: 3, urgency: 'standard', expires: '43h : 51m : 20s' },
-  { blood: 'O+',  badgeClass: 'type-o',  hospitalKey: 'hospitalValleyMedical',  cityKey: 'cityPhoenix',     units: 5, urgency: 'urgent',   expires: '14h : 30m : 00s' },
-  { blood: 'A-',  badgeClass: 'type-a',  hospitalKey: 'hospitalStMarys',        cityKey: 'cityBoston',      units: 2, urgency: 'critical', expires: '03h : 45m : 22s' },
-  { blood: 'B+',  badgeClass: 'type-b',  hospitalKey: 'hospitalCentralCommunity', cityKey: 'cityPortland',  units: 3, urgency: 'standard', expires: '36h : 12m : 05s' },
-  { blood: 'AB-', badgeClass: 'type-ab', hospitalKey: 'hospitalLakeview',       cityKey: 'cityMinneapolis', units: 1, urgency: 'urgent',   expires: '08h : 57m : 44s' },
-];
-
+  let allRequests = [];
   const ITEMS_PER_PAGE = 8;
   let currentPage = 1;
-  let filtered = [...allRequests];
+  let filtered = [];
+
+  /* ─── FETCH FROM BACKEND ─── */
+  async function fetchRequests() {
+    try {
+      const response = await fetch('/api/blood-requests');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      
+      // Map database fields to the structure expected by the UI
+      allRequests = data.requests.map(r => {
+        // Calculate remaining time
+        let expiresStr = 'Expired';
+        if (r.expires_at) {
+          const diff = new Date(r.expires_at) - new Date();
+          if (diff > 0) {
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            expiresStr = `${h}h : ${m}m`;
+          }
+        }
+
+        return {
+          blood: r.blood_type,
+          badgeClass: `type-${r.blood_type.toLowerCase().replace('+', '').replace('-', '')}`,
+          hospitalKey: r.hospital_name,
+          cityKey: r.city,
+          units: r.units,
+          urgency: r.urgency,
+          expires: expiresStr
+        };
+      });
+      applyFilters(); // Setup initial filtered items
+    } catch (error) {
+      console.error('Error fetching blood requests:', error);
+      showToast('Could not load active requests', 'danger');
+    }
+  }
 
   /* ─── TOAST ─── */
   let toastTimeout = null;
@@ -307,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   updatePlaceholderTranslations();
-  renderCards();
+  fetchRequests();
 
   languageSelect?.addEventListener('change', e => {
     const lang = e.target.value;

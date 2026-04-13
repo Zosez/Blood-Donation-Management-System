@@ -57,4 +57,17 @@ router.get('/', async (req, res) => {
     }
 });
 
+// ──────────────────────────────────────────────
+// GET /api/donations/stats  — get current user's donation stats
+// ──────────────────────────────────────────────
+router.get('/stats', async (req, res) => {
+    try {
+        const stats = await Donation.getUserStats(req.user.id);
+        res.json({ stats });
+    } catch (error) {
+        console.error('Get donation stats error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;

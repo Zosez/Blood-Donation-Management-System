@@ -1,10 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { body, param, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const BloodRequest = require('../models/BloodRequest');
 const { authenticateToken } = require('../middleware/auth');
 
-// All blood-request routes require authentication
+// ──────────────────────────────────────────────
+// GET /api/blood-requests  — list all active requests (public or auth)
+// ──────────────────────────────────────────────
+// This can be public since Active Requests is typically a public board
+router.get('/', async (req, res) => {
+    try {
+        const requests = await BloodRequest.findAllActive();
+        res.json({ requests });
+    } catch (error) {
+        console.error('Get all active requests error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// All following routes require authentication
 router.use(authenticateToken);
 
 // ──────────────────────────────────────────────
@@ -74,14 +88,23 @@ router.get('/', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// GET /api/blood-requests/my  — list logged-in user's requests
+// GET /api/blood-requests/matched  — get matched active requests
 // ──────────────────────────────────────────────
-router.get('/my', async (req, res) => {
+router.get('/matched', async (req, res) => {
     try {
-        const requests = await BloodRequest.findByUserId(req.user.id);
+        // we need the user's blood type. req.user only contains id/email from standard token payload.
+        // let's fetch the full user profile to get blood type.
+        const User = require('../models/user');
+        const currentUser = await User.findById(req.user.id);
+        
+        if (!currentUser || !currentUser.blood_type) {
+            return res.status(400).json({ message: 'User blood type not found' });
+        }
+
+        const requests = await BloodRequest.findMatchedRequests(currentUser.blood_type);
         res.json({ requests });
     } catch (error) {
-        console.error('Get my blood requests error:', error);
+        console.error('Get matched requests error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

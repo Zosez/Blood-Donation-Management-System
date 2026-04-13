@@ -43,6 +43,7 @@ async function initializeDatabase() {
                 city VARCHAR(100),
                 blood_type VARCHAR(10),
                 role ENUM('donor', 'recipient', 'admin') DEFAULT 'donor',
+                is_available_donor TINYINT(1) DEFAULT 1,
                 is_verified TINYINT(1) DEFAULT 0,
                 reset_token VARCHAR(255),
                 reset_token_expiry DATETIME,
@@ -95,6 +96,9 @@ async function initializeDatabase() {
         } catch (e) { /* column already exists */ }
         try {
             await db.execute(`ALTER TABLE users ADD COLUMN email_verification_expiry DATETIME`);
+        } catch (e) { /* column already exists */ }
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN is_available_donor TINYINT(1) DEFAULT 1`);
         } catch (e) { /* column already exists */ }
 
         console.log('Database tables initialized successfully');

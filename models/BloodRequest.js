@@ -98,6 +98,14 @@ class BloodRequest {
         );
         return result.affectedRows > 0;
     }
+
+    static async findMatchedRequests(bloodType) {
+        const [rows] = await db.execute(
+            'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ? ORDER BY urgency DESC, created_at DESC',
+            ['active', bloodType]
+        );
+        return rows;
+    }
 }
 
 module.exports = BloodRequest;

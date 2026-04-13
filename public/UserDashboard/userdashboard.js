@@ -106,34 +106,118 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusBadge  = document.querySelector('.status-badge');
   const statusDot    = document.querySelector('.status-dot');
 
-  availToggle?.addEventListener('change', () => {
+  function updateAvailabilityUI(checked, showToasts = true) {
     const statusText = statusBadge?.querySelector('span:last-child');
-    if (availToggle.checked) {
+    if (checked) {
       if (statusText) statusText.textContent = 'Ready to Donate';
       statusDot?.classList.add('green');
       statusDot && (statusDot.style.background = '');
-      showToast('Availability set to Ready to Donate.', 'success');
+      if (showToasts) showToast('Availability set to Ready to Donate.', 'success');
     } else {
       if (statusText) statusText.textContent = 'Unavailable';
       statusDot?.classList.remove('green');
       statusDot && (statusDot.style.background = '#9CA3AF');
-      showToast('Availability set to Unavailable.', 'warning');
+      if (showToasts) showToast('Availability set to Unavailable.', 'warning');
+    }
+  }
+
+  availToggle?.addEventListener('change', async () => {
+    updateAvailabilityUI(availToggle.checked);
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            await fetch('/api/auth/availability', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ is_available: availToggle.checked })
+            });
+        } catch(e) {
+            console.error('Failed saving availability', e);
+        }
     }
   });
 
-  /* ─── Request buttons ─── */
-  document.querySelectorAll('.req-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const card     = e.currentTarget.closest('.request-card');
-      const hospital = card?.querySelector('.req-hospital')?.textContent.trim() || 'Hospital';
-      const blood    = card?.querySelector('.blood-type')?.textContent.trim() || '';
-      const label    = btn.textContent.trim();
+  /* ─── DYNAMIC DONOR DATA LOADING ─── */
+  const token = localStorage.getItem('token');
+  async function loadDonorData() {
+      if (!token) {
+        showToast('Please log in to view real data', 'warning');
+        return;
+      }
+      
+      try {
+          // 1. Fetch user info
+          const userRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (userRes.ok) {
+              const { user } = await userRes.json();
+              if (availToggle) {
+                  availToggle.checked = user.is_available_donor === 1;
+                  updateAvailabilityUI(availToggle.checked, false);
+              }
+          }
 
-      if (label === 'Donate Now') showToast(`Donation started for ${hospital} (${blood}).`, 'danger');
-      else if (label === 'Respond') showToast(`Response sent to ${hospital} (${blood}).`, 'warning');
-      else showToast(`Viewing details for ${hospital}.`, 'info');
-    });
-  });
+          // 2. Fetch stats
+          const statsRes = await fetch('/api/donations/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (statsRes.ok) {
+              const { stats } = await statsRes.json();
+              const unitsEl = document.getElementById('total-units-val');
+              const livesEl = document.getElementById('lives-impacted-val');
+              if (unitsEl) unitsEl.innerHTML = `${stats.total_units} <span class="stat-unit">Units</span>`;
+              if (livesEl) livesEl.innerHTML = `${stats.total_units * 3} <span class="stat-unit">People</span>`;
+          }
+
+          // 3. Fetch matched requests
+          const matchRes = await fetch('/api/blood-requests/matched', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (matchRes.ok) {
+              const { requests } = await matchRes.json();
+              renderMatchedRequests(requests);
+          }
+      } catch (err) {
+          console.error('Failed loading donor data:', err);
+      }
+  }
+
+  function renderMatchedRequests(requests) {
+    const grid = document.getElementById('matched-requests-grid');
+    const count = document.getElementById('matched-requests-count');
+    if (!grid || !count) return;
+
+    if (requests.length === 0) {
+        grid.innerHTML = '<p style="color:#6B7280; font-size: 0.9rem; grid-column: 1/-1;">No matched requests in your area right now.</p>';
+        count.textContent = '0 Near You';
+        return;
+    }
+
+    count.textContent = `${requests.length} Near You`;
+
+    grid.innerHTML = requests.map(r => {
+        const urn = r.urgency || 'normal';
+        const colorClass = urn === 'critical' ? 'critical' : urn === 'urgent' ? 'urgent' : 'normal';
+        const btnClass = urn === 'critical' ? 'btn-red' : urn === 'urgent' ? 'btn-orange' : 'btn-dark';
+        const btnLabel = urn === 'critical' ? 'Donate Now' : urn === 'urgent' ? 'Respond' : 'View Details';
+        return `
+      <div class="request-card ${colorClass}">
+        <div class="req-top">
+          <span class="urgency-badge ${colorClass}-badge">${urn.toUpperCase()}</span>
+          <span class="blood-type">${r.blood_type}</span>
+        </div>
+        <div class="req-body">
+          <p class="req-hospital">${r.hospital_name}</p>
+          <p class="req-meta">
+            <svg width="10" height="13" viewBox="0 0 12 16" fill="none"><path d="M6 1C3.79 1 2 2.79 2 5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/></svg>
+            ${r.city} &bull; ${r.units} Units Needed
+          </p>
+        </div>
+        <button class="req-btn ${btnClass}" onclick="window.location.href='/bloodRequest'">${btnLabel}</button>
+      </div>
+        `;
+    }).join('');
+  }
+
+  loadDonorData();
+
+  /* ─── Request buttons ─── */
+  // Old hardcoded buttons listener removed because we added onclick directly into the new DOM html.
 
   /* ─── Submit blood request ─── */
   document.querySelector('.submit-request-btn')?.addEventListener('click', () => {
