@@ -108,13 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  /* ─── 7. GO TO SETTINGS BUTTON ─── */
-  const goSettingsBtn = document.getElementById('goSettingsBtn');
-  if (goSettingsBtn) {
-    goSettingsBtn.addEventListener('click', () => {
-      showToast(' Opening notification settings…', 'info');
-    });
-  }
+  
 
 
   /* ─── 8. NEW REQUEST BUTTON ─── */
@@ -153,31 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1800);
   });
 
-  /* ─── 9.5. SETTINGS MODAL ─── */
-  const settingsOverlay = document.getElementById('settingsOverlay');
-  const settingsLink    = document.getElementById('settingsLink');
-  const closeSettings   = document.getElementById('closeSettings');
-
-  settingsLink?.addEventListener('click', (e) => {
-    e.preventDefault();
-    settingsOverlay?.classList.add('open');
-  });
-
-  closeSettings?.addEventListener('click', () => {
-    settingsOverlay?.classList.remove('open');
-  });
-
-  settingsOverlay?.addEventListener('click', (e) => {
-    if (e.target === settingsOverlay) {
-      settingsOverlay.classList.remove('open');
-    }
-  });
-
-  const notifSelect = document.getElementById('notifSelect');
-  notifSelect?.addEventListener('change', (e) => {
-    showToast(`Notification preference changed to: ${e.target.value}`, 'info');
-  });
-
+  
 
   /* ─── 9.7. MOBILE SIDEBAR ─── */
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -199,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── 10. SIDEBAR NAV LINKS ─── */
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   sidebarLinks.forEach(link => {
-    if (link.id === 'logoutBtn' || link.id === 'settingsLink') return; // ignore footer links for now
+    if (link.id === 'logoutBtn') return;
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const label = link.textContent.trim();
@@ -219,17 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── 10.5. LOGOUT ─── */
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      showToast('Logging out… Goodbye, Admin User!', 'warn');
-      setTimeout(() => {
-        showToast('Session ended. Redirecting…', 'error');
-      }, 1800);
-    });
-  }
+  
 
 
   /* ─── 11. TOAST NOTIFICATION ─── */

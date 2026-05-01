@@ -61,9 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const titles = {
         dashboard:  { title: 'Admin Dashboard',    sub: 'Overview of LifeLink platform activity' },
         pending:    { title: 'Pending Requests',   sub: 'Review and approve blood requests' },
-        myrequests: { title: 'My Requests',        sub: 'Track your submitted requests' },
         users:      { title: 'User Management',    sub: 'Manage donors, admins, and hospitals' },
-        logs:       { title: 'Audit Logs',         sub: 'View all system activity logs' },
+        
       };
 
       const info = titles[page] || { title: label, sub: '' };
@@ -76,31 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── SETTINGS MODAL ─── */
-  const settingsOverlay = document.getElementById('settingsOverlay');
-  const settingsLink    = document.getElementById('settingsLink');
-  const closeSettings   = document.getElementById('closeSettings');
-
-  settingsLink?.addEventListener('click', (e) => {
-    e.preventDefault();
-    settingsOverlay.classList.add('open');
-  });
-
-  closeSettings?.addEventListener('click', () => {
-    settingsOverlay.classList.remove('open');
-  });
-
-  settingsOverlay?.addEventListener('click', (e) => {
-    if (e.target === settingsOverlay) {
-      settingsOverlay.classList.remove('open');
-    }
-  });
-
-  const notifSelect = document.getElementById('notifSelect');
-  notifSelect?.addEventListener('change', (e) => {
-    showToast(`Notification preference changed to: ${e.target.value}`, 'success');
-  });
-
+  
   /* ─── LOGOUT ─── */
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -197,11 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   });
 
-  /* ─── AUDIT LOG BUTTON ─── */
-  document.getElementById('auditBtn')?.addEventListener('click', () => {
-    showToast('Opening full audit log…', 'info');
-    document.querySelector('[data-page="logs"]')?.click();
-  });
+ 
 
   /* ─── MANAGE DONORS ─── */
   document.getElementById('manageDonorsBtn')?.addEventListener('click', () => {
@@ -315,13 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(redrawChart, 200);
 
-  /* ─── KEYBOARD SHORTCUTS ─── */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      settingsOverlay?.classList.remove('open');
-    }
-  });
-
+  
   /* ─── INITIAL TOAST ─── */
   setTimeout(() => {
     showToast('Welcome back, Admin User!', 'success');
