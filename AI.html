@@ -1,0 +1,397 @@
+<!-- BloodDonor AI Chat Widget – embed on all pages -->
+<div id="bloodDonorChatRoot"></div>
+<script>
+(function() {
+  // Create widget container & inject styles
+  const widgetRoot = document.getElementById('bloodDonorChatRoot');
+  if (!widgetRoot) return;
+
+  // Build full widget HTML + CSS inside a shadow DOM (to avoid global style conflicts)
+  const shadowHost = document.createElement('div');
+  widgetRoot.appendChild(shadowHost);
+  const shadow = shadowHost.attachShadow({ mode: 'open' });
+
+  // ----- Styles (scoped to shadow DOM) -----
+  const style = document.createElement('style');
+  style.textContent = `
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .blood-chat-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    .chat-toggle-btn {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(190, 28, 28, 0.4);
+      transition: all 0.2s ease;
+      border: none;
+      color: white;
+      font-size: 28px;
+    }
+    .chat-toggle-btn:hover {
+      transform: scale(1.05);
+    }
+    .chat-window {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 380px;
+      height: 560px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      transform-origin: bottom right;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+    .chat-window.open {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+    .chat-header {
+      background: linear-gradient(98deg, #E11D2E 0%, #A71D2A 100%);
+      padding: 18px 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-info i {
+      font-size: 28px;
+    }
+    .header-text h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .header-text p {
+      font-size: 0.7rem;
+      opacity: 0.9;
+    }
+    .close-chat {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .close-chat:hover {
+      background: rgba(0,0,0,0.2);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 16px;
+      background: #FEF7F5;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      display: flex;
+      max-width: 90%;
+      animation: fadeSlideUp 0.25s ease;
+    }
+    .message.user {
+      align-self: flex-end;
+    }
+    .message.bot {
+      align-self: flex-start;
+    }
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 22px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .user .bubble {
+      background: #E11D2E;
+      color: white;
+      border-bottom-right-radius: 6px;
+    }
+    .bot .bubble {
+      background: white;
+      border: 1px solid #FFD9DD;
+      color: #2D2F36;
+      border-bottom-left-radius: 6px;
+    }
+    .bot .bubble a {
+      color: #E11D2E;
+      text-decoration: none;
+    }
+    .typing-indicator {
+      background: white;
+      border-radius: 22px;
+      padding: 10px 16px;
+      display: inline-flex;
+      gap: 6px;
+      border: 1px solid #FFD9DD;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: #E11D2E;
+      border-radius: 50%;
+      display: inline-block;
+      animation: blink 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      padding: 0 4px;
+    }
+    .quick-chip {
+      background: #FEE2E2;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #B91C1C;
+      cursor: pointer;
+      border: none;
+    }
+    .quick-chip:hover {
+      background: #FFCDD2;
+    }
+    .chat-input-area {
+      background: white;
+      border-top: 1px solid #FFDFE0;
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+    }
+    .chat-input-area input {
+      flex: 1;
+      border: 1px solid #F0C0C2;
+      border-radius: 40px;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      outline: none;
+      font-family: inherit;
+    }
+    .chat-input-area input:focus {
+      border-color: #E11D2E;
+    }
+    .chat-input-area button {
+      background: #E11D2E;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .disclaimer-note {
+      font-size: 0.6rem;
+      text-align: center;
+      background: #FFF4F2;
+      padding: 6px;
+      color: #A13535;
+      border-top: 1px solid #FFE0DD;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      0%,60%,100% { opacity: 0.3; }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+    @media (max-width: 480px) {
+      .chat-window { width: 340px; height: 520px; right: -10px; bottom: 70px; }
+      .blood-chat-widget { bottom: 16px; right: 16px; }
+    }
+  `;
+  shadow.appendChild(style);
+
+  // ----- Widget HTML structure -----
+  const widgetDiv = document.createElement('div');
+  widgetDiv.className = 'blood-chat-widget';
+  widgetDiv.innerHTML = `
+    <div class="chat-toggle-btn"><i class="fas fa-comment-droplet"></i></div>
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="header-info">
+          <i class="fas fa-hand-holding-heart"></i>
+          <div class="header-text"><h3>🩸 BloodDonor AI</h3><p>Your donation assistant · 24/7</p></div>
+        </div>
+        <button class="close-chat"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="chat-messages"></div>
+      <div class="quick-replies"></div>
+      <div class="chat-input-area">
+        <input type="text" placeholder="Ask me about blood donation...">
+        <button class="send-btn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+      <div class="disclaimer-note"><i class="fas fa-info-circle"></i> Informational only — always check local guidelines.</div>
+    </div>
+  `;
+  shadow.appendChild(widgetDiv);
+
+  // Load Font Awesome icons (global, but inside shadow it still works because of <link>)
+  const fontAwesome = document.createElement('link');
+  fontAwesome.rel = 'stylesheet';
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css';
+  shadow.appendChild(fontAwesome);
+
+  // ----- AI knowledge base -----
+  const intents = [
+    { keywords: ["hello","hi","hey","greetings"], answer: "🩸 Hello! I'm your BloodDonor AI assistant. Ask me about eligibility, blood types, donation process, and more!" },
+    { keywords: ["eligible","eligibility","qualify","who can donate"], answer: "✅ General eligibility: Age 17-75, weight ≥50kg, good health, hemoglobin ≥12.5 g/dL (M) / 12.0 g/dL (F)." },
+    { keywords: ["blood type","compatibility","o negative","a positive"], answer: "🅾️ O- is universal red cell donor. AB+ is universal plasma donor. O+ can donate to all positive types." },
+    { keywords: ["process","how to donate","step"], answer: "📋 Register → health screen → donation (8-10 min) → refreshments. Total ~1 hour." },
+    { keywords: ["how often","frequency","every"], answer: "🔄 Whole blood every 56 days. Platelets every 7 days. Double red cells every 112 days." },
+    { keywords: ["side effects","dizzy","after donation"], answer: "🩹 Mild dizziness or bruising is normal. Drink fluids and rest for 15 min." },
+    { keywords: ["where to donate","find center","blood bank near me"], answer: "📍 Contact your local Red Cross, NHS Blood, or hospital blood bank." },
+    { keywords: ["tattoo","piercing"], answer: "💉 Usually 3-12 months deferral after tattoo/piercing in unregulated studios." },
+    { keywords: ["pregnancy","pregnant"], answer: "🤰 Do not donate while pregnant. Wait 6-9 months after delivery." },
+    { keywords: ["medication","medicine","antibiotics"], answer: "💊 Most meds are fine. Blood thinners or isotretinoin may require deferral. Tell staff." },
+    { keywords: ["hemoglobin","iron","anaemia"], answer: "🩸 Minimum Hb: 12.5 (M), 12.0 (F). Eat iron-rich foods before donation." }
+  ];
+
+  function getAIResponse(msg) {
+    const lower = msg.toLowerCase();
+    let best = null, bestScore = 0;
+    for (let intent of intents) {
+      let score = intent.keywords.filter(kw => lower.includes(kw)).length;
+      if (score > bestScore) { bestScore = score; best = intent; }
+    }
+    if (best) return best.answer;
+    return "🤔 I'm your BloodDonor AI! Ask me about eligibility, blood types, donation process, or side effects. Be a lifesaver! 🩸";
+  }
+
+  // ----- DOM references inside shadow -----
+  const toggleBtn = widgetDiv.querySelector('.chat-toggle-btn');
+  const chatWindowDiv = widgetDiv.querySelector('.chat-window');
+  const closeBtn = widgetDiv.querySelector('.close-chat');
+  const messagesContainer = widgetDiv.querySelector('.chat-messages');
+  const userInput = widgetDiv.querySelector('.chat-input-area input');
+  const sendBtn = widgetDiv.querySelector('.send-btn');
+  const quickRepliesContainer = widgetDiv.querySelector('.quick-replies');
+
+  let isTyping = false;
+
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function addMessage(sender, content, isHTML = false) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    if (isHTML) bubble.innerHTML = content;
+    else bubble.textContent = content;
+    msgDiv.appendChild(bubble);
+    messagesContainer.appendChild(msgDiv);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    if (document.getElementById('typingIndicator')) return;
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typingIndicator';
+    typingDiv.className = 'message bot';
+    typingDiv.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    messagesContainer.appendChild(typingDiv);
+    scrollToBottom();
+    isTyping = true;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+    isTyping = false;
+  }
+
+  async function sendAIResponse(userMessage) {
+    showTyping();
+    await new Promise(r => setTimeout(r, 600));
+    removeTyping();
+    const reply = getAIResponse(userMessage);
+    addMessage('bot', reply, true);
+    regenerateQuickReplies();
+  }
+
+  async function handleUserMessage() {
+    const text = userInput.value.trim();
+    if (!text || isTyping) return;
+    userInput.value = '';
+    addMessage('user', text);
+    await sendAIResponse(text);
+  }
+
+  function regenerateQuickReplies() {
+    quickRepliesContainer.innerHTML = '';
+    const suggestions = [
+      { text: "🩸 Am I eligible?", query: "Am I eligible to donate blood?" },
+      { text: "🩸 Blood types", query: "Tell me about blood type compatibility" },
+      { text: "📋 Donation process", query: "How does blood donation work?" },
+      { text: "❤️ After donation", query: "What should I do after donation?" },
+      { text: "📍 Find a center", query: "Where can I donate blood?" }
+    ];
+    suggestions.forEach(s => {
+      const chip = document.createElement('button');
+      chip.className = 'quick-chip';
+      chip.textContent = s.text;
+      chip.onclick = () => {
+        userInput.value = s.query;
+        handleUserMessage();
+      };
+      quickRepliesContainer.appendChild(chip);
+    });
+  }
+
+  function initChat() {
+    addMessage('bot', "🩸 <strong>Welcome, Lifesaver!</strong> I'm your BloodDonor AI. Ask me anything about blood donation — eligibility, blood types, process, and more! ❤️‍🔥", true);
+    regenerateQuickReplies();
+  }
+
+  // Event listeners
+  toggleBtn.onclick = () => {
+    chatWindowDiv.classList.toggle('open');
+    if (chatWindowDiv.classList.contains('open') && messagesContainer.children.length === 0) {
+      initChat();
+    }
+    if (chatWindowDiv.classList.contains('open')) userInput.focus();
+  };
+  closeBtn.onclick = () => chatWindowDiv.classList.remove('open');
+  sendBtn.onclick = handleUserMessage;
+  userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleUserMessage(); });
+})();
+</script>
