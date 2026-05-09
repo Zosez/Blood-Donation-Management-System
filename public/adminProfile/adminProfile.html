@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Profile - LifeLink</title>
+
+  <link rel="stylesheet" href="adminProfile.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <nav class="navbar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <a href="../Admin_Dashboard/admindashboard.html" class="nav-logo">
+      <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+      <div class="logo-fallback" style="display:none;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2C14 2 4 11 4 17.5a10 10 0 0 0 20 0C24 11 14 2 14 2z" fill="#C0281C"/>
+        </svg>
+      </div>
+      <span class="logo-text">LifeLink Admin</span>
+    </a>
+
+    <div class="nav-right">
+      <button class="nav-bell" aria-label="Notifications" id="notifBtn">
+        <span class="bell-badge">2</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+
+      <div class="nav-avatar-wrapper">
+        <div class="nav-avatar" id="navAvatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Admin"/>
+          <span class="nav-avatar-name">Admin</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-name">Admin User</div>
+            <div class="dropdown-role">Hematology Lead</div>
+          </div>
+
+          <div class="dropdown-item">
+            <span class="dropdown-item-label">ID</span>
+            <strong>ADM-7842</strong>
+          </div>
+
+          <div class="dropdown-item">
+            <span class="dropdown-item-label">Clearance</span>
+            <strong>Level 5</strong>
+          </div>
+
+          <button class="dropdown-action" id="dropdownLogoutBtn" type="button">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="sidebar" id="sidebar">
+      <nav class="sidebar-nav">
+        <a href="../Admin_Dashboard/admindashboard.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Dashboard
+        </a>
+
+        <a href="../Admin_PendingRequests/pendingRequests.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+           <circle cx="12" cy="12" r="10"/>
+           <line x1="12" y1="8" x2="12" y2="12"/>
+           <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Pending Requests
+          <span class="sidebar-badge" id="pendingBadge">5</span>
+       </a>
+
+        <a href="../notifications/notifications.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          Notifications
+        </a>
+
+        <a href="#" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          User Management
+        </a>
+
+        <a href="../adminEvents/adminEvents.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Events
+        </a>
+
+        <a href="adminProfile.html" class="sidebar-link active">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Profile
+        </a>
+      </nav>
+    </aside>
+
+    <main class="dash-content">
+      <div class="dash-page-header">
+        <div>
+          <h1 class="dash-title">Admin Profile</h1>
+          <p class="dash-subtitle">View administrator identity, role, clearance, and account information.</p>
+        </div>
+
+        <button class="primary-btn" id="editProfileBtn" type="button">
+          Edit Profile
+        </button>
+      </div>
+
+      <section class="profile-grid">
+        <div class="profile-card card">
+          <div class="profile-top">
+            <img class="profile-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Admin Avatar">
+
+            <div>
+              <h2 id="displayName">Admin User</h2>
+              <p id="displayRole">Hematology Lead</p>
+              <span class="status-pill active-status">Active Admin</span>
+            </div>
+          </div>
+
+          <div class="profile-summary">
+            <div class="summary-box">
+              <span>Admin ID</span>
+              <strong id="displayAdminId">ADM-7842</strong>
+            </div>
+
+            <div class="summary-box">
+              <span>Clearance</span>
+              <strong id="displayClearance">Level 5</strong>
+            </div>
+
+            <div class="summary-box">
+              <span>Department</span>
+              <strong id="displayDepartment">Blood Operations</strong>
+            </div>
+
+            <div class="summary-box">
+              <span>Status</span>
+              <strong>Verified</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Account Information</div>
+          </div>
+
+          <div class="info-list">
+            <div class="info-row">
+              <span>Full Name</span>
+              <strong id="infoName">Admin User</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Email</span>
+              <strong id="infoEmail">admin@lifelink.com</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Phone</span>
+              <strong id="infoPhone">+977 9800000000</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Role</span>
+              <strong id="infoRole">Hematology Lead</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Last Login</span>
+              <strong>Today, 9:30 AM</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Permissions</div>
+          </div>
+
+          <div class="permission-list">
+            <span class="permission-chip">Approve Requests</span>
+            <span class="permission-chip">Manage Events</span>
+            <span class="permission-chip">View Notifications</span>
+            <span class="permission-chip">Manage Users</span>
+            <span class="permission-chip">Access Reports</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Admin Activity</div>
+          </div>
+
+          <div class="activity-list">
+            <div class="activity-item">
+              <span class="activity-dot green"></span>
+              <div>
+                <strong>Approved blood request</strong>
+                <p>Request #RQ-9012 approved recently.</p>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <span class="activity-dot blue"></span>
+              <div>
+                <strong>Reviewed notifications</strong>
+                <p>Checked urgent blood stock alert.</p>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <span class="activity-dot red"></span>
+              <div>
+                <strong>Updated event record</strong>
+                <p>Event management action recorded.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2>Edit Profile</h2>
+          <p>Update admin profile information for frontend demo.</p>
+        </div>
+        <button class="modal-close" id="modalClose" type="button">×</button>
+      </div>
+
+      <form id="profileForm" class="profile-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="profileName" value="Admin User" required>
+          </div>
+
+          <div class="form-group">
+            <label>Role</label>
+            <input type="text" id="profileRole" value="Hematology Lead" required>
+          </div>
+
+          <div class="form-group">
+            <label>Admin ID</label>
+            <input type="text" id="profileAdminId" value="ADM-7842" required>
+          </div>
+
+          <div class="form-group">
+            <label>Clearance</label>
+            <input type="text" id="profileClearance" value="Level 5" required>
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="profileEmail" value="admin@lifelink.com" required>
+          </div>
+
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="profilePhone" value="+977 9800000000" required>
+          </div>
+
+          <div class="form-group full">
+            <label>Department</label>
+            <input type="text" id="profileDepartment" value="Blood Operations" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" id="cancelProfileBtn">Cancel</button>
+          <button type="submit" class="primary-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="adminProfile.js"></script>
+</body>
+</html>
