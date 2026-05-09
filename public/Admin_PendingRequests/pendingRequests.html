@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pending Requests - LifeLink Admin</title>
+
+  <link rel="stylesheet" href="pendingRequests.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <nav class="navbar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <a href="../Admin_Dashboard/admindashboard.html" class="nav-logo">
+      <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+      <div class="logo-fallback" style="display:none;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2C14 2 4 11 4 17.5a10 10 0 0 0 20 0C24 11 14 2 14 2z" fill="#C0281C"/>
+        </svg>
+      </div>
+      <span class="logo-text">LifeLink Admin</span>
+    </a>
+
+    <div class="nav-right">
+      <button class="nav-bell" aria-label="Notifications" id="notifBtn">
+        <span class="bell-badge">2</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+
+      <div class="nav-avatar-wrapper">
+        <div class="nav-avatar" id="navAvatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Admin"/>
+          <span class="nav-avatar-name">Admin</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-name">Admin User</div>
+            <div class="dropdown-role">Hematology Lead</div>
+          </div>
+
+          <div class="dropdown-item">
+            <span class="dropdown-item-label">ID</span>
+            <strong>ADM-7842</strong>
+          </div>
+
+          <div class="dropdown-item">
+            <span class="dropdown-item-label">Clearance</span>
+            <strong>Level 5</strong>
+          </div>
+
+          <button class="dropdown-action" id="dropdownLogoutBtn" type="button">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="sidebar" id="sidebar">
+      <nav class="sidebar-nav">
+        <a href="../Admin_Dashboard/admindashboard.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Dashboard
+        </a>
+
+        <a href="pendingRequests.html" class="sidebar-link active">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Pending Requests
+          <span class="sidebar-badge" id="pendingBadge">5</span>
+        </a>
+
+        <a href="../Admin_Notification/notifications.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          Notifications
+        </a>
+
+
+        <a href="#" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          User Management
+        </a>
+
+        <a href="../adminEvents/adminEvents.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Events
+        </a>
+
+        <a href="../adminProfile/adminProfile.html" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Profile
+        </a>
+      </nav>
+    </aside>
+
+    <main class="dash-content">
+      <div class="dash-page-header">
+        <div>
+          <h1 class="dash-title">Pending Requests</h1>
+          <p class="dash-subtitle">Review and manage blood requests submitted by hospitals and facilities.</p>
+        </div>
+      </div>
+
+      <section class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <svg width="22" height="22" viewBox="0 0 18 22" fill="none">
+              <path d="M9 1C9 1 1 9.5 1 14.5a8 8 0 0 0 16 0C17 9.5 9 1 9 1z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Pending</span>
+            <span class="stat-val" id="pendingCount">5</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12h18"/>
+              <path d="M12 3v18"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Total Units</span>
+            <span class="stat-val" id="unitCount">16</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Approved Today</span>
+            <span class="stat-val" id="approvedCount">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon teal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Critical</span>
+            <span class="stat-val" id="criticalCount">1</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">Pending Blood Requests</div>
+
+          <div class="table-actions">
+            <input type="text" id="requestSearch" class="search-input" placeholder="Search hospital or request ID...">
+
+            <select id="urgencyFilter" class="filter-select">
+              <option value="">All Urgency</option>
+              <option value="Critical">Critical</option>
+              <option value="Expedited">Expedited</option>
+              <option value="Standard">Standard</option>
+            </select>
+
+            <select id="statusFilter" class="filter-select">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Fulfilled">Fulfilled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient / Facility</th>
+                <th>Blood Type</th>
+                <th>Urgency</th>
+                <th>Units</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="requestsBody">
+              <tr data-id="RQ-9012" data-facility="City General Hospital" data-type="O-" data-urgency="Critical" data-units="4" data-status="Pending">
+                <td>
+                  <div class="patient-name">City General Hospital</div>
+                  <div class="patient-req">Request #RQ-9012</div>
+                </td>
+                <td><span class="blood-tag o-neg">O-</span></td>
+                <td><span class="urgency critical">Critical</span></td>
+                <td><strong>4 Units</strong></td>
+                <td><span class="status-pill pending">Pending</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="icon-btn view-btn" type="button">View</button>
+                    <button class="icon-btn approve-btn" type="button">Approve</button>
+                    <button class="icon-btn danger-btn reject-btn" type="button">Reject</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr data-id="RQ-9015" data-facility="St. Jude Medical" data-type="A+" data-urgency="Standard" data-units="2" data-status="Pending">
+                <td>
+                  <div class="patient-name">St. Jude Medical</div>
+                  <div class="patient-req">Request #RQ-9015</div>
+                </td>
+                <td><span class="blood-tag a-pos">A+</span></td>
+                <td><span class="urgency standard">Standard</span></td>
+                <td><strong>2 Units</strong></td>
+                <td><span class="status-pill pending">Pending</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="icon-btn view-btn" type="button">View</button>
+                    <button class="icon-btn approve-btn" type="button">Approve</button>
+                    <button class="icon-btn danger-btn reject-btn" type="button">Reject</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr data-id="RQ-9018" data-facility="Metro Blood Bank" data-type="B-" data-urgency="Expedited" data-units="6" data-status="Pending">
+                <td>
+                  <div class="patient-name">Metro Blood Bank</div>
+                  <div class="patient-req">Request #RQ-9018</div>
+                </td>
+                <td><span class="blood-tag b-neg">B-</span></td>
+                <td><span class="urgency expedited">Expedited</span></td>
+                <td><strong>6 Units</strong></td>
+                <td><span class="status-pill pending">Pending</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="icon-btn view-btn" type="button">View</button>
+                    <button class="icon-btn approve-btn" type="button">Approve</button>
+                    <button class="icon-btn danger-btn reject-btn" type="button">Reject</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr data-id="RQ-9021" data-facility="Children's Wellness" data-type="AB+" data-urgency="Standard" data-units="1" data-status="Pending">
+                <td>
+                  <div class="patient-name">Children's Wellness</div>
+                  <div class="patient-req">Request #RQ-9021</div>
+                </td>
+                <td><span class="blood-tag ab-pos">AB+</span></td>
+                <td><span class="urgency standard">Standard</span></td>
+                <td><strong>1 Unit</strong></td>
+                <td><span class="status-pill pending">Pending</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="icon-btn view-btn" type="button">View</button>
+                    <button class="icon-btn approve-btn" type="button">Approve</button>
+                    <button class="icon-btn danger-btn reject-btn" type="button">Reject</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr data-id="RQ-9025" data-facility="Sunset Care Facility" data-type="O+" data-urgency="Expedited" data-units="3" data-status="Pending">
+                <td>
+                  <div class="patient-name">Sunset Care Facility</div>
+                  <div class="patient-req">Request #RQ-9025</div>
+                </td>
+                <td><span class="blood-tag o-pos">O+</span></td>
+                <td><span class="urgency expedited">Expedited</span></td>
+                <td><strong>3 Units</strong></td>
+                <td><span class="status-pill pending">Pending</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="icon-btn view-btn" type="button">View</button>
+                    <button class="icon-btn approve-btn" type="button">Approve</button>
+                    <button class="icon-btn danger-btn reject-btn" type="button">Reject</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="view-backdrop" id="requestModal">
+    <div class="view-card">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalFacility">Request Details</h2>
+          <p id="modalRequestId">RQ-0000</p>
+        </div>
+        <button class="modal-close" id="modalClose" type="button">×</button>
+      </div>
+
+      <div class="view-details-grid">
+        <div class="view-detail-box">
+          <span>Blood Type</span>
+          <strong id="modalBloodType">-</strong>
+        </div>
+
+        <div class="view-detail-box">
+          <span>Urgency</span>
+          <strong id="modalUrgency">-</strong>
+        </div>
+
+        <div class="view-detail-box">
+          <span>Units Needed</span>
+          <strong id="modalUnits">-</strong>
+        </div>
+
+        <div class="view-detail-box">
+          <span>Status</span>
+          <strong id="modalStatus">-</strong>
+        </div>
+      </div>
+
+      <div class="view-description">
+        <span>Request Note</span>
+        <p id="modalNote">Hospital has requested blood units for patient support. Admin should verify availability before approval.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary-btn" id="modalDoneBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="pendingRequests.js"></script>
+</body>
+</html>
