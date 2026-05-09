@@ -33,14 +33,16 @@
     </a>
 
     <div class="nav-right">
-      <button class="nav-bell" aria-label="Notifications" id="notifBtn">
-        <span class="bell-badge" id="bellBadge">2</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-      </button>
+      <div class="nav-bell-wrapper" style="position:relative;display:flex;align-items:center;">
+        <button class="nav-bell" aria-label="Notifications" id="navBellBtn">
+          <span class="bell-badge" id="bellBadge" style="display:none;"></span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+      </div>
       <div class="nav-avatar-wrapper" style="position: relative; display: flex; align-items: center;">
         <div class="nav-avatar" id="navAvatar">
           <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Dr. Sarah Chen"/>
@@ -120,6 +122,18 @@
           User Management
         </a>
         
+        <a href="#" class="sidebar-link" id="admin-events">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Events
+        </a>
+
+
         <a href="#" class="sidebar-link" data-page="profile" id="admin-profile">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -321,44 +335,10 @@
           </div>
 
           <ul class="activity-list" id="activityList">
-            <li class="activity-item">
-              <div class="activity-dot green-dot"></div>
-              <div class="activity-content">
-                <strong>New Request Approved</strong>
-                <p>Request #RQ-8999 for City Medical Center has been validated by Dr. Marcus.</p>
-                <span class="activity-time">2 minutes ago</span>
-              </div>
-            </li>
-            <li class="activity-item">
-              <div class="activity-dot blue-dot"></div>
-              <div class="activity-content">
-                <strong>New Donor Registered</strong>
-                <p>System recorded a new O- donor registration from the downtown clinic area.</p>
-                <span class="activity-time">15 minutes ago</span>
-              </div>
-            </li>
-            <li class="activity-item">
-              <div class="activity-dot red-dot pulse"></div>
-              <div class="activity-content">
-                <strong>Stock Alert: Low O-</strong>
-                <p>Central Storage reported O- reserves fell below 5 units. Auto-alerts triggered.</p>
-                <span class="activity-time">42 minutes ago</span>
-              </div>
-            </li>
-            <li class="activity-item">
+            <li class="activity-item" id="activityLoading">
               <div class="activity-dot gray-dot"></div>
               <div class="activity-content">
-                <strong>System Maintenance</strong>
-                <p>Backup of database BloodNode_Live completed successfully.</p>
-                <span class="activity-time">1 hour ago</span>
-              </div>
-            </li>
-            <li class="activity-item">
-              <div class="activity-dot green-dot"></div>
-              <div class="activity-content">
-                <strong>Delivery Confirmed</strong>
-                <p>Batch B-4402 successfully reached North Valley Hospital.</p>
-                <span class="activity-time">7 hours ago</span>
+                <strong style="color:#9CA3AF;">Loading activity…</strong>
               </div>
             </li>
           </ul>
@@ -525,6 +505,7 @@
   <div class="ll-toast" id="toastEl"></div>
 
   <script src="../utils/adminAuth.js"></script>
+  <script src="../utils/notificationBell.js"></script>
   <script src="adminDashboard.js"></script>
 
 </body>

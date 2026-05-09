@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood Drive Events - LifeLink</title>
+
+  <link rel="stylesheet" href="events.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+  <!-- ─── NAVBAR ─── -->
+  <nav id="navbar">
+    <a href="../index.html" class="nav-logo">
+      <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img">
+      <span class="logo-text" data-key="navLogo">LifeLink</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="../index.html" data-key="navHome">Home</a></li>
+      <li><a href="../aboutUs/about.html" data-key="navAbout">About</a></li>
+      <li><a href="../activeRequests/activeRequests.html" data-key="navRequests">Active Requests</a></li>
+      <li><a href="events.html" class="active" data-key="navEvents">Events</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <button class="btn-login" id="btn-login" data-key="login">Log In</button>
+      <button class="btn-register" id="btn-register" data-key="register">Register</button>
+
+      <!-- ─── SETTINGS DROPDOWN ─── -->
+      <div class="settings-wrap">
+        <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06
+            a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+            1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09
+            a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06
+            a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82
+            1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09
+            a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06
+            a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01
+            a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09
+            a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+            a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01
+            a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09
+            a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <div class="settings-menu" id="settingsMenu">
+          <div class="settings-group">
+            <label data-key="themeLabel">Theme</label>
+            <div class="filter-select-wrap">
+              <select id="themeSelect">
+                <option value="light" data-key="themeLight">Light</option>
+                <option value="dark" data-key="themeDark">Dark</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <label data-key="languageLabel">Language</label>
+            <div class="filter-select-wrap">
+              <select id="languageSelect">
+                <option value="en" data-key="langEnglish">English</option>
+                <option value="np" data-key="langNepali">Nepali</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hamburger -->
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── PAGE WRAPPER ─── -->
+  <div class="page-wrapper">
+
+    <!-- ─── PAGE HEADER ─── -->
+    <header class="page-header">
+      <div style="max-width:1280px; margin:0 auto;">
+        <h1 data-key="eventsTitle">Upcoming Blood Drive Events</h1>
+        <p data-key="eventsDesc">
+          View upcoming blood donation events. Anyone can view events, but login is required before registering.
+        </p>
+
+        <!-- Filters only — removed grid/map toggle -->
+        <div class="events-controls">
+          <div class="filter-bar">
+            <div class="filter-group" style="flex:1; min-width:220px;">
+              <label data-key="filterSearch">Search</label>
+              <div class="search-input-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="filterSearch" placeholder="Search events by title or location...">
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label data-key="filterBloodType">Blood Type</label>
+              <div class="filter-select-wrap">
+                <select id="filterBlood">
+                  <option value="">All Blood Types</option>
+                  <option value="O-">O-</option>
+                  <option value="O+">O+</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label data-key="filterDate">Date</label>
+              <div class="filter-select-wrap">
+                <select id="filterDate">
+                  <option value="">Any Date</option>
+                  <option value="this-week">This Week</option>
+                  <option value="this-month">This Month</option>
+                  <option value="next-month">Next Month</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-group filter-clear-group">
+              <label>&nbsp;</label>
+              <button class="btn-clear-filters" id="clearFilters">
+                <i class="fas fa-xmark"></i>
+                <span data-key="clearFilters">Clear</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── MAIN CONTENT ─── -->
+    <main class="main-content">
+      <div style="max-width:1280px; margin:0 auto;">
+
+        <div class="results-bar">
+          <span class="results-info" id="resultsInfo">Showing <strong>6</strong> events</span>
+        </div>
+
+        <section class="events-grid" id="eventsGrid">
+
+          <!-- Event 1 -->
+          <article class="event-card reveal" data-event-id="evt-001" data-date="2026-05-24" data-blood="O-,O+,A-">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #0d9488, #0f766e);">
+              <div class="event-date-badge">
+                <span class="badge-month">MAY</span>
+                <span class="badge-day">24</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 28 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 40 Q20 20 40 20 Q60 20 60 40 Q60 60 40 60 Q20 60 20 40Z"
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <path d="M10 45 Q15 35 20 40 Q25 30 30 35 Q35 25 40 30 Q45 20 50 28 Q55 18 60 25 Q65 15 70 22"
+                  fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 9:00 AM – 4:00 PM</span>
+              </div>
+
+              <h3 class="event-title">Metro Community Blood Drive</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> Central Community Hall, Kathmandu
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip bchip-active">O-</span>
+                  <span class="bchip">O+</span>
+                  <span class="bchip">A-</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                Community donation event focused on supporting emergency blood availability.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:70%"></div>
+                  </div>
+                  <span class="spots-label">28 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Event 2 -->
+          <article class="event-card reveal" data-event-id="evt-002" data-date="2026-06-02" data-blood="B+,AB+">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+              <div class="event-date-badge">
+                <span class="badge-month">JUN</span>
+                <span class="badge-day">02</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 12 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="15" y="15" width="50" height="50" rx="6"
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <rect x="25" y="25" width="30" height="30" rx="3"
+                  fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 10:00 AM – 2:00 PM</span>
+              </div>
+
+              <h3 class="event-title">University Campus Blood Drive</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> Main Student Union Hall, Lalitpur
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip bchip-active">B+</span>
+                  <span class="bchip">AB+</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                Campus-based donation drive for students, staff, and registered community donors.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:30%"></div>
+                  </div>
+                  <span class="spots-label">12 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Event 3 -->
+          <article class="event-card reveal" data-event-id="evt-003" data-date="2026-06-15" data-blood="A+,A-,O+">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+              <div class="event-date-badge">
+                <span class="badge-month">JUN</span>
+                <span class="badge-day">15</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 21 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="30" r="15"
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <circle cx="25" cy="55" r="10"
+                  fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                <circle cx="55" cy="55" r="10"
+                  fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 8:00 AM – 1:00 PM</span>
+              </div>
+
+              <h3 class="event-title">Neighbourhood Blood Donation Camp</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> Community Center, Bhaktapur
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip bchip-active">A+</span>
+                  <span class="bchip">A-</span>
+                  <span class="bchip">O+</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                Local event for eligible donors to help increase available inventory units.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:52%"></div>
+                  </div>
+                  <span class="spots-label">21 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Event 4 -->
+          <article class="event-card reveal" data-event-id="evt-004" data-date="2026-06-20" data-blood="AB+,B-">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #0891b2, #0e7490);">
+              <div class="event-date-badge">
+                <span class="badge-month">JUN</span>
+                <span class="badge-day">20</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 8 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="10" width="15" height="60" rx="2"
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+                <rect x="42" y="25" width="15" height="45" rx="2"
+                  fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 11:00 AM – 3:00 PM</span>
+              </div>
+
+              <h3 class="event-title">Corporate Donor Day</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> Tech Hub Plaza, Kathmandu
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip bchip-active">AB+</span>
+                  <span class="bchip bchip-active">B-</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                Partner event organised to support scheduled donation collection.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:20%"></div>
+                  </div>
+                  <span class="spots-label">8 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Event 5 -->
+          <article class="event-card reveal" data-event-id="evt-005" data-date="2026-07-05" data-blood="A+,A-,O+">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #d97706, #b45309);">
+              <div class="event-date-badge">
+                <span class="badge-month">JUL</span>
+                <span class="badge-day">05</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 34 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M40 10 L70 65 L10 65 Z"
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <path d="M40 25 L58 58 L22 58 Z"
+                  fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 9:00 AM – 3:00 PM</span>
+              </div>
+
+              <h3 class="event-title">Winter Blood Drive</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> City Medical Center, Pokhara
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip">A+</span>
+                  <span class="bchip">A-</span>
+                  <span class="bchip">O+</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                Seasonal blood drive for maintaining healthy blood stock levels.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:85%"></div>
+                  </div>
+                  <span class="spots-label">34 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Event 6 -->
+          <article class="event-card reveal" data-event-id="evt-006" data-date="2026-07-12" data-blood="O-,B-">
+            <div class="event-card-img" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+              <div class="event-date-badge">
+                <span class="badge-month">JUL</span>
+                <span class="badge-day">12</span>
+              </div>
+
+              <div class="event-donor-chip">
+                <i class="fas fa-heart"></i> 5 Registered
+              </div>
+
+              <svg class="card-bg-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M40 15 C40 15 60 28 60 45 C60 56 51 65 40 65 C29 65 20 56 20 45 C20 28 40 15 40 15Z"
+                  fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+              </svg>
+            </div>
+
+            <div class="event-card-body">
+              <div class="event-meta-row">
+                <span class="event-time"><i class="fas fa-clock"></i> 6:00 AM – 6:00 PM</span>
+              </div>
+
+              <h3 class="event-title">Emergency Blood Collection Event</h3>
+
+              <div class="event-detail">
+                <i class="fas fa-location-dot"></i> Regional Clinic, Chitwan
+              </div>
+
+              <div class="event-blood-row">
+                <span class="event-blood-label">Blood types:</span>
+                <span class="event-blood-chips">
+                  <span class="bchip bchip-active">O-</span>
+                  <span class="bchip bchip-active">B-</span>
+                </span>
+              </div>
+
+              <p class="event-description">
+                High-priority collection event for low-stock blood types.
+              </p>
+
+              <div class="event-card-footer">
+                <div class="event-spots">
+                  <div class="spots-track">
+                    <div class="spots-fill" style="width:12%"></div>
+                  </div>
+                  <span class="spots-label">5 / 40 target quota registered</span>
+                </div>
+
+                <button class="btn-register-event" type="button">Register for Event</button>
+              </div>
+            </div>
+          </article>
+
+        </section>
+
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <i class="fas fa-calendar-xmark"></i>
+          <h3>No events found</h3>
+          <p>Try changing your search or filters.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- ─── FOOTER — SAME STRUCTURE AS YOUR ORIGINAL FILE ─── -->
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand-name" data-key="navLogo">LifeLink</span>
+          <p data-key="footerDesc">A clinical curator platform dedicated to connecting blood donors and recipients through precise, real-time matching technology.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="footerPlatform">Platform</h4>
+          <ul>
+            <li><a href="#" data-key="footerHowItWorks">How it Works</a></li>
+            <li><a href="#" data-key="footerSearchDonors">Search Donors</a></li>
+            <li><a href="#" data-key="footerActiveRequests">Active Requests</a></li>
+            <li><a href="#" data-key="footerBloodBanks">Blood Banks</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="footerResources">Resources</h4>
+          <ul>
+            <li><a href="#" data-key="footerDonationTips">Donation Tips</a></li>
+            <li><a href="#" data-key="footerHealthReqs">Health Requirements</a></li>
+            <li><a href="#" data-key="footerSuccessStories">Success Stories</a></li>
+            <li><a href="#" data-key="footerContactSupport">Contact Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="footerConnect">Connect</h4>
+
+          <div class="social-row">
+            <button class="social-btn" type="button"><i class="fab fa-linkedin"></i></button>
+            <button class="social-btn" type="button"><i class="fab fa-instagram"></i></button>
+            <button class="social-btn" type="button"><i class="fab fa-youtube"></i></button>
+          </div>
+
+          <div class="footer-sub-label" data-key="subscribeLabel">Subscribe for emergency alerts</div>
+
+          <div class="newsletter-row">
+            <input type="email" id="newsletterEmail" data-key="emailPlaceholder" placeholder="Email address">
+            <button id="newsletterBtn" type="button">&#10148;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span data-key="footerCopyright">&copy; 2026 LifeLink Clinical Systems. All rights reserved.</span>
+
+        <div class="footer-bottom-links">
+          <a href="#" data-key="footerPrivacy">Privacy Policy</a>
+          <a href="#" data-key="footerTerms">Terms of Service</a>
+          <a href="#" data-key="footerAccessibility">Accessibility</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="events.js"></script>
+</body>
+</html>

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LifeLink — My Blood Requests</title>
+  <title>LifeLink â€” My Blood Requests</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="bloodrequests.css"/>
 </head>
 <body>
 
-<!-- ─── NAVBAR ─── -->
+<!-- â”€â”€â”€ NAVBAR â”€â”€â”€ -->
 <nav class="navbar">
   <div class="nav-logo" id="home-logo">
     <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img"/>
@@ -29,7 +29,7 @@
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input type="text" placeholder="Search requests…" class="search-input"/>
+      <input type="text" placeholder="Search requestsâ€¦" class="search-input"/>
     </div>
     <button class="nav-bell" aria-label="Notifications">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -64,7 +64,7 @@
   </div>
 </nav>
 
-<!-- ─── MAIN ─── -->
+<!-- â”€â”€â”€ MAIN â”€â”€â”€ -->
 <main class="main-wrapper">
 
   <!-- Page Header -->
@@ -188,7 +188,7 @@
   <div class="footer-inner">
      
     
-    <p class="footer-copy">© 2026 LifeLink Hematology Network. All rights reserved.</p>
+    <p class="footer-copy">Â© 2026 LifeLink Hematology Network. All rights reserved.</p>
     <div class="footer-links">
       <a href="#">Support</a>
       <a href="#">Privacy Policy</a>
@@ -202,5 +202,46 @@
 <script>
   initProtectedRoute(null);
 </script>
+
+<!-- ═══ VIEW DETAILS MODAL ═══ -->
+<div class="br-modal-overlay" id="brModalOverlay" onclick="brCloseModal(event)">
+  <div class="br-modal-card">
+    <div class="br-modal-header">
+      <div class="br-modal-blood-badge" id="brModalBloodBadge">A+</div>
+      <div class="br-modal-title-block">
+        <h3 id="brModalHospital"></h3>
+        <span class="br-urgency-badge" id="brModalUrgencyBadge">Normal</span>
+      </div>
+      <button class="br-modal-close" onclick="brCloseModal(null)" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="br-modal-body">
+      <div class="br-detail-grid">
+        <div class="br-detail-item"><span class="br-detail-label">Blood Type</span><span class="br-detail-value" id="brMdBloodType"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Units Required</span><span class="br-detail-value" id="brMdUnits"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Donation Type</span><span class="br-detail-value" id="brMdDonationType"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Urgency</span><span class="br-detail-value" id="brMdUrgency"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Hospital</span><span class="br-detail-value" id="brMdHospital"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">City</span><span class="br-detail-value" id="brMdCity"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Date Needed</span><span class="br-detail-value" id="brMdDate"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Relationship</span><span class="br-detail-value" id="brMdRelationship"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Status</span><span class="br-detail-value" id="brMdStatus"></span></div>
+        <div class="br-detail-item"><span class="br-detail-label">Submitted</span><span class="br-detail-value" id="brMdSubmitted"></span></div>
+      </div>
+      <div class="br-notes-block" id="brNotesWrap">
+        <span class="br-detail-label">Additional Notes</span>
+        <p id="brMdNotes"></p>
+      </div>
+    </div>
+    <div class="br-modal-footer">
+      <span class="br-posted-time" id="brMdPosted"></span>
+      <button class="btn-new-request" style="padding:9px 24px;font-size:13px;" onclick="brCloseModal(null)">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

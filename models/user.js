@@ -122,6 +122,36 @@ class User {
         );
         return result.affectedRows > 0;
     }
+
+    /**
+     * Find users whose blood_type AND city match a blood request.
+     * Used for notification matching on approval.
+     * Rules:
+     *   - Exact blood type match
+     *   - Case-insensitive city match
+     *   - role = 'user' (exclude admins)
+     *   - Exclude the submitter of the request
+     *   - Exclude users with no city set
+     *
+     * @param {string} bloodType     - required blood type
+     * @param {string} city          - city from the blood request
+     * @param {number} excludeUserId - user_id of the request submitter
+     */
+    static async findMatchedDonors(bloodType, city, excludeUserId) {
+        const [rows] = await db.execute(
+            `SELECT id, email, fullname, blood_type, city
+             FROM users
+             WHERE blood_type = ?
+               AND city REGEXP CONCAT('^', ?, '$')
+               AND id != ?
+               AND role = 'user'
+               AND city IS NOT NULL
+               AND city != ''
+               AND is_verified = 1`,
+            [bloodType, city.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), excludeUserId]
+        );
+        return rows;
+    }
 }
 
 module.exports = User;

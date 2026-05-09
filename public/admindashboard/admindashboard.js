@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Populate requests table
       populateRequestsTable(requests);
 
+      // Load recent activity feed (non-blocking — own try/catch inside)
+      loadRecentActivity();
+
       // Trigger counter animation
       startCounters();
     } catch (error) {
@@ -111,6 +114,95 @@ document.addEventListener('DOMContentLoaded', () => {
     attachRequestRowListeners();
   }
 
+  /* ─── RECENT ACTIVITY FEED ─── */
+  function timeAgo(dateStr) {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) > 1 ? 's' : ''} ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) > 1 ? 's' : ''} ago`;
+  }
+
+  function activityConfig(event) {
+    switch (event.event_type) {
+      case 'request_new':
+        return {
+          dot: 'blue-dot',
+          title: 'New Blood Request',
+          desc: `${event.actor_name} submitted a ${event.urgency_level || 'normal'} request for ${event.blood_type} blood at ${event.hospital_name}, ${event.city}.`
+        };
+      case 'request_approved':
+        return {
+          dot: 'green-dot',
+          title: 'Request Approved',
+          desc: `Request #${event.event_id} for ${event.blood_type} blood at ${event.hospital_name} has been approved. Donors notified.`
+        };
+      case 'request_rejected':
+        return {
+          dot: 'red-dot',
+          title: 'Request Rejected',
+          desc: `Request #${event.event_id} for ${event.blood_type} blood at ${event.hospital_name} was rejected.`
+        };
+      case 'user_registered':
+        return {
+          dot: 'blue-dot',
+          title: 'New Donor Registered',
+          desc: `${event.actor_name}${event.blood_type ? ' (' + event.blood_type + ')' : ''} joined as a donor${event.city ? ' in ' + event.city : ''}.`
+        };
+      default:
+        return {
+          dot: 'gray-dot',
+          title: 'System Event',
+          desc: 'A system event was recorded.'
+        };
+    }
+  }
+
+  async function loadRecentActivity() {
+    const list = document.getElementById('activityList');
+    if (!list) return;
+
+    try {
+      const res = await fetch(`${API_URL}/admin/recent-activity`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Activity fetch failed');
+
+      const { activity } = await res.json();
+
+      if (!activity || activity.length === 0) {
+        list.innerHTML = `
+          <li class="activity-item">
+            <div class="activity-dot gray-dot"></div>
+            <div class="activity-content">
+              <strong style="color:#9CA3AF;">No recent activity yet.</strong>
+            </div>
+          </li>`;
+        return;
+      }
+
+      list.innerHTML = activity.map(event => {
+        const { dot, title, desc } = activityConfig(event);
+        const pulse = event.event_type === 'request_new' && event.urgency_level === 'critical' ? ' pulse' : '';
+        return `
+          <li class="activity-item">
+            <div class="activity-dot ${dot}${pulse}"></div>
+            <div class="activity-content">
+              <strong>${title}</strong>
+              <p>${desc}</p>
+              <span class="activity-time">${timeAgo(event.event_time)}</span>
+            </div>
+          </li>`;
+      }).join('');
+
+    } catch (err) {
+      console.warn('[ACTIVITY] Failed to load:', err.message);
+      // Leave the loading placeholder — don't crash the whole dashboard
+    }
+  }
+
+
   function attachRequestRowListeners() {
     document.querySelectorAll('.row-action-btn').forEach(btn => {
       btn.removeEventListener('click', handleRowAction);
@@ -136,45 +228,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── TOAST ─── */
   let toastTimeout = null;
-  let activeToast  = null;
+  let activeToast = null;
 
   function showToast(message, type = 'default') {
     const colors = {
       default: { bg: '#ffffff', border: '#e2e8f0', text: '#1e293b' },
       success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
       warning: { bg: '#fff7ed', border: '#fdba74', text: '#92400e' },
-      danger:  { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-      info:    { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
+      danger: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
+      info: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
     };
 
     const c = colors[type] || colors.default;
 
     if (toastTimeout) clearTimeout(toastTimeout);
-    if (activeToast)  activeToast.remove();
+    if (activeToast) activeToast.remove();
 
     const toast = document.createElement('div');
     toast.className = 'll-toast';
     toast.textContent = message;
 
     Object.assign(toast.style, {
-      background:  c.bg,
-      border:      `1px solid ${c.border}`,
-      color:       c.text,
-      display:     'block',
-      opacity:     '0',
-      transform:   'translateY(20px)',
+      background: c.bg,
+      border: `1px solid ${c.border}`,
+      color: c.text,
+      display: 'block',
+      opacity: '0',
+      transform: 'translateY(20px)',
     });
 
     document.body.appendChild(toast);
     activeToast = toast;
 
     requestAnimationFrame(() => {
-      toast.style.opacity   = '1';
+      toast.style.opacity = '1';
       toast.style.transform = 'translateY(0)';
     });
 
     toastTimeout = setTimeout(() => {
-      toast.style.opacity   = '0';
+      toast.style.opacity = '0';
       toast.style.transform = 'translateY(20px)';
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
     }, 3000);
@@ -186,21 +278,21 @@ document.addEventListener('DOMContentLoaded', () => {
   sidebarLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      const page  = link.dataset.page;
+      const page = link.dataset.page;
       const label = link.textContent.trim();
 
       sidebarLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
 
       const titles = {
-        dashboard:  { title: 'Admin Dashboard',    sub: 'Overview of LifeLink platform activity' },
-        pending:    { title: 'Pending Requests',   sub: 'Review and approve blood requests' },
-        users:      { title: 'User Management',    sub: 'Manage donors, admins, and hospitals' },
-        
+        dashboard: { title: 'Admin Dashboard', sub: 'Overview of LifeLink platform activity' },
+        pending: { title: 'Pending Requests', sub: 'Review and approve blood requests' },
+        users: { title: 'User Management', sub: 'Manage donors, admins, and hospitals' },
+
       };
 
       const info = titles[page] || { title: label, sub: '' };
-      document.getElementById('pageTitle').textContent    = info.title;
+      document.getElementById('pageTitle').textContent = info.title;
       document.getElementById('pageSubtitle').textContent = info.sub;
 
       if (page !== 'dashboard') {
@@ -209,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  
+
   /* ─── LOGOUT ─── */
   function handleLogout() {
     localStorage.removeItem('token');
@@ -228,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dropdownLogoutBtn')?.addEventListener('click', (e) => {
     e.preventDefault();
     const avatarDropdown = document.getElementById('avatarDropdown');
-    if(avatarDropdown) avatarDropdown.classList.remove('show');
+    if (avatarDropdown) avatarDropdown.classList.remove('show');
     handleLogout();
   });
 
@@ -240,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── NAV AVATAR ─── */
   const navAvatar = document.getElementById('navAvatar');
   const avatarDropdown = document.getElementById('avatarDropdown');
-  
+
   if (navAvatar && avatarDropdown) {
     navAvatar.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -297,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   });
 
- 
+
 
   /* ─── MANAGE DONORS ─── */
   document.getElementById('manageDonorsBtn')?.addEventListener('click', () => {
@@ -376,14 +468,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('bloodChart');
     if (!canvas) return;
 
-    const ctx     = canvas.getContext('2d');
-    const data    = [8, 31, 22, 7, 28, 4];
-    const colors  = ['#DC2626','#2563EB','#059669','#D97706','#7C3AED','#DB2777'];
-    const total   = data.reduce((a, b) => a + b, 0);
+    const ctx = canvas.getContext('2d');
+    const data = [8, 31, 22, 7, 28, 4];
+    const colors = ['#DC2626', '#2563EB', '#059669', '#D97706', '#7C3AED', '#DB2777'];
+    const total = data.reduce((a, b) => a + b, 0);
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const outerR  = 90;
-    const innerR  = 55;
+    const outerR = 90;
+    const innerR = 55;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -417,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(redrawChart, 200);
 
-  
+
   /* ─── INITIAL TOAST ─── */
   setTimeout(() => {
     showToast('Welcome back, Admin User!', 'success');
@@ -434,9 +526,12 @@ document.getElementById('admin-users')?.addEventListener('click', () => {
 });
 
 document.getElementById('admin-request')?.addEventListener('click', () => {
-  window.location.href = '/adminRequest';
+  window.location.href = '/pendingRequests';
 });
 
 document.getElementById('admin-profile')?.addEventListener('click', () => {
   window.location.href = '/adminProfile';
+});
+document.getElementById('admin-events')?.addEventListener('click', () => {
+  window.location.href = '/adminEvents';
 });

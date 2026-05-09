@@ -5,6 +5,8 @@ const BloodRequest = require('../models/BloodRequest');
 const Notification = require('../models/Notification');
 const { authenticateToken } = require('../middleware/auth');
 const { getCompatibleDonorTypes } = require('../utils/bloodTypeCompatibility');
+const { sendCriticalRequestToAdminsEmail } = require('../config/mailer');
+const { db } = require('../config/database');
 
 // Queue for notifications (to avoid blocking requests)
 const notificationQueue = [];
@@ -26,11 +28,61 @@ async function processNotificationQueue() {
 }
 
 // ──────────────────────────────────────────────
-// GET /api/blood-requests  — list all active requests (public or auth)
+// Helper: notify all admin users about a new blood request
+// normal/urgent → in-app only
+// critical      → in-app + email
+// ──────────────────────────────────────────────
+async function notifyAdmins(requestId, requestData, requester) {
+    try {
+        // Fetch all admin users
+        const [admins] = await db.execute(
+            'SELECT id, fullname, email FROM users WHERE role = "admin"'
+        );
+        if (!admins.length) return;
+
+        const urgency = (requestData.urgency_level || 'normal').toLowerCase();
+        const isCritical = urgency === 'critical';
+        const urgencyLabel = isCritical ? 'CRITICAL' : urgency === 'urgent' ? 'Urgent' : 'Normal';
+
+        // In-app notification for every admin
+        const notifications = admins.map(admin => ({
+            user_id: admin.id,
+            type:    'admin_request',
+            title:   `${urgencyLabel} Blood Request — ${requestData.blood_type} needed`,
+            message: `${requester.fullname} submitted a ${urgencyLabel} request for ${requestData.blood_type} blood ` +
+                     `at ${requestData.hospital_name}${requestData.city ? ', ' + requestData.city : ''}. ` +
+                     `${requestData.units_required} unit(s) required. Pending your approval.`,
+            blood_request_id: requestId
+        }));
+
+        await Notification.insertMany(notifications);
+        console.log(`[ADMIN NOTIF] ${notifications.length} in-app notification(s) sent to admins for request #${requestId}`);
+
+        // Email only if critical
+        if (isCritical) {
+            const emailResults = await Promise.allSettled(
+                admins
+                    .filter(a => !!a.email)
+                    .map(admin => sendCriticalRequestToAdminsEmail(
+                        admin,
+                        { ...requestData, id: requestId },
+                        requester
+                    ))
+            );
+            const sent = emailResults.filter(r => r.status === 'fulfilled' && r.value === true).length;
+            console.log(`[ADMIN NOTIF] Critical admin emails: ${sent}/${admins.length} sent`);
+        }
+    } catch (err) {
+        console.error('[ADMIN NOTIF] notifyAdmins error:', err.message);
+    }
+}
+
+// ──────────────────────────────────────────────
+// GET /api/blood-requests  — list approved requests (public display)
 // ──────────────────────────────────────────────
 router.get('/', async (req, res) => {
     try {
-        const requests = await BloodRequest.findAll({ status: 'pending' });
+        const requests = await BloodRequest.findAll({ status: 'approved' });
         res.json({ requests });
     } catch (error) {
         console.error('Get all active requests error:', error);
@@ -97,7 +149,7 @@ router.post('/notifications/read-all', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// GET /api/blood-requests/my  — get current user's blood requests
+// GET /api/blood-requests/my  — get current user's blood requests (all statuses)
 // ──────────────────────────────────────────────
 router.get('/my', async (req, res) => {
     try {
@@ -105,6 +157,63 @@ router.get('/my', async (req, res) => {
         res.json({ requests });
     } catch (error) {
         console.error('Get user blood requests error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// GET /api/blood-requests/my-requests  — alias for /my
+// ──────────────────────────────────────────────
+router.get('/my-requests', async (req, res) => {
+    try {
+        const requests = await BloodRequest.findByUserId(req.user.id);
+        res.json({ requests });
+    } catch (error) {
+        console.error('Get user blood requests error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ──────────────────────────────────────────────
+// GET /api/blood-requests/matched
+// Returns approved requests matching the logged-in user's
+// blood_type + city (excludes their own requests)
+// ──────────────────────────────────────────────
+router.get('/matched', async (req, res) => {
+    try {
+        const { db } = require('../config/database');
+        const userRow = await require('../models/user').findById(req.user.id);
+        if (!userRow) return res.json({ requests: [] });
+
+        const { blood_type, city } = userRow;
+        if (!blood_type || !city) return res.json({ requests: [] });
+
+        const [requests] = await db.execute(
+            `SELECT id, blood_type, hospital_name, city, urgency_level,
+                    units_required, status, created_at
+             FROM blood_requests
+             WHERE status = 'approved'
+               AND blood_type = ?
+               AND city REGEXP CONCAT('^', ?, '$')
+               AND user_id != ?
+             ORDER BY
+               CASE urgency_level
+                 WHEN 'critical' THEN 1
+                 WHEN 'urgent'   THEN 2
+                 ELSE 3
+               END,
+               created_at DESC
+             LIMIT 20`,
+            [
+                blood_type,
+                city.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                req.user.id
+            ]
+        );
+
+        res.json({ requests });
+    } catch (error) {
+        console.error('Matched requests error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -179,6 +288,15 @@ router.post(
 
                 setImmediate(processNotificationQueue);
             }
+
+            // ── Notify admins (non-blocking) ──────────────────────────
+            // All requests → in-app to admins
+            // Critical only → also email admins
+            setImmediate(() => notifyAdmins(
+                requestId,
+                { blood_type, units_required, urgency_level: urgency_level || 'normal', hospital_name, city },
+                { fullname: user.fullname }
+            ));
 
             res.status(201).json({
                 message: 'Blood request submitted successfully',

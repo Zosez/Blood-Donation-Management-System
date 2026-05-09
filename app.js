@@ -35,12 +35,16 @@ const authRoutes = require('./routes/auth');
 const donationRoutes = require('./routes/donations');
 const bloodRequestRoutes = require('./routes/bloodRequests');
 const adminRoutes = require('./routes/admin');
+const notificationRoutes = require('./routes/notifications');
+const eventsRoutes = require('./routes/events');
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/blood-requests', bloodRequestRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -62,12 +66,12 @@ function requireAdmin(req, res, next) {
     try {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
+
         if (decoded.role !== 'admin') {
             // Not an admin - redirect to user dashboard
             return res.redirect('/userdashboard');
         }
-        
+
         next();
     } catch (err) {
         // Invalid token - redirect to login
@@ -88,12 +92,12 @@ function requireUser(req, res, next) {
     try {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
+
         if (decoded.role === 'admin') {
             // Admin trying to access user route - redirect to admin dashboard
             return res.redirect('/adminDashboard');
         }
-        
+
         next();
     } catch (err) {
         // Invalid token - proceed (will show login)
@@ -133,6 +137,10 @@ app.get('/activeRequests', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/activeRequests/activeRequests.html'));
 });
 
+app.get('/events', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/events/events.html'));
+});
+
 app.get('/userdashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/userdashboard/userdashboard.html'));
 });
@@ -143,6 +151,10 @@ app.get('/bloodRequest', (req, res) => {
 
 app.get('/userProfile', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/userProfile/userProfile.html'));
+});
+
+app.get('/notification', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/notification/notifications.html'));
 });
 
 app.get('/requestBlood', (req, res) => {
@@ -162,12 +174,16 @@ app.get('/adminNotification', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/adminNotification/adminNotification.html'));
 });
 
-app.get('/adminRequest', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/adminRequest/adminRequest.html'));
+app.get('/pendingRequests', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/pendingRequests/pendingRequests.html'));
 });
 
 app.get('/adminUsers', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/adminUsers/adminUsers.html'));
+});
+
+app.get('/adminEvents', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminEvents/adminEvents.html'));
 });
 
 app.get('/welcome', (req, res) => {

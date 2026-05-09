@@ -3,6 +3,8 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { db } = require('../config/database');
 const User = require('../models/user');
+const Notification = require('../models/Notification');
+const { sendCriticalBloodRequestEmail } = require('../config/mailer');
 
 // All admin routes require authentication
 router.use(authenticateToken);
@@ -16,6 +18,63 @@ function requireAdmin(req, res, next) {
 }
 
 router.use(requireAdmin);
+
+// ──────────────────────────────────────────────
+// Helper: find users matched to a blood request
+// Match criteria: exact blood_type + case-insensitive city
+// Exclude: the submitter, admins, users with no city
+// ──────────────────────────────────────────────
+async function findMatchedUsers(request) {
+    return await User.findMatchedDonors(
+        request.blood_type,
+        request.city,
+        request.user_id
+    );
+}
+
+// ──────────────────────────────────────────────
+// Helper: handle all post-approval notifications & emails
+// ──────────────────────────────────────────────
+async function handleRequestApproval(request) {
+    try {
+        // STEP 1 — Find all matched users (bloodType + city, excludes submitter/admins)
+        const matchedUsers = await findMatchedUsers(request);
+        if (matchedUsers.length === 0) {
+            console.log(`[APPROVAL] No matched donors found for request #${request.id}`);
+            return;
+        }
+
+        console.log(`[APPROVAL] Found ${matchedUsers.length} matched donor(s) for request #${request.id}`);
+
+        // STEP 2 — Create in-app notifications for ALL matched users (bulk insert)
+        const notifications = matchedUsers.map(user => ({
+            user_id: user.id,
+            type: 'blood_match',
+            title: `Blood Needed – ${request.blood_type} in ${request.city}`,
+            message: `A ${request.urgency_level} request for ${request.blood_type} blood has been posted at ${request.hospital_name}, ${request.city}. Please help if you can.`,
+            blood_request_id: request.id
+        }));
+
+        await Notification.insertMany(notifications);
+        console.log(`[APPROVAL] Created ${notifications.length} in-app notification(s)`);
+
+        // STEP 3 — Send email ONLY if urgency_level === 'critical'
+        if (request.urgency_level === 'critical') {
+            const emailTargets = matchedUsers.filter(user => !!user.email);
+            const emailPromises = emailTargets.map(user =>
+                sendCriticalBloodRequestEmail(user, request)
+            );
+            // Promise.allSettled ensures one failure doesn't block others
+            const results = await Promise.allSettled(emailPromises);
+            const sent = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+            console.log(`[APPROVAL] Critical emails: ${sent}/${emailTargets.length} sent`);
+        }
+        // urgency_level 'normal' or 'urgent' → in-app notification only, NO email
+    } catch (err) {
+        // Log but never let this block the approval response
+        console.error('[APPROVAL] handleRequestApproval error:', err.message);
+    }
+}
 
 /**
  * GET /api/admin/dashboard-stats
@@ -50,6 +109,87 @@ router.get('/dashboard-stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Dashboard stats error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/admin/recent-activity
+ * Returns a unified activity feed from real DB events:
+ *   - Blood requests submitted, approved, rejected
+ *   - New user registrations
+ * Newest first, limit 10
+ */
+router.get('/recent-activity', async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT * FROM (
+
+                -- Blood request submitted
+                SELECT
+                    br.id            AS event_id,
+                    'request_new'    AS event_type,
+                    br.created_at    AS event_time,
+                    br.blood_type,
+                    br.hospital_name,
+                    br.city,
+                    br.urgency_level,
+                    br.units_required,
+                    br.status,
+                    u.fullname       AS actor_name,
+                    NULL             AS extra
+                FROM blood_requests br
+                JOIN users u ON br.user_id = u.id
+
+                UNION ALL
+
+                -- Blood request approved / rejected (status change)
+                SELECT
+                    br.id            AS event_id,
+                    CASE br.status
+                        WHEN 'approved' THEN 'request_approved'
+                        WHEN 'rejected' THEN 'request_rejected'
+                        ELSE 'request_updated'
+                    END              AS event_type,
+                    COALESCE(br.updated_at, br.created_at) AS event_time,
+                    br.blood_type,
+                    br.hospital_name,
+                    br.city,
+                    br.urgency_level,
+                    br.units_required,
+                    br.status,
+                    u.fullname       AS actor_name,
+                    NULL             AS extra
+                FROM blood_requests br
+                JOIN users u ON br.user_id = u.id
+                WHERE br.status IN ('approved', 'rejected')
+
+                UNION ALL
+
+                -- New user registered
+                SELECT
+                    u.id             AS event_id,
+                    'user_registered' AS event_type,
+                    u.created_at     AS event_time,
+                    u.blood_type,
+                    NULL             AS hospital_name,
+                    u.city,
+                    NULL             AS urgency_level,
+                    NULL             AS units_required,
+                    NULL             AS status,
+                    u.fullname       AS actor_name,
+                    NULL             AS extra
+                FROM users u
+                WHERE u.role = 'user'
+
+            ) AS activity
+            ORDER BY event_time DESC
+            LIMIT 10
+        `);
+
+        res.json({ activity: rows });
+    } catch (error) {
+        console.error('Recent activity error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -99,22 +239,76 @@ router.get('/pending-requests', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/blood-requests
+ * Returns ALL blood requests (no status filter) — for admin dashboard
+ * Supports optional ?status= filter tab on frontend
+ */
+router.get('/blood-requests', async (req, res) => {
+    try {
+        const { status } = req.query;
+
+        let query = `
+            SELECT 
+                br.id,
+                br.blood_type,
+                br.urgency_level,
+                br.units_required,
+                br.hospital_name,
+                br.city,
+                br.status,
+                br.patient_name,
+                br.notes,
+                br.created_at,
+                u.fullname AS requester_name,
+                u.email    AS requester_email
+            FROM blood_requests br
+            JOIN users u ON br.user_id = u.id
+        `;
+        const params = [];
+
+        if (status && ['pending', 'approved', 'rejected', 'fulfilled', 'cancelled'].includes(status)) {
+            query += ' WHERE br.status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY br.created_at DESC';
+
+        const [requests] = await db.execute(query, params);
+        res.json({ requests });
+    } catch (error) {
+        console.error('Admin blood requests error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
  * POST /api/admin/approve-request/:requestId
- * Approve a blood request and trigger matching
+ * Approve a blood request and trigger matching + notifications
  */
 router.post('/approve-request/:requestId', async (req, res) => {
     try {
         const { requestId } = req.params;
 
+        // Fetch the full request first (needed for matching)
+        const [requests] = await db.execute('SELECT * FROM blood_requests WHERE id = ?', [requestId]);
+        if (requests.length === 0) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+
+        const request = requests[0];
+
         // Update request status to approved
         const [result] = await db.execute(
-            'UPDATE blood_requests SET status = "approved" WHERE id = ?',
+            'UPDATE blood_requests SET status = "approved", updated_at = NOW() WHERE id = ?',
             [requestId]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Request not found' });
         }
+
+        // Trigger notification matching asynchronously (non-blocking)
+        setImmediate(() => handleRequestApproval(request));
 
         res.json({ message: 'Request approved successfully', request_id: requestId });
     } catch (error) {
@@ -142,11 +336,9 @@ router.post('/reject-request/:requestId', async (req, res) => {
             return res.status(404).json({ message: 'Request not found' });
         }
 
-        const request = requests[0];
-
         // Update request status to rejected and store reason
         await db.execute(
-            'UPDATE blood_requests SET status = "cancelled", notes = CONCAT(IFNULL(notes, ""), "\\nAdmin Rejection: ", ?) WHERE id = ?',
+            'UPDATE blood_requests SET status = "rejected", updated_at = NOW(), notes = CONCAT(IFNULL(notes, ""), "\\nAdmin Rejection: ", ?) WHERE id = ?',
             [reason, requestId]
         );
 

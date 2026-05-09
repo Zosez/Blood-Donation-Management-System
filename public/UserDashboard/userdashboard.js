@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const count = document.getElementById('matched-requests-count');
     if (!grid || !count) return;
 
-    if (requests.length === 0) {
+    if (!requests || requests.length === 0) {
         grid.innerHTML = '<p style="color:#6B7280; font-size: 0.9rem; grid-column: 1/-1;">No matched requests in your area right now.</p>';
         count.textContent = '0 Near You';
         return;
@@ -246,10 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
     count.textContent = `${requests.length} Near You`;
 
     grid.innerHTML = requests.map(r => {
-        const urn = r.urgency || 'normal';
+        const urn = (r.urgency_level || r.urgency || 'normal').toLowerCase();
         const colorClass = urn === 'critical' ? 'critical' : urn === 'urgent' ? 'urgent' : 'normal';
-        const btnClass = urn === 'critical' ? 'btn-red' : urn === 'urgent' ? 'btn-orange' : 'btn-dark';
-        const btnLabel = urn === 'critical' ? 'Donate Now' : urn === 'urgent' ? 'Respond' : 'View Details';
+        const btnClass   = urn === 'critical' ? 'btn-red'   : urn === 'urgent' ? 'btn-orange' : 'btn-dark';
+        const btnLabel   = urn === 'critical' ? 'Donate Now' : urn === 'urgent' ? 'Respond' : 'View Details';
         return `
       <div class="request-card ${colorClass}">
         <div class="req-top">

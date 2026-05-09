@@ -280,22 +280,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Login Redirection 
 
-document.getElementById("btn-login").addEventListener("click",function(){
+document.getElementById("btn-login").addEventListener("click", function () {
   window.location.href = "/login";
 });
 
 //Signup Redirection
-document.getElementById("btn-register").addEventListener("click",function(){
+document.getElementById("btn-register").addEventListener("click", function () {
   window.location.href = "/signup";
 });
 
 //AboutUS Redirection
-document.getElementById("about-us").addEventListener("click",function(){
+document.getElementById("about-us").addEventListener("click", function () {
   window.location.href = "/aboutUs";
+});
+
+document.getElementById("events").addEventListener("click", function () {
+  window.location.href = "/events";
 });
 
 
 //ActiveRequest Redirection
-document.getElementById("active-request").addEventListener("click",function(){
+document.getElementById("active-request").addEventListener("click", function () {
   window.location.href = "/activeRequests";
 });

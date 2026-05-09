@@ -96,4 +96,59 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('New request form coming soon!');
   });
 
+  /* ── Standard Sidebar Nav ── */
+  document.getElementById('admin-dashboard')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminDashboard';
+  });
+  document.getElementById('admin-request')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/pendingRequests';
+  });
+  document.getElementById('admin-notification')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminNotification';
+  });
+  document.getElementById('admin-events')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminEvents';
+  });
+  document.getElementById('admin-profile')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminProfile';
+  });
+  document.getElementById('home-logo')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminDashboard';
+  });
+
+  /* ── Avatar dropdown ── */
+  const navAvatar = document.getElementById('navAvatar');
+  const avatarDropdown = document.getElementById('avatarDropdown');
+  if (navAvatar && avatarDropdown) {
+    navAvatar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
+        avatarDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  /* ── Logout ── */
+  document.getElementById('dropdownLogoutBtn')?.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  });
+
+  /* ── Mobile sidebar ── */
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  if (mobileMenuBtn && sidebar && sidebarOverlay) {
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.add('open'); sidebarOverlay.classList.add('active');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open'); sidebarOverlay.classList.remove('active');
+    });
+  }
+
 });

@@ -159,6 +159,70 @@ async function initializeDatabase() {
             await db.execute(`CREATE INDEX IF NOT EXISTS idx_donations_date ON donations(donation_date)`);
         } catch (e) { /* index already exists */ }
 
+        // Migrate: add 'rejected' to blood_requests status ENUM if missing
+        try {
+            await db.execute(`
+                ALTER TABLE blood_requests 
+                MODIFY COLUMN status ENUM('pending','approved','rejected','fulfilled','cancelled') DEFAULT 'pending'
+            `);
+            console.log('[DB] blood_requests.status ENUM updated to include rejected');
+        } catch (e) {
+            console.log('[DB] blood_requests.status ENUM already up to date');
+        }
+
+        // Migrate: add patient_name column to blood_requests if missing
+        try {
+            await db.execute(`ALTER TABLE blood_requests ADD COLUMN patient_name VARCHAR(255)`);
+            console.log('[DB] Added patient_name column to blood_requests');
+        } catch (e) { /* column already exists */ }
+
+        // Migrate: add contact column to blood_requests if missing
+        try {
+            await db.execute(`ALTER TABLE blood_requests ADD COLUMN contact VARCHAR(50)`);
+            console.log('[DB] Added contact column to blood_requests');
+        } catch (e) { /* column already exists */ }
+
+        // Migrate: add updated_at column to blood_requests if missing
+        try {
+            await db.execute(`ALTER TABLE blood_requests ADD COLUMN updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP`);
+            console.log('[DB] Added updated_at column to blood_requests');
+        } catch (e) { /* column already exists */ }
+
+        // Create events table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS events (
+                id           INT AUTO_INCREMENT PRIMARY KEY,
+                title        VARCHAR(255) NOT NULL,
+                event_date   DATE NOT NULL,
+                event_time   VARCHAR(50),
+                location     VARCHAR(255),
+                blood_types  VARCHAR(255),
+                quota        INT DEFAULT 40,
+                registered   INT DEFAULT 0,
+                description  TEXT,
+                status       ENUM('Upcoming','Closed','Cancelled') DEFAULT 'Upcoming',
+                created_by   INT,
+                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at   TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+            )
+        `);
+        console.log('[DB] events table ready');
+
+        // Create event_registrations table (tracks which user registered for which event)
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS event_registrations (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                event_id   INT NOT NULL,
+                user_id    INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_reg (event_id, user_id),
+                FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE
+            )
+        `);
+        console.log('[DB] event_registrations table ready');
+
         // Re-enable foreign key checks
         await db.execute('SET FOREIGN_KEY_CHECKS=1');
 

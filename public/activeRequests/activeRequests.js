@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/blood-requests');
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      
+
       // Map database fields to the structure expected by the UI
       allRequests = data.requests.map(r => {
         // Calculate remaining time until date_needed
@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
       default: { bg: '#ffffff', border: '#e2e8f0', text: '#1e293b' },
       success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
       warning: { bg: '#fff7ed', border: '#fdba74', text: '#92400e' },
-      danger:  { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-      info:    { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+      danger: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
+      info: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
     };
 
     const c = colors[type] || colors.default;
@@ -383,26 +383,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Login Redirection 
 
-document.getElementById("btn-login").addEventListener("click",function(){
+document.getElementById("btn-login").addEventListener("click", function () {
   window.location.href = "/login";
 });
 
 //Signup Redirection
-document.getElementById("btn-register").addEventListener("click",function(){
+document.getElementById("btn-register").addEventListener("click", function () {
   window.location.href = "/signup";
 });
 
 //Home Redirection
-document.getElementById("home-logo").addEventListener("click",function(){
+document.getElementById("home-logo").addEventListener("click", function () {
   window.location.href = "/";
 });
 
 //Home Redirection
-document.getElementById("home").addEventListener("click",function(){
+document.getElementById("home").addEventListener("click", function () {
   window.location.href = "/";
 });
 
 //AboutUS Redirection
-document.getElementById("about-us").addEventListener("click",function(){
+document.getElementById("about-us").addEventListener("click", function () {
   window.location.href = "/aboutUs";
+});
+
+//Events Redirection
+document.getElementById("events").addEventListener("click", function () {
+  window.location.href = "/events";
 });

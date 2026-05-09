@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tbody    = document.getElementById('requestsBody');
   const pills    = document.querySelectorAll('.pill');
   let   allRows  = [];   // will hold references to rendered <tr> elements
+  let   cachedRequests = []; // cache for modal lookup
 
   // ─── LOAD REQUESTS FROM API ────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       tbody.innerHTML = '';
+      cachedRequests = requests; // store for modal lookup
       requests.forEach((req, i) => {
         const tr = buildRow(req, i);
         tbody.appendChild(tr);
@@ -150,10 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── 3. VIEW DETAILS LINKS ─── */
   tbody.addEventListener('click', (e) => {
-    if (e.target.classList.contains('view-link')) {
-      e.preventDefault();
-      showToast('Request details coming soon!', 'info');
-    }
+    const link = e.target.closest('.view-link');
+    if (!link) return;
+    e.preventDefault();
+    const id = link.dataset.id;
+    // Find the request object by id from the last loaded data
+    const req = cachedRequests.find(r => String(r.id) === String(id));
+    if (req) brOpenModal(req);
   });
 
 
@@ -311,4 +316,95 @@ document.getElementById("dashboard").addEventListener("click", () => {
 // ───────── Back to Dashboard REDIRECT ─────────
 document.getElementById("back-dashboard").addEventListener("click", () => {
     window.location.href = "/userDashboard";
+});
+
+// ══════════════════════════════════════════
+// VIEW DETAILS MODAL
+// ══════════════════════════════════════════
+
+function brFormatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function brTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function brOpenModal(r) {
+  const urgency = r.urgency_level || 'normal';
+  const isNeg   = r.blood_type && r.blood_type.includes('-');
+
+  // Blood type badge colour
+  const badge = document.getElementById('brModalBloodBadge');
+  badge.textContent      = r.blood_type;
+  badge.style.background = isNeg ? '#EFF6FF' : '#FEF2F2';
+  badge.style.color      = isNeg ? '#1D4ED8' : '#C0392B';
+
+  // Header
+  document.getElementById('brModalHospital').textContent = r.hospital_name;
+  const ub = document.getElementById('brModalUrgencyBadge');
+  if (ub) {
+    ub.textContent = urgency.charAt(0).toUpperCase() + urgency.slice(1);
+    ub.className   = `br-urgency-badge ${urgency}`;
+  }
+
+  // Detail grid values
+  document.getElementById('brMdBloodType').textContent   = r.blood_type;
+  document.getElementById('brMdUnits').textContent        = `${r.units_required} unit${r.units_required !== 1 ? 's' : ''}`;
+  document.getElementById('brMdDonationType').textContent = r.donation_type || 'Whole Blood';
+  document.getElementById('brMdUrgency').textContent      = urgency.charAt(0).toUpperCase() + urgency.slice(1);
+  document.getElementById('brMdHospital').textContent     = r.hospital_name;
+  document.getElementById('brMdCity').textContent         = r.city || '—';
+  document.getElementById('brMdDate').textContent         = brFormatDate(r.date_needed);
+  document.getElementById('brMdRelationship').textContent = r.relationship || '—';
+
+  // Status with colour
+  const statusEl = document.getElementById('brMdStatus');
+  const statusColors = { pending: '#D97706', approved: '#16A34A', fulfilled: '#2563EB', cancelled: '#DC2626' };
+  statusEl.textContent = (r.status || 'pending').toUpperCase();
+  statusEl.style.color = statusColors[r.status] || '#374151';
+  statusEl.style.fontWeight = '700';
+
+  // Submitted datetime
+  const d = new Date(r.created_at);
+  document.getElementById('brMdSubmitted').textContent = isNaN(d) ? '—'
+    : d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+      + ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  // Notes block
+  const notesWrap = document.getElementById('brNotesWrap');
+  if (r.notes && r.notes.trim()) {
+    document.getElementById('brMdNotes').textContent = r.notes;
+    notesWrap.style.display = 'flex';
+  } else {
+    notesWrap.style.display = 'none';
+  }
+
+  // Footer "posted X ago"
+  document.getElementById('brMdPosted').textContent = r.created_at
+    ? `Posted ${brTimeAgo(r.created_at)}` : '';
+
+  // Open overlay
+  document.getElementById('brModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function brCloseModal(event) {
+  if (event && event.target !== document.getElementById('brModalOverlay')) return;
+  document.getElementById('brModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ESC to close
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') brCloseModal(null);
 });

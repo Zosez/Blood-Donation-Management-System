@@ -64,10 +64,10 @@
         <label for="blood-type">Blood Type Needed</label>
         <select id="blood-type">
           <option value="" disabled selected>Select Type</option>
-          <option>A+</option><option>A−</option>
-          <option>B+</option><option>B−</option>
-          <option>AB+</option><option>AB−</option>
-          <option>O+</option><option>O−</option>
+          <option value="A+">A+</option><option value="A-">A-</option>
+          <option value="B+">B+</option><option value="B-">B-</option>
+          <option value="AB+">AB+</option><option value="AB-">AB-</option>
+          <option value="O+">O+</option><option value="O-">O-</option>
         </select>
       </div>
       <div class="form-group">
@@ -129,15 +129,34 @@
       </div>
     </div>
 
-    <!-- Hospital + City -->
+    <!-- Hospital -->
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group full">
         <label for="hospital">Hospital Name</label>
-        <input id="hospital" type="text" placeholder="e.g. City General Hospital" />
+        <input id="hospital" type="text" placeholder="e.g. Bir Hospital" />
       </div>
-      <div class="form-group">
-        <label for="city">City</label>
-        <input id="city" type="text" placeholder="e.g. Chicago" />
+    </div>
+
+    <!-- Province + City (combined box) -->
+    <div class="form-row">
+      <div class="form-group full">
+        <label>Province &amp; City / District</label>
+        <div class="location-group">
+          <select id="province" onchange="updateCities()">
+            <option value="" disabled selected>Select Province</option>
+            <option value="koshi">Koshi Province</option>
+            <option value="madhesh">Madhesh Province</option>
+            <option value="bagmati">Bagmati Province</option>
+            <option value="gandaki">Gandaki Province</option>
+            <option value="lumbini">Lumbini Province</option>
+            <option value="karnali">Karnali Province</option>
+            <option value="sudurpashchim">Sudurpashchim Province</option>
+          </select>
+          <div class="location-divider"></div>
+          <select id="city" disabled>
+            <option value="" disabled selected>Select Province first</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -215,9 +234,98 @@
     <span class="banner-label">Medical Work</span>
   </div>
 
+  <!-- ═══ ACTIVE REQUESTS LIST ═══ -->
+  <section class="requests-section">
+    <div class="requests-header">
+      <div>
+        <h2 class="requests-title">Active Blood Requests</h2>
+        <p class="requests-sub">Click any request to view full details</p>
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="loadRequests()" title="Refresh">
+        <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Skeleton / list container -->
+    <div id="requests-list" class="requests-list">
+      <div class="req-skeleton"></div>
+      <div class="req-skeleton"></div>
+      <div class="req-skeleton"></div>
+    </div>
+
+    <p id="requests-empty" class="requests-empty" style="display:none;">
+      No active blood requests at the moment.
+    </p>
+  </section>
+
 </main>
 
 <footer>© 2026 LifeLink Hematology Management. All rights reserved.</footer>
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-card" id="modal-card">
+
+    <!-- Modal header -->
+    <div class="modal-header" id="modal-header-bar">
+      <div class="modal-blood-badge" id="modal-blood-badge">A+</div>
+      <div class="modal-title-block">
+        <h3 id="modal-hospital"></h3>
+        <span class="modal-urgency-badge" id="modal-urgency-badge">Normal</span>
+      </div>
+      <button class="modal-close" onclick="closeModal(null)" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal body grid -->
+    <div class="modal-body">
+      <div class="modal-detail-grid">
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Blood Type</span>
+          <span class="modal-detail-value" id="md-blood-type"></span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Units Required</span>
+          <span class="modal-detail-value" id="md-units"></span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Donation Type</span>
+          <span class="modal-detail-value" id="md-donation-type"></span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">City</span>
+          <span class="modal-detail-value" id="md-city"></span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Date Needed</span>
+          <span class="modal-detail-value" id="md-date"></span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Relationship</span>
+          <span class="modal-detail-value" id="md-relationship"></span>
+        </div>
+      </div>
+
+      <div class="modal-notes-block" id="modal-notes-wrap">
+        <span class="modal-detail-label">Additional Notes</span>
+        <p id="md-notes"></p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <span id="md-posted"></span>
+      <button class="btn-submit modal-contact-btn" onclick="closeModal(null)">Close</button>
+    </div>
+  </div>
+</div>
 
 <script src="../utils/protectedRoute.js"></script>
 <script src="requestBlood.js"></script>
