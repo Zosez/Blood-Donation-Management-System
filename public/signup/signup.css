@@ -55,7 +55,15 @@ nav {
   flex-shrink: 0;
   display: block;
 }
-
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a {
+  text-decoration: none;
+  color: var(--sub);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--text); }
 .btn-login {
   border: 1.5px solid var(--text);
   border-radius: 50px;
@@ -128,6 +136,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="tel"],
+input[type="date"],
 select {
   width: 100%;
   background: var(--input-bg);
@@ -142,6 +151,14 @@ select {
   appearance: none;
   -webkit-appearance: none;
 }
+
+/* Required asterisk */
+.required-star {
+  color: var(--red);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: 2px;
+}
 input::placeholder { color: #A0AABA; }
 input:focus, select:focus {
   border-color: var(--red);
@@ -149,11 +166,13 @@ input:focus, select:focus {
 }
 
 /* ── Email validation states ── */
-input.input-error {
+input.input-error,
+select.input-error {
   border-color: #EF4444 !important;
   background: #FFF5F5;
 }
-input.input-valid {
+input.input-valid,
+select.input-valid {
   border-color: #16A34A !important;
   background: #F0FDF4;
 }

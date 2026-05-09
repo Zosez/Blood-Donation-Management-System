@@ -3,13 +3,24 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false, // true for 465, false for other ports
+    port: smtpPort,
+    secure: smtpPort === 465, // true for port 465 (SSL), false for 587 (STARTTLS)
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
+    }
+});
+
+// Verify SMTP connection on startup so misconfiguration surfaces immediately
+transporter.verify((error) => {
+    if (error) {
+        console.error('[MAILER] SMTP connection failed:', error.message);
+    } else {
+        console.log('[MAILER] SMTP connection established – ready to send emails');
     }
 });
 

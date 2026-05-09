@@ -317,6 +317,11 @@ document.getElementById("user-profile").addEventListener("click", () => {
     window.location.href = "/userProfile";
 });
 
+// ───────── donorRequest REDIRECT ─────────
+document.getElementById("donor-request").addEventListener("click", () => {
+    window.location.href = "/donorRequest";
+});
+
 // ───────── userProfile REDIRECT ─────────
 document.getElementById("home-logo").addEventListener("click", () => {
     window.location.href = "/";
@@ -326,5 +331,6 @@ document.getElementById("home-logo").addEventListener("click", () => {
 document.getElementById("submit-request").addEventListener("click", () => {
     window.location.href = "/requestBlood";
 });
+
 
 

@@ -1,6 +1,8 @@
 /* ── main.js ── */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Protect admin route
+  if (!ADMIN_AUTH.protectRoute()) return;
 
   /* ── NAV: active state on click ── */
   document.querySelectorAll('.nav-item').forEach(item => {

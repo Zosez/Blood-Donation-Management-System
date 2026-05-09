@@ -620,47 +620,179 @@ html, body {
 
 /* ─── RESPONSIVE DESIGN ─── */
 
-/* Tablet (481px - 768px) */
-@media (max-width: 768px) {
+/* Extra large screens (1441px+) */
+@media (min-width: 1441px) {
+  .main-wrapper { max-width: 1400px; margin: 0 auto; padding-left: 3rem; padding-right: 3rem; }
+  .impact-row { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Large screens (1100px - 1440px) */
+@media (max-width: 1100px) {
+  .main-wrapper { padding-left: 36px; padding-right: 36px; }
+  .footer { padding: 22px 36px; }
+}
+
+/* Medium screens (900px - 1100px) */
+@media (max-width: 900px) {
   .navbar { padding: 0 1.5rem; }
-  .nav-links { gap: 16px; font-size: 12px; }
-  .filters-row { flex-direction: column; gap: 1rem; }
-  .filter-pills { flex-wrap: wrap; }
+  .nav-links { display: none; }
+  .nav-search { display: none; width: auto; }
+  .page-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+  .page-title { font-size: 1.5rem; }
+  .filters-row { flex-direction: column; gap: 0.75rem; }
+  .filter-pills { flex-wrap: wrap; gap: 4px; }
+  .pill { padding: 5px 12px; font-size: 0.75rem; }
+  .impact-row { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .impact-card { grid-column: 1 / -1; padding: 24px 20px; }
   .table-card { overflow-x: auto; }
-  .requests-table { font-size: 0.85rem; }
-  .impact-row { grid-template-columns: repeat(2, 1fr); }
+  .requests-table { font-size: 0.82rem; }
+  .requests-table th, .requests-table td { padding: 12px 14px; }
+}
+
+/* Tablet (768px - 900px) */
+@media (max-width: 768px) {
+  :root { --nav-h: 60px; }
+  .navbar { padding: 0 1rem; height: 60px; }
+  .logo-img { width: 30px; height: 30px; }
+  .logo-text { font-size: 1.05rem; }
+  .nav-avatar-name { display: none; }
+  .nav-avatar { padding: 4px; }
+  .nav-avatar img { width: 28px; height: 28px; }
+  .main-wrapper { padding-top: calc(60px + 24px); padding-left: 20px; padding-right: 20px; padding-bottom: 40px; gap: 20px; }
+  .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
+  .page-header-left { gap: 4px; }
+  .page-title { font-size: 1.4rem; }
+  .page-subtitle { font-size: 0.85rem; }
+  .btn-new-request { width: 100%; padding: 12px 16px; font-size: 0.88rem; }
+  .filters-row { flex-direction: column; gap: 12px; }
+  .status-filters { width: 100%; flex-direction: column; }
+  .filter-label { margin-bottom: 6px; }
+  .filter-pills { gap: 4px; }
+  .pill { padding: 5px 12px; font-size: 0.75rem; }
+  .sort-wrap { width: 100%; justify-content: space-between; font-size: 0.8rem; }
+  .requests-table { font-size: 0.78rem; }
+  .requests-table th { padding: 12px 10px; font-size: 0.65rem; }
+  .requests-table td { padding: 12px 10px; }
+  .blood-badge { min-width: 35px; padding: 3px 8px; font-size: 0.75rem; }
+  .status-badge { padding: 3px 8px; font-size: 0.65rem; }
+  .impact-row { grid-template-columns: 1fr; gap: 12px; }
+  .impact-card { padding: 20px 16px; margin-bottom: 0; }
+  .impact-number { font-size: 1.4rem; }
+  .impact-desc { max-width: 100%; font-size: 0.8rem; }
+  .metric-card { padding: 18px 16px; gap: 6px; }
+  .metric-icon { width: 32px; height: 32px; }
+  .metric-label { font-size: 0.65rem; }
+  .metric-value { font-size: 1.6rem; }
+  .footer { padding: 16px 20px; }
+  .footer-inner { gap: 12px; }
+  .footer-copy { font-size: 0.75rem; }
+  .footer-links { gap: 12px; }
+  .footer-links a { font-size: 0.75rem; }
+}
+
+/* Small tablet (600px - 768px) */
+@media (max-width: 700px) {
+  .main-wrapper { padding-left: 16px; padding-right: 16px; }
+  .page-title { font-size: 1.3rem; }
+  .page-subtitle { display: none; }
+  .requests-table { font-size: 0.75rem; }
+  .requests-table th { padding: 10px 8px; }
+  .requests-table td { padding: 10px 8px; }
+  .impact-row { gap: 10px; }
+}
+
+/* Mobile landscape / small devices (481px - 600px) */
+@media (max-width: 600px) {
+  :root { --nav-h: 56px; }
+  .navbar { padding: 0 0.75rem; height: 56px; }
+  .logo-img { width: 28px; height: 28px; }
+  .logo-text { font-size: 0.95rem; }
+  .nav-avatar { display: none; }
+  .nav-bell { min-width: 44px; }
+  .main-wrapper { padding-top: calc(56px + 16px); padding-left: 12px; padding-right: 12px; }
+  .page-title { font-size: 1.15rem; }
+  .back-link { font-size: 0.75rem; margin-bottom: 8px; }
+  .btn-new-request { font-size: 0.85rem; padding: 10px 16px; }
+  .filters-row { gap: 8px; }
+  .filter-label { display: none; }
+  .filter-pills { gap: 3px; }
+  .pill { padding: 4px 10px; font-size: 0.7rem; }
+  .sort-wrap { font-size: 0.75rem; padding: 6px 10px; }
+  .requests-table { font-size: 0.7rem; }
+  .requests-table th { padding: 8px 6px; font-size: 0.6rem; letter-spacing: 0.3px; }
+  .requests-table td { padding: 8px 6px; }
+  .blood-badge { min-width: 32px; padding: 2px 6px; font-size: 0.7rem; }
+  .status-badge { padding: 2px 6px; font-size: 0.6rem; }
+  .td-date { gap: 1px; }
+  .date-main { font-size: 0.75rem; }
+  .date-time { font-size: 0.65rem; }
+  .urgency { font-size: 0.7rem; }
+  .impact-card { padding: 16px 12px; }
+  .impact-number { font-size: 1.2rem; }
+  .impact-label { font-size: 0.6rem; }
+  .impact-desc { font-size: 0.75rem; }
+  .metric-card { padding: 14px 12px; }
+  .metric-label { font-size: 0.6rem; }
+  .metric-value { font-size: 1.4rem; }
+  .metric-unit { font-size: 0.85rem; }
+  .footer { padding: 12px 12px; }
+  .footer-inner { flex-direction: column; }
 }
 
 /* Mobile (320px - 480px) */
 @media (max-width: 480px) {
-  :root { --nav-h: 64px; }
-  .navbar { padding: 0 1rem; height: 64px; }
-  .logo-img { width: 28px; height: 28px; }
-  .logo-text { font-size: 1rem; }
-  .nav-links { display: none; }
-  .nav-search { display: none; }
-  .nav-right { gap: 8px; }
-  .page-header { flex-direction: column; gap: 1rem; }
-  .page-header-left { width: 100%; }
-  .page-title { font-size: 1.25rem; }
-  .btn-new-request { width: 100%; }
-  .filters-row { flex-direction: column; }
-  .filter-pills { flex-wrap: wrap; }
-  .requests-table { font-size: 0.75rem; }
-  .requests-table th, .requests-table td { padding: 0.5rem; }
-  .impact-row { grid-template-columns: 1fr; gap: 1rem; }
+  :root { --nav-h: 52px; }
+  .navbar { padding: 0 0.5rem; height: 52px; justify-content: space-between; }
+  .nav-logo { gap: 4px; }
+  .logo-img { width: 26px; height: 26px; }
+  .logo-text { font-size: 0.9rem; }
+  .nav-right { gap: 6px; }
+  .main-wrapper { padding-top: calc(52px + 12px); padding-left: 10px; padding-right: 10px; padding-bottom: 30px; gap: 16px; }
+  .page-header { gap: 8px; }
+  .page-header-left { gap: 2px; }
+  .back-link { font-size: 0.7rem; margin-bottom: 4px; gap: 2px; }
+  .page-title { font-size: 1rem; }
+  .page-subtitle { display: none; }
+  .btn-new-request { width: 100%; font-size: 0.8rem; padding: 9px 12px; gap: 4px; }
+  .filters-row { flex-direction: column; gap: 6px; }
+  .filter-label { display: none; }
+  .filter-pills { gap: 2px; justify-content: flex-start; }
+  .pill { padding: 3px 8px; font-size: 0.65rem; border-radius: 40px; }
+  .sort-wrap { font-size: 0.7rem; padding: 4px 8px; gap: 3px; border-radius: 6px; }
+  .sort-wrap svg { width: 10px; height: 10px; }
+  .table-card { border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .requests-table { font-size: 0.65rem; }
+  .requests-table th { padding: 6px 4px; font-size: 0.55rem; letter-spacing: 0px; }
+  .requests-table td { padding: 6px 4px; }
+  .blood-badge { min-width: 28px; padding: 1px 4px; font-size: 0.6rem; }
+  .status-badge { padding: 1px 4px; font-size: 0.55rem; }
+  .view-link { font-size: 0.75rem; }
+  .td-date { gap: 0px; }
+  .date-main { font-size: 0.7rem; }
+  .date-time { font-size: 0.6rem; }
+  .impact-row { gap: 8px; }
+  .impact-card { padding: 12px 10px; grid-column: 1 / -1; }
+  .impact-watermark { display: none; }
+  .impact-label { font-size: 0.55rem; margin-bottom: 4px; }
+  .impact-number { font-size: 1rem; margin-bottom: 4px; }
+  .impact-desc { font-size: 0.7rem; line-height: 1.4; }
+  .metric-card { padding: 12px 10px; }
+  .metric-icon { width: 28px; height: 28px; }
+  .metric-label { font-size: 0.55rem; }
+  .metric-value { font-size: 1.2rem; }
+  .metric-unit { font-size: 0.7rem; }
+  .footer { padding: 10px; }
+  .footer-inner { flex-direction: column; gap: 8px; }
+  .footer-copy { font-size: 0.7rem; }
+  .footer-links { gap: 8px; flex-direction: column; }
+  .footer-links a { font-size: 0.7rem; }
 }
 
-/* Touch targets (min 44x44px) */
+/* Touch targets - ensure 44x44px minimum */
 @media (hover: none) and (pointer: coarse) {
-  button, a, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
-  .nav-bell { min-height: 44px; }
-}
-
-/* Extra wide (1441px+) */
-@media (min-width: 1441px) {
-  .main-wrapper { max-width: 1400px; margin: 0 auto; padding-left: 3rem; padding-right: 3rem; }
-  .impact-row { grid-template-columns: repeat(4, 1fr); }
+  button, a { min-width: 44px; min-height: 44px; }
+  .nav-bell, .pill, .sort-wrap { min-height: 44px; }
+  .requests-table td { padding: 12px 10px; }
 }
   font-size: 2.6rem;
   font-weight: 800;

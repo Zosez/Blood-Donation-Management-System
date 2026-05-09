@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeLink – Request Declined</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="logo">
+      <img src="life_link_logo.jpg" class="logo-icon" alt="LifeLink Logo" style="object-fit: contain;" />
+      LifeLink
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#" class="active">Requests</a></li>
+      <li><a href="#">Donations</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <button class="bell-btn" aria-label="Notifications">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <div class="avatar" aria-label="User profile">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="7" r="4" fill="#fff" opacity=".9"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"
+                stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="card">
+
+      <div class="icon-wrap">
+        <img
+          src="data:image/png;base64,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"
+          alt="Declined hand icon"
+          class="hand-img"
+        />
+      </div>
+
+      <h1>You've declined this<br>request.</h1>
+
+      <p class="subtitle">
+        Thank you for your response. No action is<br>required.
+      </p>
+
+      <div class="info-box">
+        You can still accept other matched requests from your dashboard.
+        Our network relies on specialists like you to maintain the flow of
+        life-saving care.
+      </div>
+
+      <a href="#" class="btn-dashboard">Go to Dashboard</a>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>LifeLink Clinical Network &bull; Response Confirmed</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

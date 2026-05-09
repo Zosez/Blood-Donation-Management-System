@@ -5,13 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LifeLink Admin – User Management</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="users.css"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-<!-- ══════════════════════════════
-     SIDEBAR
-══════════════════════════════ -->
 <aside class="sidebar">
 
   <!-- Brand -->
@@ -95,14 +92,6 @@
     </button>
   </div>
 
-  <!-- Logged-in user -->
-  <div class="sidebar-user">
-    <div class="avatar" style="background:#dbeafe;color:#1d4ed8;">SC</div>
-    <div>
-      <div style="font-size:13px;font-weight:600;color:var(--text-1)">Dr. Sarah Chen</div>
-      <div style="font-size:11px;color:var(--text-3)">Senior Coordinator</div>
-    </div>
-  </div>
 
 </aside>
 
@@ -370,10 +359,7 @@
   </main>
 </div>
 
-<script src="../utils/protectedRoute.js"></script>
-<script src="users.js"></script>
-<script>
-  initProtectedRoute('admin');
-</script>
+<script src="../utils/adminAuth.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

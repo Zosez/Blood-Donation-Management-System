@@ -1,4 +1,138 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Protect admin route
+  if (!ADMIN_AUTH.protectRoute()) return;
+
+  const API_URL = 'http://localhost:5000/api';
+  const token = localStorage.getItem('token');
+
+  /* ─── LOAD DASHBOARD DATA ─── */
+  async function loadDashboardData() {
+    try {
+      // Fetch dashboard stats
+      const statsRes = await fetch(`${API_URL}/admin/dashboard-stats`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!statsRes.ok) throw new Error('Failed to fetch stats');
+      const stats = await statsRes.json();
+
+      // Update stat cards with animation
+      const statValues = document.querySelectorAll('[data-count]');
+      if (statValues[0]) { statValues[0].dataset.count = stats.totalUsers; }
+      if (statValues[1]) { statValues[1].dataset.count = stats.pendingRequests; }
+      if (statValues[2]) { statValues[2].dataset.count = stats.openRequests; }
+      if (statValues[3]) { statValues[3].dataset.count = stats.donationsToday; }
+
+      // Update pending badge
+      const pendingBadge = document.getElementById('pendingBadge');
+      if (pendingBadge) pendingBadge.textContent = stats.pendingRequests;
+
+      // Fetch pending requests
+      const requestsRes = await fetch(`${API_URL}/admin/pending-requests`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!requestsRes.ok) throw new Error('Failed to fetch requests');
+      const { requests } = await requestsRes.json();
+
+      // Populate requests table
+      populateRequestsTable(requests);
+
+      // Trigger counter animation
+      startCounters();
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      showToast('Failed to load dashboard data', 'danger');
+    }
+  }
+
+  function populateRequestsTable(requests) {
+    const tbody = document.getElementById('requestsBody');
+    if (!tbody) return;
+
+    // Clear existing rows
+    tbody.innerHTML = '';
+
+    if (requests.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #9CA3AF;">No pending requests</td></tr>';
+      return;
+    }
+
+    // Map blood types to CSS classes
+    const bloodTypeClass = {
+      'O-': 'o-neg', 'O+': 'o-pos',
+      'A-': 'a-neg', 'A+': 'a-pos',
+      'B-': 'b-neg', 'B+': 'b-pos',
+      'AB-': 'ab-neg', 'AB+': 'ab-pos'
+    };
+
+    // Map urgency levels
+    const urgencyMap = {
+      'critical': { class: 'critical', label: 'Critical' },
+      'urgent': { class: 'expedited', label: 'Expedited' },
+      'normal': { class: 'standard', label: 'Standard' }
+    };
+
+    requests.forEach(req => {
+      const urgency = urgencyMap[req.urgency_level] || urgencyMap['normal'];
+      const bloodClass = bloodTypeClass[req.blood_type] || 'o-neg';
+
+      const row = document.createElement('tr');
+      row.dataset.id = req.id;
+      row.innerHTML = `
+        <td>
+          <div class="patient-name">${req.facility}</div>
+          <div class="patient-req">Request #${req.id}</div>
+        </td>
+        <td><span class="blood-tag ${bloodClass}">${req.blood_type}</span></td>
+        <td><span class="urgency ${urgency.class}">
+          <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+          ${urgency.label}</span></td>
+        <td><strong>${req.units_required} Unit${req.units_required > 1 ? 's' : ''}</strong></td>
+        <td>
+          <button class="row-action-btn" data-id="${req.id}" data-facility="${req.facility}" data-type="${req.blood_type}" data-urgency="${urgency.label}" data-units="${req.units_required}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+    // Reattach event listeners
+    attachRequestRowListeners();
+  }
+
+  function attachRequestRowListeners() {
+    document.querySelectorAll('.row-action-btn').forEach(btn => {
+      btn.removeEventListener('click', handleRowAction);
+      btn.addEventListener('click', handleRowAction);
+    });
+
+    document.querySelectorAll('tbody tr').forEach(row => {
+      row.removeEventListener('click', handleRowClick);
+      row.addEventListener('click', handleRowClick);
+    });
+  }
+
+  function handleRowAction(e) {
+    e.stopPropagation();
+    const { facility, type, urgency, units, id } = e.currentTarget.dataset;
+    showToast(`Opening ${facility} — ${type} · ${urgency} · ${units} units`, 'info');
+    // Show action modal here later (approve/reject)
+  }
+
+  function handleRowClick() {
+    this.querySelector('.row-action-btn')?.click();
+  }
 
   /* ─── TOAST ─── */
   let toastTimeout = null;
@@ -61,9 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const titles = {
         dashboard:  { title: 'Admin Dashboard',    sub: 'Overview of LifeLink platform activity' },
         pending:    { title: 'Pending Requests',   sub: 'Review and approve blood requests' },
-        myrequests: { title: 'My Requests',        sub: 'Track your submitted requests' },
         users:      { title: 'User Management',    sub: 'Manage donors, admins, and hospitals' },
-        logs:       { title: 'Audit Logs',         sub: 'View all system activity logs' },
+        
       };
 
       const info = titles[page] || { title: label, sub: '' };
@@ -76,38 +209,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── SETTINGS MODAL ─── */
-  const settingsOverlay = document.getElementById('settingsOverlay');
-  const settingsLink    = document.getElementById('settingsLink');
-  const closeSettings   = document.getElementById('closeSettings');
-
-  settingsLink?.addEventListener('click', (e) => {
-    e.preventDefault();
-    settingsOverlay.classList.add('open');
-  });
-
-  closeSettings?.addEventListener('click', () => {
-    settingsOverlay.classList.remove('open');
-  });
-
-  settingsOverlay?.addEventListener('click', (e) => {
-    if (e.target === settingsOverlay) {
-      settingsOverlay.classList.remove('open');
-    }
-  });
-
-  const notifSelect = document.getElementById('notifSelect');
-  notifSelect?.addEventListener('change', (e) => {
-    showToast(`Notification preference changed to: ${e.target.value}`, 'success');
-  });
-
+  
   /* ─── LOGOUT ─── */
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    showToast('Logging out… Goodbye!', 'warning');
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 1500);
+  }
+
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
     e.preventDefault();
-    showToast('Logging out… Goodbye, Admin User!', 'warning');
-    setTimeout(() => {
-      showToast('Session ended. Redirecting…', 'danger');
-    }, 1800);
+    handleLogout();
+  });
+
+  document.getElementById('dropdownLogoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    if(avatarDropdown) avatarDropdown.classList.remove('show');
+    handleLogout();
   });
 
   /* ─── BELL / NOTIFICATIONS ─── */
@@ -132,14 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.getElementById('dropdownLogoutBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    if(avatarDropdown) avatarDropdown.classList.remove('show');
-    showToast('Logging out… Goodbye, Admin User!', 'warning');
-    setTimeout(() => {
-      showToast('Session ended. Redirecting…', 'danger');
-    }, 1800);
-  });
+  /* ─── NAV AVATAR DROPDOWN - moved to logout handlers above ─── */
 
   /* ─── MOBILE SIDEBAR ─── */
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -164,21 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('[data-page="pending"]')?.click();
   });
 
-  /* ─── ROW ACTION BUTTONS ─── */
-  document.querySelectorAll('.row-action-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const { facility, type, urgency, units } = btn.dataset;
-      showToast(`Opening ${facility} — ${type} · ${urgency} · ${units} units`, 'info');
-    });
-  });
-
-  document.querySelectorAll('tbody tr').forEach(row => {
-    row.addEventListener('click', () => {
-      row.querySelector('.row-action-btn')?.click();
-    });
-  });
-
   /* ─── BROADCAST BUTTON ─── */
   document.getElementById('broadcastBtn')?.addEventListener('click', () => {
     showToast(' Emergency Broadcast Activated! Notifying all O- matched donors…', 'danger');
@@ -197,11 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   });
 
-  /* ─── AUDIT LOG BUTTON ─── */
-  document.getElementById('auditBtn')?.addEventListener('click', () => {
-    showToast('Opening full audit log…', 'info');
-    document.querySelector('[data-page="logs"]')?.click();
-  });
+ 
 
   /* ─── MANAGE DONORS ─── */
   document.getElementById('manageDonorsBtn')?.addEventListener('click', () => {
@@ -212,11 +308,13 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── STAT CARD CLICK ─── */
   document.querySelectorAll('.stat-card').forEach((card, i) => {
     card.addEventListener('click', () => {
+      const statValues = document.querySelectorAll('[data-count]');
+      const vals = Array.from(statValues).map(el => parseInt(el.textContent.replace(/,/g, '')));
       const msgs = [
-        'Total Users: 2,842 — +12% from last month',
-        'Pending Requests: 12 — Action required urgently!',
-        'Open Requests: 48 — Across 18 hospitals',
-        'Donations Today: 156 — Great work, team!',
+        `Total Users: ${vals[0]} — Active users on platform`,
+        `Pending Requests: ${vals[1]} — Action required urgently!`,
+        `Open Requests: ${vals[2]} — Across multiple hospitals`,
+        `Donations Today: ${vals[3]} — Great work, team!`,
       ];
       showToast(msgs[i] || 'Stat details coming soon', 'info');
     });
@@ -252,7 +350,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('scroll', startCounters);
-  setTimeout(startCounters, 300);
+
+  /* ─── LOAD DASHBOARD DATA ─── */
+  loadDashboardData().then(() => {
+    setTimeout(startCounters, 300);
+  });
 
   /* ─── SCROLL REVEAL ─── */
   const revealEls = document.querySelectorAll('.reveal');
@@ -315,16 +417,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(redrawChart, 200);
 
-  /* ─── KEYBOARD SHORTCUTS ─── */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      settingsOverlay?.classList.remove('open');
-    }
-  });
-
+  
   /* ─── INITIAL TOAST ─── */
   setTimeout(() => {
     showToast('Welcome back, Admin User!', 'success');
   }, 800);
 
+});
+
+document.getElementById('admin-notification')?.addEventListener('click', () => {
+  window.location.href = '/adminNotification';
+});
+
+document.getElementById('admin-users')?.addEventListener('click', () => {
+  window.location.href = '/adminUsers';
+});
+
+document.getElementById('admin-request')?.addEventListener('click', () => {
+  window.location.href = '/adminRequest';
+});
+
+document.getElementById('admin-profile')?.addEventListener('click', () => {
+  window.location.href = '/adminProfile';
 });

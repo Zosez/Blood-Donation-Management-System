@@ -14,7 +14,13 @@ const forgotLink    = document.getElementById("forgotLink");
 
 // Redirect if already logged in
 if (localStorage.getItem('token')) {
-  window.location.href = '/userdashboard';
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const redirectUrl = user?.role === 'admin' ? '/adminDashboard' : '/userdashboard';
+    window.location.href = redirectUrl;
+  } catch {
+    window.location.href = '/userdashboard';
+  }
 }
 
 // Toggle password
@@ -84,11 +90,10 @@ async function handleLogin() {
 
       loginBtn.textContent = "✓ Success!";
 
-      setTimeout(() => {
-        const finalUrl = data.redirectUrl || '/userdashboard';
-        console.log('[LOGIN REDIRECT] Going to:', finalUrl);
-        window.location.href = finalUrl;
-      }, 1000);
+      // Redirect immediately without delay
+      const finalUrl = data.redirectUrl || '/userdashboard';
+      console.log('[LOGIN REDIRECT] Going to:', finalUrl);
+      window.location.href = finalUrl;
     } else {
       // Check if email is not verified (403)
       if (data.requiresVerification && data.email) {

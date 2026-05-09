@@ -199,6 +199,48 @@ confirmInput.addEventListener('blur', () => {
     }
 });
 
+/* ─── BIRTH DATE VALIDATION ─── */
+const birthDateInput = document.getElementById('birthDate');
+const birthDateError = document.getElementById('birthDateError');
+
+// Set max date to today (no future births)
+(function() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm   = String(today.getMonth() + 1).padStart(2, '0');
+  const dd   = String(today.getDate()).padStart(2, '0');
+  birthDateInput.max = `${yyyy}-${mm}-${dd}`;
+})();
+
+function setBirthDateError(msg) {
+  birthDateInput.classList.toggle('input-error', !!msg);
+  birthDateInput.classList.toggle('input-valid', !msg && !!birthDateInput.value);
+  birthDateError.textContent = msg;
+  birthDateError.style.display = msg ? 'block' : 'none';
+}
+
+function validateBirthDate() {
+  const val = birthDateInput.value;
+  if (!val) {
+    setBirthDateError('Date of Birth is required.');
+    return false;
+  }
+  const dob   = new Date(val);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  if (age < 18) {
+    setBirthDateError('You must be at least 18 years old to register.');
+    return false;
+  }
+  setBirthDateError('');
+  return true;
+}
+
+birthDateInput.addEventListener('blur',  validateBirthDate);
+birthDateInput.addEventListener('change', validateBirthDate);
+
 // Form submission
 const signupForm = document.getElementById('signupForm');
 
@@ -206,7 +248,7 @@ signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     let hasError = false;
-    
+
     // Validate full name
     const fullnameInput = document.getElementById('fullname');
     if (!fullnameInput.value.trim()) {
@@ -297,6 +339,15 @@ signupForm.addEventListener('submit', async (e) => {
         setFieldError(citySelect, 'cityError', '');
     }
     
+    // Validate birth date
+    const isAgeValid = validateBirthDate();
+    if (!isAgeValid) {
+        if (!hasError) {
+            birthDateInput.focus();
+            hasError = true;
+        }
+    }
+    
     // Validate blood type
     const bloodTypeSelect = document.getElementById('bloodType');
     if (!bloodTypeSelect.value) {
@@ -334,7 +385,8 @@ signupForm.addEventListener('submit', async (e) => {
         phone: phoneInput.value.trim() || null,
         province: provinceSelect.value,
         city: citySelect.value,
-        blood_type: bloodTypeSelect.value
+        blood_type: bloodTypeSelect.value,
+        date_of_birth: birthDateInput.value || null   // ← was missing
     };
     
     try {
@@ -389,3 +441,20 @@ signupForm.addEventListener('submit', async (e) => {
 // Navigation
 document.getElementById("btn-login").onclick = () => window.location.href = "/login";
 document.getElementById("home-logo").onclick = () => window.location.href = "/";
+
+// ... existing constants (API_URL, nepalData) ...
+
+// Helper to set valid/error states (from reference files)
+function setFieldState(input, errorId, msg) {
+    const errorDiv = document.getElementById(errorId);
+    if (msg) {
+        errorDiv.textContent = msg;
+        input.classList.add('input-error');
+        input.classList.remove('input-valid');
+    } else {
+        errorDiv.textContent = '';
+        input.classList.remove('input-error');
+        input.classList.add('input-valid');
+    }
+}
+

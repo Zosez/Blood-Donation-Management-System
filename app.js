@@ -17,6 +17,8 @@ const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const { corsMiddleware } = require('./middleware/corsConfig');
 const { sanitizeInputs } = require('./middleware/sanitizer');
 const { errorHandler } = require('./middleware/errorHandler');
+const { adminAuthMiddleware } = require('./middleware/adminAuth');
+const { authenticateToken } = require('./middleware/auth');
 
 // Middleware
 app.use(globalLimiter);
@@ -32,11 +34,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 const authRoutes = require('./routes/auth');
 const donationRoutes = require('./routes/donations');
 const bloodRequestRoutes = require('./routes/bloodRequests');
+const adminRoutes = require('./routes/admin');
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/blood-requests', bloodRequestRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -44,6 +48,58 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── Page Routes ──
+
+// Helper middleware to check admin role
+function requireAdmin(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        // No token provided - redirect to login
+        return res.redirect('/login');
+    }
+
+    try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (decoded.role !== 'admin') {
+            // Not an admin - redirect to user dashboard
+            return res.redirect('/userdashboard');
+        }
+        
+        next();
+    } catch (err) {
+        // Invalid token - redirect to login
+        return res.redirect('/login');
+    }
+}
+
+// Helper middleware to prevent admin access to user routes
+function requireUser(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        // No token - proceed (will show login or public page)
+        return next();
+    }
+
+    try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (decoded.role === 'admin') {
+            // Admin trying to access user route - redirect to admin dashboard
+            return res.redirect('/adminDashboard');
+        }
+        
+        next();
+    } catch (err) {
+        // Invalid token - proceed (will show login)
+        next();
+    }
+}
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -93,8 +149,25 @@ app.get('/requestBlood', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/requestBlood/requestBlood.html'));
 });
 
-app.get('/admindashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/admindashboard/admindashboard.html'));
+app.get('/donorRequest', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/donorRequest/donorRequest.html'));
+});
+
+// -- Admin Routes --
+app.get('/adminDashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminDashboard/adminDashboard.html'));
+});
+
+app.get('/adminNotification', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminNotification/adminNotification.html'));
+});
+
+app.get('/adminRequest', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminRequest/adminRequest.html'));
+});
+
+app.get('/adminUsers', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminUsers/adminUsers.html'));
 });
 
 app.get('/welcome', (req, res) => {

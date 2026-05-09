@@ -132,6 +132,12 @@ async function initializeDatabase() {
         } catch (e) { 
             console.log('[DB] Onboarded column already exists or skipped');
         }
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN date_of_birth DATE`);
+            console.log('[DB] Added date_of_birth column to users table');
+        } catch (e) {
+            console.log('[DB] date_of_birth column already exists or skipped');
+        }
 
         // Create indexes for frequently queried columns
         try {

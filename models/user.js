@@ -4,13 +4,13 @@ const bcrypt = require('bcrypt');
 class User {
     // Create new user
     static async create(userData) {
-        const { fullname, email, password, phone, province, city, blood_type } = userData;
+        const { fullname, email, password, phone, province, city, blood_type, date_of_birth } = userData;
         const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 10;
         const hashedPassword = await bcrypt.hash(password, rounds);
 
         const [result] = await db.execute(
-            'INSERT INTO users (fullname, email, password, phone, province, city, blood_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [fullname, email, hashedPassword, phone || null, province, city, blood_type]
+            'INSERT INTO users (fullname, email, password, phone, province, city, blood_type, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [fullname, email, hashedPassword, phone || null, province, city, blood_type, date_of_birth || null]
         );
         return result.insertId;
     }

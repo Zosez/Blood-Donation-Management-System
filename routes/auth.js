@@ -12,7 +12,7 @@ const { addToBlacklist } = require('../middleware/tokenBlacklist');
 // Helper: generate JWT token
 function generateToken(user) {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role || 'user' },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
@@ -57,7 +57,7 @@ router.post(
                 return res.status(400).json({ errors: errors.array() });
             }
 
-            const { fullname, email, password, phone, province, city, blood_type } = req.body;
+            const { fullname, email, password, phone, province, city, blood_type, date_of_birth } = req.body;
 
             // Check if email already exists
             const existingUser = await User.findByEmail(email);
@@ -66,7 +66,7 @@ router.post(
             }
 
             // Create user (is_verified defaults to 0)
-            const userId = await User.create({ fullname, email, password, phone, province, city, blood_type });
+            const userId = await User.create({ fullname, email, password, phone, province, city, blood_type, date_of_birth });
 
             // Generate and send verification email
             await generateAndSendVerification(email);
@@ -213,14 +213,25 @@ router.post(
             // Check if user has completed onboarding (treat NULL as 0/false for new users)
             const isNewUser = !user.onboarded || user.onboarded === 0;
             
-            console.log(`[AUTH LOGIN] User: ${user.email}, onboarded value: ${user.onboarded}, isNewUser: ${isNewUser}`);
+            // Debug: Check role value
+            console.log(`[AUTH LOGIN DEBUG] Role Value: "${user.role}", Type: ${typeof user.role}, IsAdmin: ${user.role === 'admin'}`);
+            
+            // Determine redirect URL based on role
+            let redirectUrl = '/userdashboard';
+            if (user.role === 'admin') {
+                redirectUrl = '/adminDashboard';
+            } else if (isNewUser) {
+                redirectUrl = '/welcome';
+            }
+            
+            console.log(`[AUTH LOGIN] Email: ${user.email}, Role: "${user.role}", IsNewUser: ${isNewUser}, RedirectURL: ${redirectUrl}`);
 
             res.json({
                 message: 'Login successful',
                 token,
                 user: sanitizeUser(user),
                 isNewUser: isNewUser,
-                redirectUrl: isNewUser ? '/welcome' : '/userdashboard'
+                redirectUrl: redirectUrl
             });
         } catch (error) {
             console.error('Login error:', error);
