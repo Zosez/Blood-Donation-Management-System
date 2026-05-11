@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ── SEARCH: live filter table rows ── */
-  const searchInputs = document.querySelectorAll('.search-wrap input, .filter-input-wrap input');
+  const searchInputs = document.querySelectorAll('.filter-input-wrap input');
   const roleSelect   = document.getElementById('roleFilter');
   const statusSelect = document.getElementById('statusFilter');
   const bloodSelect  = document.getElementById('bloodFilter');
 
   function filterTable() {
-    const query  = (document.querySelector('.search-wrap input').value || '').toLowerCase();
+    const query  = ''; // Topbar search removed
     const dbQuery= (document.querySelector('.filter-input-wrap input') || {value:''}).value.toLowerCase();
     const role   = roleSelect   ? roleSelect.value   : 'All Roles';
     const status = statusSelect ? statusSelect.value : 'All Status';
@@ -93,5 +93,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.btn-new-request')?.addEventListener('click', () => {
     alert('New request form coming soon!');
   });
+
+  /* ── PROFILE DROPDOWN: toggle & close ── */
+  const profileTrigger = document.getElementById('profileTrigger');
+  const profileDropdown = document.getElementById('profileDropdown');
+
+  if (profileTrigger && profileDropdown) {
+    profileTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profileDropdown.contains(e.target) && !profileTrigger.contains(e.target)) {
+        profileDropdown.classList.remove('show');
+      }
+    });
+  }
 
 });
