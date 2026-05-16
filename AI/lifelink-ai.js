@@ -1,11 +1,11 @@
 // lifelink-chat.js – LifeLink AI Chat (no emojis)
-(function() {
+(function () {
     // ========== CUSTOMIZATION ==========
     const CUSTOM_LOGO_URL = null;   // optional: set your logo URL
     const PRIMARY_COLOR = "#E11D2E"; // LifeLink red
     // =================================
 
-    const API_KEY = "AIzaSyA8im7cMDvIJ5xAPRAJ5h9ovRtXyzDn7RM";
+    const API_KEY = "AIzaSyCjqPZfiGUTDPKkDqa3UKzI6rIbS1LLYq4";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
     if (document.getElementById('lifeLinkAIChat')) return;

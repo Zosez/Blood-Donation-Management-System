@@ -30,6 +30,9 @@ app.use(sanitizeInputs);
 // Serve static frontend files from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve AI chatbot script from /AI directory
+app.use('/AI', express.static(path.join(__dirname, 'AI')));
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const donationRoutes = require('./routes/donations');
