@@ -151,9 +151,19 @@ router.post('/notifications/read-all', async (req, res) => {
 // ──────────────────────────────────────────────
 // GET /api/blood-requests/my  — get current user's blood requests (all statuses)
 // ──────────────────────────────────────────────
-router.get('/my', async (req, res) => {
+// ──────────────────────────────────────────────
+// GET /api/blood-requests/my  — get current user's blood requests (requires auth)
+// ──────────────────────────────────────────────
+router.get('/my', authenticateToken, async (req, res) => {
     try {
+        console.log('\n[BLOOD_REQUESTS] GET /my');
+        console.log('  userId:', req.user.id);
+        
         const requests = await BloodRequest.findByUserId(req.user.id);
+        console.log('  Found', requests.length, 'requests');
+        if (requests.length > 0) {
+            console.log('  First request:', { id: requests[0].id, user_id: requests[0].user_id });
+        }
         res.json({ requests });
     } catch (error) {
         console.error('Get user blood requests error:', error);
@@ -164,7 +174,7 @@ router.get('/my', async (req, res) => {
 // ──────────────────────────────────────────────
 // GET /api/blood-requests/my-requests  — alias for /my
 // ──────────────────────────────────────────────
-router.get('/my-requests', async (req, res) => {
+router.get('/my-requests', authenticateToken, async (req, res) => {
     try {
         const requests = await BloodRequest.findByUserId(req.user.id);
         res.json({ requests });

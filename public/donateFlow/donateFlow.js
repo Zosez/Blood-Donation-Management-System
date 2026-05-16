@@ -4,6 +4,8 @@ let targetRequest = null;
 let donorAttempts = [];
 let sessionRole = 'donor'; // or 'requester'
 let currentStep = 'eligibility'; // eligibility, questionnaire, confirmation, success, attempts
+let existingAttempt = null;
+let isEditMode = false;
 
 // Blood type compatibility
 const bloodTypeCompatibility = {
@@ -23,6 +25,10 @@ function initDonateFlow(systemState) {
   targetRequest = systemState.targetRequest;
   donorAttempts = systemState.donorAttempts || [];
   sessionRole = systemState.sessionRole || 'donor';
+  existingAttempt = systemState.existingAttempt || null;
+  isEditMode = !!existingAttempt;
+
+  console.log('DonateFlow initialized with state:', { currentUser, targetRequest, isEditMode, existingAttempt });
 
   if (sessionRole === 'donor') {
     renderDonorFlow();
@@ -38,6 +44,64 @@ function initDonateFlow(systemState) {
 function renderDonorFlow() {
   const container = document.getElementById('donateContent');
 
+  // Show existing attempt message
+  if (isEditMode && existingAttempt) {
+    let html = '<h2 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.3rem;">Your Donation Offer</h2>';
+    
+    html += `
+      <div class="success-card">
+        <div class="success-card-title">✓ Your response has been sent</div>
+        <div class="success-card-msg">The requester has received your donation offer. You can edit your response below if needed.</div>
+      </div>
+    `;
+
+    // Show current response info
+    html += `
+      <div class="summary-card">
+        <div class="summary-title">Current Response</div>
+        <div class="summary-item">
+          <span class="summary-label">Submitted</span>
+          <span class="summary-value">${existingAttempt.created_at ? new Date(existingAttempt.created_at).toLocaleDateString() : 'N/A'}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Status</span>
+          <span class="summary-value" style="text-transform: capitalize;">${existingAttempt.status || 'Pending'}</span>
+        </div>
+      </div>
+    `;
+
+    // If already accepted or declined, show that
+    if (existingAttempt.status === 'accepted') {
+      html += `
+        <div class="success-card" style="margin-top: 1.5rem;">
+          <div class="success-card-title">🎉 Donation Accepted!</div>
+          <div class="success-card-msg">The requester has accepted your donation offer. Please check your email for further instructions.</div>
+        </div>
+        <button class="btn btn-secondary" onclick="window.history.back()" style="width: 100%; margin-top: 1.5rem;">Go Back</button>
+      `;
+      container.innerHTML = html;
+      return;
+    } else if (existingAttempt.status === 'declined') {
+      html += `
+        <div class="blocking-card" style="margin-top: 1.5rem;">
+          <div class="blocking-card-title">ℹ Donation Declined</div>
+          <div class="blocking-card-msg">The requester has declined your donation offer. They may contact you if needed.</div>
+        </div>
+        <button class="btn btn-secondary" onclick="window.history.back()" style="width: 100%; margin-top: 1.5rem;">Go Back</button>
+      `;
+      container.innerHTML = html;
+      return;
+    }
+
+    // Allow editing if still pending
+    html += `<p style="color: #64748b; font-size: 0.9rem; margin: 1rem 0;">You can edit your contact information:</p>`;
+    currentStep = 'confirmation';
+    container.innerHTML = html;
+    renderConfirmation();
+    return;
+  }
+
+  // Normal flow for new donation
   if (currentStep === 'eligibility') {
     const blockReason = checkEligibility();
     if (blockReason) {
@@ -211,7 +275,7 @@ function renderConfirmation() {
     'normal': 'normal'
   }[urgencyClass] || 'normal';
 
-  let html = '<h2 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.3rem;">Confirm Your Donation</h2>';
+  let html = `<h2 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.3rem;">${isEditMode ? 'Edit Response' : 'Confirm Your Donation'}</h2>`;
 
   // Request summary
   html += `
@@ -262,7 +326,7 @@ function renderConfirmation() {
 
     <form id="confirmationForm">
       <div class="button-group">
-        <button type="submit" class="btn btn-primary">Confirm Donation Request</button>
+        <button type="submit" class="btn btn-primary">${isEditMode ? 'Save Changes' : 'Confirm Donation Request'}</button>
         <button type="button" class="btn btn-secondary" onclick="location.reload()">Cancel</button>
       </div>
     </form>
@@ -284,10 +348,10 @@ function submitDonation() {
   };
 
   const response = {
-    action: 'DONATION_ATTEMPT',
+    action: isEditMode ? 'UPDATE_DONATION' : 'DONATION_ATTEMPT',
     donor_id: currentUser.id,
     request_id: targetRequest.id,
-    questionnaire_passed: true,
+    questionnaire_passed: !isEditMode, // Only for new attempts
     donor_contact: donorContact,
     attempted_at: new Date().toISOString()
   };
@@ -312,8 +376,11 @@ async function saveDonationAttempt(response) {
   }
 
   try {
-    const res = await fetch('/api/donation-attempts', {
-      method: 'POST',
+    const endpoint = isEditMode ? `/api/donation-attempts/${existingAttempt.id}` : '/api/donation-attempts';
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    const res = await fetch(endpoint, {
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`

@@ -1,379 +1,225 @@
-/* ═══════════════════════════════════════════
-   LIFELINK ADMIN — adminInventory.js
-   Design system aligned with adminDashboard
-═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+    const API_URL = '/api';
 
-const statsData = [
-  {
-    id: "urgent-requests",
-    label: "URGENT REQUESTS",
-    value: 24,
-    chip: "+12% VS LAST HR",
-    chipClass: "stat-chip--red",
-    iconClass: "stat-icon--red",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-  },
-  {
-    id: "waiting-period",
-    label: "WAITING PERIOD",
-    value: "08:42",
-    chip: "AVG 14M",
-    chipClass: "stat-chip--amber",
-    iconClass: "stat-icon--amber",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  },
-  {
-    id: "hospital-hubs",
-    label: "HOSPITAL HUBS",
-    value: 42,
-    chip: "9 ACTIVE",
-    chipClass: "stat-chip--grey",
-    iconClass: "stat-icon--blue",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
-  },
-  {
-    id: "fulfillment-rate",
-    label: "FULFILLMENT RATE",
-    value: 112,
-    chip: "98.2%",
-    chipClass: "stat-chip--green",
-    iconClass: "stat-icon--green",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-  },
-];
+    // DOM Elements
+    const statsGrid = document.getElementById('statsGrid');
+    const inventoryGrid = document.getElementById('inventoryGrid');
+    const requestsBody = document.getElementById('requestsBody');
+    const navAvatar = document.getElementById('navAvatar');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    const logoutBtn = document.getElementById('dropdownLogoutBtn');
+    const toast = document.getElementById('toast');
 
-const initialRequests = [
-  {
-    reqId: "DON-8821", facility: "John Doe", facilitySub: "First-time Donor", bloodType: "O+",
-    status: "PENDING", statusClass: "status-high", time: "Oct 24, 2026"
-  },
-  {
-    reqId: "DON-8820", facility: "Sarah Connor", facilitySub: "Regular Donor", bloodType: "A-",
-    status: "SCHEDULED", statusClass: "status-routine", time: "Oct 24, 2026"
-  },
-  {
-    reqId: "DON-8819", facility: "Michael Smith", facilitySub: "O- Universal", bloodType: "O-",
-    status: "URGENT NEED", statusClass: "status-critical", time: "Oct 25, 2026"
-  },
-  {
-    reqId: "DON-8818", facility: "Emily Davis", facilitySub: "Regular Donor", bloodType: "AB+",
-    status: "PENDING", statusClass: "status-high", time: "Oct 25, 2026"
-  },
-  {
-    reqId: "DON-8817", facility: "David Wilson", facilitySub: "First-time Donor", bloodType: "A+",
-    status: "SCHEDULED", statusClass: "status-routine", time: "Oct 26, 2026"
-  },
-  {
-    reqId: "DON-8816", facility: "Jessica Brown", facilitySub: "Regular Donor", bloodType: "B-",
-    status: "SCHEDULED", statusClass: "status-routine", time: "Oct 26, 2026"
-  },
-  {
-    reqId: "DON-8815", facility: "Daniel Johnson", facilitySub: "AB- Rare", bloodType: "AB-",
-    status: "URGENT NEED", statusClass: "status-critical", time: "Oct 27, 2026"
-  },
-  {
-    reqId: "DON-8814", facility: "Ashley Williams", facilitySub: "Regular Donor", bloodType: "B+",
-    status: "PENDING", statusClass: "status-high", time: "Oct 27, 2026"
-  }
-];
+    // Sidebar Links
+    const sidebarLinks = {
+        'nav-dashboard': '/adminDashboard',
+        'nav-pending': '/pendingRequests',
+        'nav-inventory': '/adminInventory',
+        'nav-notifications': '/adminNotification',
+        'nav-users': '/adminUsers',
+        'nav-events': '/adminEvents',
+        'nav-profile': '/adminProfile'
+    };
 
-const inventoryData = [
-  { type: "A+", units: 145 },
-  { type: "A-", units: 24 },
-  { type: "B+", units: 89 },
-  { type: "B-", units: 12 },
-  { type: "AB+", units: 56 },
-  { type: "AB-", units: 8 },
-  { type: "O+", units: 210 },
-  { type: "O-", units: 45 }
-];
-
-const logsData = [
-  {
-    iconClass: "log-icon-red",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
-    title: "Request REQ-8815 Fulfilled",
-    desc: "Batch 042X (O+) delivered to City Clinic.",
-    time: "2 mins ago"
-  },
-  {
-    iconClass: "log-icon-blue",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>`,
-    title: "Inventory Synced",
-    desc: "Global registry updated with 12 new donations.",
-    time: "14 mins ago"
-  },
-  {
-    iconClass: "log-icon-amber",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-    title: "Low Stock Alert: AB-",
-    desc: "Regional reserve dropped below safety threshold.",
-    time: "42 mins ago"
-  }
-];
-
-/* ── STATE ── */
-let currentRequests = [...initialRequests];
-let currentFilter = "All Types";
-
-/* ── TOAST ── */
-let toastTimeout;
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add("show");
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => toast.classList.remove("show"), 3000);
-}
-
-/* ── RENDER STATS ── */
-function renderStats() {
-  const grid = document.getElementById("statsGrid");
-  if (!grid) return;
-  grid.innerHTML = statsData.map((s) => `
-    <div class="stat-card">
-      <div class="stat-card-top">
-        <div class="stat-icon ${s.iconClass}">${s.icon}</div>
-        <span class="stat-chip ${s.chipClass}">${s.chip}</span>
-      </div>
-      <div class="stat-label">${s.label}</div>
-      <div class="stat-value">${s.value}</div>
-    </div>
-  `).join("");
-
-  document.querySelectorAll(".stat-card").forEach((card, i) => {
-    card.addEventListener("click", () => showToast(`${statsData[i].label}: ${statsData[i].value}`));
-  });
-}
-
-/* ── RENDER INVENTORY ── */
-function renderInventory() {
-  const grid = document.getElementById("inventoryGrid");
-  if (!grid) return;
-  grid.innerHTML = inventoryData.map(item => `
-    <div class="inventory-item">
-      <div class="inventory-item-title">${item.type}</div>
-      <div class="inventory-item-count">${item.units}</div>
-      <div class="inventory-item-label">Units Available</div>
-    </div>
-  `).join("");
-}
-
-/* ── RENDER REQUESTS ── */
-function renderRequests() {
-  const tbody = document.getElementById("requestsBody");
-  if (!tbody) return;
-
-  const filtered = currentRequests.filter(r =>
-    currentFilter === "All Types" || r.bloodType === currentFilter
-  );
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-hint);font-family:'Inter',sans-serif;">No donor requests found matching your filters.</td></tr>`;
-  } else {
-    tbody.innerHTML = filtered.map((r) => `
-      <tr>
-        <td class="td-req-id">${r.reqId}</td>
-        <td>
-          <div class="td-facility">${r.facility}</div>
-          <div class="td-facility-sub">${r.facilitySub}</div>
-        </td>
-        <td><span class="blood-type-box">${r.bloodType}</span></td>
-        <td>
-          <div class="status-cell ${r.statusClass}">
-            <div class="status-dot"></div>
-            ${r.status}
-          </div>
-        </td>
-        <td class="time-cell">${r.time}</td>
-        <td class="action-cell">
-          <button class="btn-action btn-action-green" data-id="${r.reqId}" data-action="Approve">Approve</button>
-          <button class="btn-action btn-action-blue"  data-id="${r.reqId}" data-action="View">View</button>
-          <button class="btn-action btn-action-red"   data-id="${r.reqId}" data-action="Reject">Reject</button>
-        </td>
-      </tr>
-    `).join("");
-  }
-
-  document.querySelectorAll(".btn-action").forEach(btn => {
-    btn.addEventListener("click", handleActionClick);
-  });
-
-  const footerInfo = document.querySelector(".table-info");
-  if (footerInfo) {
-    footerInfo.textContent = `Showing ${filtered.length} of ${currentRequests.length} donor requests`;
-  }
-}
-
-function handleActionClick(e) {
-  const reqId = e.target.getAttribute("data-id");
-  const action = e.target.getAttribute("data-action");
-  if (action === "View") { showToast(`Viewing details for donor ${reqId}`); return; }
-  currentRequests = currentRequests.filter(r => r.reqId !== reqId);
-  showToast(`${action} successful for donor ${reqId}`);
-  renderRequests();
-  renderStats();
-}
-
-/* ── RENDER LOGS ── */
-function renderLogs() {
-  const list = document.getElementById("logList");
-  if (!list) return;
-  list.innerHTML = logsData.map((l) => `
-    <div class="log-item">
-      <div class="log-icon ${l.iconClass}">${l.icon}</div>
-      <div class="log-content">
-        <div class="log-title">${l.title}</div>
-        <div class="log-desc">${l.desc}</div>
-        <div class="log-time">${l.time}</div>
-      </div>
-    </div>
-  `).join("");
-}
-
-/* ── NAV SIDEBAR ── */
-function initNav() {
-  document.querySelectorAll(".sidebar-link").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll(".sidebar-link").forEach(n => n.classList.remove("active"));
-      link.classList.add("active");
-      // Close sidebar on mobile after navigation
-      document.getElementById("sidebar")?.classList.remove("open");
-      document.getElementById("sidebarOverlay")?.classList.remove("active");
+    // Initialize sidebar
+    Object.keys(sidebarLinks).forEach(id => {
+        const link = document.getElementById(id);
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = sidebarLinks[id];
+            });
+        }
     });
-  });
 
-  // Page routing — mirrors adminDashboard.js pattern
-  document.getElementById("nav-dashboard")?.addEventListener("click", () => {
-    window.location.href = '/adminDashboard';
-  });
-  document.getElementById("nav-pending")?.addEventListener("click", () => {
-    window.location.href = '/pendingRequests';
-  });
-  document.getElementById("nav-notifications")?.addEventListener("click", () => {
-    window.location.href = '/adminNotification';
-  });
-  document.getElementById("nav-users")?.addEventListener("click", () => {
-    window.location.href = '/adminUsers';
-  });
-  document.getElementById("nav-events")?.addEventListener("click", () => {
-    window.location.href = '/adminEvents';
-  });
-  document.getElementById("nav-profile")?.addEventListener("click", () => {
-    window.location.href = '/adminProfile';
-  });
-}
+    // Helper: Get Auth Token
+    const getAuthToken = () => localStorage.getItem('token');
 
-/* ── MOBILE SIDEBAR ── */
-function initMobileSidebar() {
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const sidebar = document.getElementById("sidebar");
-  const sidebarOverlay = document.getElementById("sidebarOverlay");
+    // Helper: Redirect to login if unauthorized
+    const handleUnauthorized = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
 
-  if (mobileMenuBtn && sidebar && sidebarOverlay) {
-    mobileMenuBtn.addEventListener("click", () => {
-      sidebar.classList.add("open");
-      sidebarOverlay.classList.add("active");
+    // Dropdown Toggle
+    if (navAvatar) {
+        navAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            avatarDropdown.classList.toggle('show');
+        });
+    }
+
+    document.addEventListener('click', () => {
+        if (avatarDropdown) avatarDropdown.classList.remove('show');
     });
-    sidebarOverlay.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      sidebarOverlay.classList.remove("active");
-    });
-  }
-}
 
-/* ── NAVBAR AVATAR DROPDOWN ── */
-function initAvatarDropdown() {
-  const navAvatar = document.getElementById("navAvatar");
-  const avatarDropdown = document.getElementById("avatarDropdown");
+    // Show Toast
+    function showToast(message, type = 'success') {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = `ll-toast show ${type}`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 
-  if (navAvatar && avatarDropdown) {
-    navAvatar.addEventListener("click", (e) => {
-      e.stopPropagation();
-      avatarDropdown.classList.toggle("show");
-    });
-    document.addEventListener("click", (e) => {
-      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
-        avatarDropdown.classList.remove("show");
-      }
-    });
-  }
+    // Fetch Inventory & Donors
+    async function fetchInventoryData() {
+        const token = getAuthToken();
+        if (!token) return handleUnauthorized();
 
-  document.getElementById("dropdownLogoutBtn")?.addEventListener("click", () => {
-    avatarDropdown?.classList.remove("show");
-    showToast("Logging out…");
-    setTimeout(() => { window.location.href = '/login'; }, 1500);
-  });
-}
+        try {
+            const response = await fetch(`${API_URL}/admin/inventory`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-/* ── INTERACTIVITY ── */
-function initInteractivity() {
-  // Blood group filter chips
-  document.querySelectorAll(".table-tabs .chip").forEach(chip => {
-    chip.addEventListener("click", (e) => {
-      document.querySelectorAll(".table-tabs .chip").forEach(c => {
-        c.classList.remove("chip-red-solid");
-        c.classList.add("chip-grey");
-      });
-      e.target.classList.remove("chip-grey");
-      e.target.classList.add("chip-red-solid");
-      currentFilter = e.target.textContent;
-      renderRequests();
-    });
-  });
+            if (response.status === 401 || response.status === 403) {
+                return handleUnauthorized();
+            }
 
-  // Sort toggle
-  const sortBtn = document.querySelector(".table-sort");
-  let sortAsc = true;
-  sortBtn?.addEventListener("click", () => {
-    sortAsc = !sortAsc;
-    currentRequests.reverse();
-    renderRequests();
-    showToast(sortAsc ? "Sorted: High to Low" : "Sorted: Low to High");
-  });
+            const data = await response.json();
+            if (response.ok) {
+                renderStats(data);
+                renderInventory(data.stock);
+                renderDonors(data.donors);
+            } else {
+                console.error('Failed to fetch inventory:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching inventory:', error);
+        }
+    }
 
-  // Emergency modal
-  const emergencyBtn = document.getElementById("emergencyAlertBtn");
-  const modalOverlay = document.getElementById("emergencyModal");
-  const cancelBtn = document.getElementById("cancelBroadcast");
-  const confirmBtn = document.getElementById("confirmBroadcast");
+    // Render Stats Row (Matching original CSS/HTML structure)
+    function renderStats(data) {
+        if (!statsGrid) return;
+        
+        const totalDonors = data.donors.length;
+        const totalUnits = data.totalStock || 0;
 
-  emergencyBtn?.addEventListener("click", () => modalOverlay?.classList.add("show"));
-  cancelBtn?.addEventListener("click", () => modalOverlay?.classList.remove("show"));
-  confirmBtn?.addEventListener("click", () => {
-    modalOverlay?.classList.remove("show");
-    showToast("🚨 Emergency broadcast sent to all donors!");
-  });
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+              <div class="stat-card-top">
+                <div class="stat-icon stat-icon--red">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"/></svg>
+                </div>
+                <div class="stat-chip stat-chip--red">Live</div>
+              </div>
+              <div class="stat-label">Total Blood Units</div>
+              <div class="stat-value">${totalUnits.toFixed(1)}</div>
+            </div>
 
-  // Bell
-  document.getElementById("navBellBtn")?.addEventListener("click", () => {
-    showToast("Opening notifications…");
-  });
+            <div class="stat-card">
+              <div class="stat-card-top">
+                <div class="stat-icon stat-icon--blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="stat-chip stat-chip--grey">Eligible</div>
+              </div>
+              <div class="stat-label">Available Donors</div>
+              <div class="stat-value">${totalDonors}</div>
+            </div>
 
-  // Pagination
-  document.querySelectorAll(".page-btn").forEach(btn => {
-    btn.addEventListener("click", () => showToast(btn.textContent === "‹" ? "Previous page…" : "Next page…"));
-  });
+            <div class="stat-card">
+              <div class="stat-card-top">
+                <div class="stat-icon stat-icon--green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div class="stat-chip stat-chip--green">Active</div>
+              </div>
+              <div class="stat-label">Network Nodes</div>
+              <div class="stat-value">8</div>
+            </div>
 
-  // System history
-  document.querySelector(".btn-secondary-outline")?.addEventListener("click", () => {
-    showToast("Loading full system history…");
-  });
-}
+            <div class="stat-card">
+              <div class="stat-card-top">
+                <div class="stat-icon stat-icon--amber">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div class="stat-chip stat-chip--amber">Alert</div>
+              </div>
+              <div class="stat-label">Critical Shortage</div>
+              <div class="stat-value">2 Types</div>
+            </div>
+        `;
+    }
 
-/* ── INIT ── */
-document.addEventListener("DOMContentLoaded", () => {
-  renderStats();
-  renderInventory();
-  renderRequests();
-  renderLogs();
-  initNav();
-  initMobileSidebar();
-  initAvatarDropdown();
-  initInteractivity();
+    // Render Blood Inventory Grid (Matching original CSS)
+    function renderInventory(stock) {
+        if (!inventoryGrid) return;
+        
+        const allTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+        const stockMap = {};
+        stock.forEach(item => {
+            stockMap[item.blood_type] = Number(item.total_units);
+        });
 
-  // Welcome toast — matches dashboard pattern
-  setTimeout(() => showToast("Inventory data loaded successfully."), 800);
+        inventoryGrid.innerHTML = '';
+        
+        allTypes.forEach(type => {
+            const units = stockMap[type] || 0;
+            const item = document.createElement('div');
+            item.className = 'inventory-item';
+            item.innerHTML = `
+                <span class="inventory-item-title">${type}</span>
+                <span class="inventory-item-count">${units.toFixed(1)}</span>
+                <span class="inventory-item-label">Units Available</span>
+            `;
+            inventoryGrid.appendChild(item);
+        });
+    }
+
+    // Render Donors Table (Matching original CSS)
+    function renderDonors(donors) {
+        if (!requestsBody) return;
+        
+        requestsBody.innerHTML = '';
+        
+        if (donors.length === 0) {
+            requestsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No available donors found</td></tr>';
+            return;
+        }
+
+        donors.forEach(donor => {
+            const formattedDate = donor.last_donation_date 
+                ? new Date(donor.last_donation_date).toLocaleDateString()
+                : 'Never donated';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="td-req-id">#DON-${donor.id.toString().padStart(4, '0')}</td>
+                <td>
+                    <div class="td-facility">${donor.fullname}</div>
+                    <div class="td-facility-sub">${donor.email}</div>
+                </td>
+                <td><span class="blood-type-box">${donor.blood_type}</span></td>
+                <td>
+                    <div class="status-cell status-routine">
+                        <span class="status-dot"></span>Available
+                    </div>
+                </td>
+                <td class="time-cell">${formattedDate}</td>
+                <td class="action-cell">
+                    <button class="btn-action btn-action-red contact-donor" data-email="${donor.email}">Contact</button>
+                </td>
+            `;
+            requestsBody.appendChild(tr);
+        });
+
+        // Add contact event listeners
+        document.querySelectorAll('.contact-donor').forEach(btn => {
+            btn.addEventListener('click', () => {
+                window.location.href = `mailto:${btn.dataset.email}?subject=LifeLink Blood Donation Invitation`;
+            });
+        });
+    }
+
+    // Logout Handler
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => handleUnauthorized());
+    }
+
+    // Initialize
+    fetchInventoryData();
 });

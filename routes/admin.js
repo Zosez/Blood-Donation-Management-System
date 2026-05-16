@@ -365,20 +365,180 @@ router.get('/users', async (req, res) => {
                 email,
                 blood_type,
                 city,
+                role,
                 is_verified,
                 is_available_donor,
                 created_at
             FROM users 
-            WHERE role = "user"
             LIMIT ? OFFSET ?
         `, [limit, offset]);
 
-        const [countResult] = await db.execute('SELECT COUNT(*) as count FROM users WHERE role = "user"');
+        const [countResult] = await db.execute('SELECT COUNT(*) as count FROM users');
         const total = countResult[0].count;
 
         res.json({ users, total, limit, offset });
     } catch (error) {
         console.error('Get users error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * PATCH /api/admin/users/:userId
+ * Update user details including role and verification status
+ */
+router.patch('/users/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { fullname, email, blood_type, city, role, is_verified, is_available_donor } = req.body;
+
+        // Construct dynamic update query
+        let query = 'UPDATE users SET ';
+        const params = [];
+        const updates = [];
+
+        if (fullname) { updates.push('fullname = ?'); params.push(fullname); }
+        if (email) { updates.push('email = ?'); params.push(email); }
+        if (blood_type) { updates.push('blood_type = ?'); params.push(blood_type); }
+        if (city) { updates.push('city = ?'); params.push(city); }
+        if (role) { updates.push('role = ?'); params.push(role); }
+        if (is_verified !== undefined) { updates.push('is_verified = ?'); params.push(is_verified); }
+        if (is_available_donor !== undefined) { updates.push('is_available_donor = ?'); params.push(is_available_donor); }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ message: 'No fields to update' });
+        }
+
+        query += updates.join(', ') + ' WHERE id = ?';
+        params.push(userId);
+
+        const [result] = await db.execute(query, params);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'User updated successfully' });
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * DELETE /api/admin/users/:userId
+ * Delete a user from the system
+ */
+router.delete('/users/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Prevent admin from deleting themselves
+        if (parseInt(userId) === req.user.id) {
+            return res.status(400).json({ message: 'You cannot delete your own account' });
+        }
+
+        const [result] = await db.execute('DELETE FROM users WHERE id = ?', [userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/admin/inventory
+ * Get blood stock details and list of available donors
+ */
+router.get('/inventory', async (req, res) => {
+    try {
+        // 1. Get blood stock (sum of blood units by type)
+        const [stockRows] = await db.execute(`
+            SELECT blood_type, SUM(blood_units) as total_units 
+            FROM donations 
+            WHERE status = 'completed' 
+            GROUP BY blood_type
+        `);
+
+        // 2. Get available donors (verified users who haven't donated recently)
+        const [donorRows] = await db.execute(`
+            SELECT 
+                u.id, u.fullname, u.email, u.phone, u.blood_type, u.city,
+                MAX(d.donation_date) as last_donation_date
+            FROM users u
+            LEFT JOIN donations d ON u.id = d.user_id AND d.status = 'completed'
+            WHERE u.role = 'user' 
+              AND u.is_verified = 1 
+              AND u.is_available_donor = 1
+            GROUP BY u.id
+            ORDER BY u.fullname ASC
+        `);
+
+        // 3. Filter donors based on 56-day rule (can also do this in SQL but JS is fine for moderate user counts)
+        const today = new Date();
+        const availableDonors = donorRows.filter(donor => {
+            if (!donor.last_donation_date) return true;
+            const lastDate = new Date(donor.last_donation_date);
+            const daysDiff = Math.ceil((today - lastDate) / (1000 * 60 * 60 * 24));
+            return daysDiff >= 56;
+        });
+
+        res.json({
+            stock: stockRows,
+            donors: availableDonors,
+            totalStock: stockRows.reduce((acc, curr) => acc + Number(curr.total_units), 0)
+        });
+    } catch (error) {
+        console.error('Get inventory error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/admin/profile
+ * Get current admin details
+ */
+router.get('/profile', async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Admin profile not found' });
+        }
+        
+        // Remove password before sending
+        delete user.password;
+        res.json({ admin: user });
+    } catch (error) {
+        console.error('Get admin profile error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * PUT /api/admin/profile
+ * Update current admin profile
+ */
+router.put('/profile', async (req, res) => {
+    try {
+        const { fullname, phone, province, city, date_of_birth } = req.body;
+        
+        const [result] = await db.execute(
+            'UPDATE users SET fullname = ?, phone = ?, province = ?, city = ?, date_of_birth = ? WHERE id = ?',
+            [fullname, phone, province, city, date_of_birth || null, req.user.id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Admin profile not found' });
+        }
+
+        res.json({ message: 'Admin profile updated successfully' });
+    } catch (error) {
+        console.error('Update admin profile error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

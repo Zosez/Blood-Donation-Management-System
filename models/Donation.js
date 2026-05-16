@@ -2,10 +2,10 @@ const { db } = require('../config/database');
 
 class Donation {
     static async create(donationData) {
-        const { user_id, donation_date, blood_units, donation_center, next_eligible_date } = donationData;
+        const { user_id, blood_type, donation_date, blood_units, donation_center, next_eligible_date } = donationData;
         const [result] = await db.execute(
-            'INSERT INTO donations (user_id, donation_date, blood_units, donation_center, next_eligible_date, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [user_id, donation_date, blood_units || 1, donation_center, next_eligible_date || null, 'pending']
+            'INSERT INTO donations (user_id, blood_type, donation_date, blood_units, donation_center, next_eligible_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [user_id, blood_type, donation_date, blood_units || 1, donation_center, next_eligible_date || null, 'pending']
         );
         return result.insertId;
     }

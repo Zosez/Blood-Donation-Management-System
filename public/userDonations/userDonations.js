@@ -33,7 +33,33 @@ async function fetchBloodRequests() {
     }
 
     const data = await response.json();
-    return data.requests || [];
+    let requests = data.requests || [];
+    
+    // Get current user to filter requests appropriately
+    let currentUserId = null;
+    try {
+      let userData = localStorage.getItem('user');
+      if (!userData) userData = localStorage.getItem('userInfo');
+      if (userData) {
+        const user = JSON.parse(userData);
+        currentUserId = user.id;
+      }
+    } catch (e) {
+      console.warn('Could not get current user ID:', e);
+    }
+
+    // Filter out completed, fulfilled and cancelled requests
+    requests = requests.filter(req => {
+      const status = (req.status || '').toLowerCase();
+      return status !== 'fulfilled' && status !== 'cancelled' && status !== 'completed';
+    });
+    
+    // Store for later filtering of 'ongoing' requests
+    window.currentUserId = currentUserId;
+    window.allRequests = requests;
+    
+    console.log('[DONATIONS PAGE] Loaded', requests.length, 'available requests (filtered out fulfilled/cancelled)');
+    return requests;
   } catch (error) {
     console.error('Error fetching blood requests:', error);
     return [];
@@ -204,7 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
         <button class="modal-close" type="button" style="flex: 1; padding: 0.75rem; border: 1px solid #e2e8f0; background: white; color: #1e293b; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
-        <button class="donate-now-btn" type="button" style="flex: 1; padding: 0.75rem; background: #C0281C; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; data-request-id: ${request.id};">Donate Now</button>
       </div>
     `;
 
@@ -223,21 +248,140 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal.remove();
       }
     });
+  }
 
-    // Handle Donate Now button in modal
-    const donateNowBtn = modalContent.querySelector('.donate-now-btn');
-    if (donateNowBtn) {
-      donateNowBtn.addEventListener('click', () => {
-        modal.remove();
-        showDonationFlow(request);
-      });
+  // ──────────────────────────────────────────────
+  // Complete Donation Form
+  // ──────────────────────────────────────────────
+  function showCompleteDonationForm(request, attempt) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast('Please log in first', 'warning');
+      redirectToLogin();
+      return;
     }
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    `;
+
+    const donationTypes = ['Whole Blood', 'Platelets', 'Plasma', 'WBC', 'Red Blood Cells'];
+
+    modal.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.5rem; color: #16A34A;">Complete Donation</h2>
+        <button class="close-modal-btn" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: #666;">&times;</button>
+      </div>
+
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #16A34A; border-radius: 4px;">
+        <p style="margin: 0 0 0.5rem 0; color: #333;"><strong>Request Details:</strong></p>
+        <p style="margin: 0.25rem 0; color: #666;">Blood Type: <strong>${request.blood_type}</strong></p>
+        <p style="margin: 0.25rem 0; color: #666;">Units Requested: <strong>${request.units_required || 1}</strong></p>
+      </div>
+
+      <form id="completeDonationForm">
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">How many units did you donate?</label>
+          <input type="number" id="bloodUnits" min="1" max="5" value="1" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;" required>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Donation Type</label>
+          <select id="bloodTypeDonated" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;" required>
+            <option value="">Select donation type...</option>
+            ${donationTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+          <button type="submit" style="flex: 1; padding: 0.75rem; background: #16A34A; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1rem;">Submit Donation</button>
+          <button type="button" class="close-modal-btn" style="flex: 1; padding: 0.75rem; background: #e5e7eb; color: #333; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1rem;">Cancel</button>
+        </div>
+      </form>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close button listeners
+    const closeBtns = modal.querySelectorAll('.close-modal-btn');
+    closeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        overlay.remove();
+      });
+    });
+
+    // Form submission
+    const form = modal.querySelector('#completeDonationForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const bloodUnits = parseInt(document.getElementById('bloodUnits').value);
+      const bloodTypeDonated = document.getElementById('bloodTypeDonated').value;
+
+      if (!bloodUnits || !bloodTypeDonated) {
+        showToast('Please fill all fields', 'warning');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/donation-attempts/${attempt.id}/complete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            blood_units: bloodUnits,
+            blood_type: bloodTypeDonated
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast('Donation submitted for review! Thank you for saving lives.', 'success');
+          overlay.remove();
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          showToast(data.message || 'Error submitting donation', 'danger');
+        }
+      } catch (error) {
+        console.error('[COMPLETE DONATION] Error:', error);
+        showToast('Error submitting donation', 'danger');
+      }
+    });
   }
 
   // ──────────────────────────────────────────────
   // Donation Flow Modal
   // ──────────────────────────────────────────────
-  function showDonationFlow(request) {
+  function showDonationFlow(request, existingAttempt = null) {
     // Get current user data
     let currentUser = null;
     try {
@@ -280,7 +424,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         date_needed: request.needed_by_date || new Date().toISOString()
       },
       donorAttempts: [],
-      sessionRole: 'donor'
+      sessionRole: 'donor',
+      existingAttempt: existingAttempt || null
     };
 
     // Create modal for donation flow
@@ -333,6 +478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       justify-content: center;
       border-radius: 4px;
       transition: background 0.2s;
+      z-index: 10001;
     `;
 
     closeBtn.addEventListener('click', () => modal.remove());
@@ -351,23 +497,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (e.target === modal) modal.remove();
     });
 
-    // Inject system state and initialize donation flow
+    // Inject system state into window for donation flow module
     window.donateFlowState = systemState;
     window.currentDonationModal = modal;
+    window.donateFlowContainer = document.getElementById('donateContent');
 
     // Load and run donation flow module
-    if (window.initDonateFlow) {
+    if (typeof window.initDonateFlow === 'function') {
+      console.log('Initializing donation flow with state:', systemState);
       window.initDonateFlow(systemState);
     } else {
       // Donation flow module not yet loaded, load it
       const script = document.createElement('script');
       script.src = '/donateFlow/donateFlow.js';
       script.onload = () => {
-        if (window.initDonateFlow) {
+        console.log('Donation flow script loaded');
+        if (typeof window.initDonateFlow === 'function') {
+          console.log('Initializing donation flow after loading');
           window.initDonateFlow(systemState);
+        } else {
+          console.error('initDonateFlow not available after loading script');
+          showToast('Error initializing donation flow', 'danger');
         }
       };
       script.onerror = () => {
+        console.error('Failed to load donation flow script');
         showToast('Error loading donation module', 'danger');
         modal.remove();
       };
@@ -497,18 +651,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     return card;
   }
 
-  function renderBloodRequests(requests) {
+  async function renderBloodRequests(requests) {
+    console.log('[RENDER] Starting render with', requests.length, 'requests');
     requestsGrid.innerHTML = '';
     
-    // Filter out user's own requests
-    const filteredRequests = requests.filter(req => req.user_id !== currentUserId);
+    // Filter out user's own requests and fulfilled/cancelled requests
+    const filteredRequests = requests.filter(req => {
+      const isOwnRequest = req.user_id === currentUserId;
+      const status = (req.status || '').toLowerCase();
+      const isFulfilled = status === 'fulfilled' || status === 'cancelled';
+      return !isOwnRequest && !isFulfilled;
+    });
+    
+    console.log('[RENDER] Filtered to', filteredRequests.length, 'requests (excluded own + fulfilled/cancelled)');
     
     if (!filteredRequests || filteredRequests.length === 0) {
+      console.log('[RENDER] No requests to display');
       emptyState.style.display = 'block';
       resultText.textContent = 'No blood requests available at this time.';
       matchCount.textContent = '0 Matches';
       return;
     }
+
+    // Fetch current user's donation attempts
+    const userAttempts = await getUserDonationAttempts();
+    const attemptsByRequest = {};
+    userAttempts.forEach(att => {
+      attemptsByRequest[att.request_id] = att;
+    });
+
+    // Filter out 'ongoing' requests from users who are not the donor or requester
+    const currentUserId = window.currentUserId;
+    filteredRequests = filteredRequests.filter(req => {
+      const status = (req.status || '').toLowerCase();
+      
+      // Hide 'ongoing' requests from other users (only show to donor or requester)
+      if (status === 'ongoing') {
+        const hasAttempt = attemptsByRequest[req.id];
+        const isDonor = hasAttempt && Number(hasAttempt.donor_id) === Number(currentUserId);
+        const isRequester = Number(req.user_id) === Number(currentUserId);
+        
+        // Only show ongoing to donor or requester
+        if (!isDonor && !isRequester) {
+          console.log('[DONATIONS PAGE] Hiding ongoing request', req.id, 'from user', currentUserId);
+          return false;
+        }
+      }
+      return true;
+    });
 
     filteredRequests.forEach(request => {
       const card = createRequestCard(request);
@@ -516,17 +706,66 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const detailsBtn = card.querySelector('.details-btn');
       const donateBtn = card.querySelector('.donate-btn');
+      const hasAttempt = attemptsByRequest[request.id];
+
+      // Update button label and behavior based on attempt status
+      if (hasAttempt) {
+        if (hasAttempt.status === 'accepted') {
+          donateBtn.textContent = 'Complete Donation';
+          donateBtn.classList.remove('btn-red');
+          donateBtn.classList.add('btn-orange');
+          donateBtn.style.background = '#16A34A';
+          donateBtn.dataset.attemptId = hasAttempt.id;
+        } else {
+          donateBtn.textContent = 'Edit Request';
+          donateBtn.classList.remove('btn-red');
+          donateBtn.classList.add('btn-orange');
+          donateBtn.style.background = '#EA580C';
+        }
+      }
 
       detailsBtn?.addEventListener('click', () => {
         showDetailsModal(request);
       });
 
-      donateBtn?.addEventListener('click', () => {
-        showDonationFlow(request);
+      donateBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (hasAttempt?.status === 'accepted') {
+          showCompleteDonationForm(request, hasAttempt);
+        } else {
+          showDonationFlow(request, hasAttempt);
+        }
       });
     });
 
     emptyState.style.display = 'none';
+    console.log('[RENDER] ✓ Rendered', filteredRequests.length, 'cards');
+  }
+
+  async function getUserDonationAttempts() {
+    const token = getToken();
+    if (!token) return [];
+
+    try {
+      const response = await fetch('/api/donation-attempts/my', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Could not fetch user donation attempts');
+        return [];
+      }
+
+      const data = await response.json();
+      return data.attempts || [];
+    } catch (error) {
+      console.error('Error fetching donation attempts:', error);
+      return [];
+    }
   }
 
   // ──────────────────────────────────────────────
@@ -535,6 +774,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateStats() {
     const cards = document.querySelectorAll('.request-card');
     const allCards = Array.from(cards);
+
+    console.log('[STATS] Found', allCards.length, 'request cards on page');
 
     totalRequests.textContent = allCards.length;
 
@@ -555,6 +796,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return nearby.includes((card.dataset.city || '').toLowerCase());
     }).length;
     nearbyRequests.textContent = nearbyCount;
+
+    console.log('[STATS] Updated:', { total: allCards.length, critical: criticalCount, urgent: urgentCount, nearby: nearbyCount });
   }
 
   function filterRequests() {

@@ -40,6 +40,7 @@ const bloodRequestRoutes = require('./routes/bloodRequests');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 const eventsRoutes = require('./routes/events');
+const donationAttemptsRoutes = require('./routes/donationAttempts');
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -48,6 +49,7 @@ app.use('/api/blood-requests', bloodRequestRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/donation-attempts', donationAttemptsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let toastTimeout = null;
   let activeToast  = null;
 
-  function showToast(message, type = 'success') {
+  window.showToast = function(message, type = 'success') {
     const colors = {
       success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
       warn:    { bg: '#fff7ed', border: '#fdba74', text: '#92400e' },
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.style.transform = 'translateY(20px)';
       setTimeout(() => toast.remove(), 300);
     }, 3000);
-  }
+  };
 
   /* ─── AVATAR DROPDOWN ─── */
   const navAvatar      = document.getElementById('navAvatar');
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     avatarDropdown?.classList.remove('show');
-    showToast('Signed out successfully.', 'success');
+    window.showToast('Signed out successfully.', 'success');
     setTimeout(() => { window.location.href = '/'; }, 1000);
   });
 
@@ -426,30 +426,49 @@ document.addEventListener('keydown', (e) => {
 async function brOpenDonorResponseModal(request) {
   const token = localStorage.getItem('token');
   if (!token) {
-    showToast('Please log in to view responses', 'error');
+    window.showToast('Please log in to view responses', 'error');
     return;
   }
 
   try {
+    console.log('Opening donor response modal for request:', request.id);
+    
     // Fetch donation attempts for this request
     const res = await fetch(`/api/donation-attempts/request/${request.id}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
+    console.log('Fetch response status:', res.status);
+
     if (!res.ok) {
-      showToast('Failed to load donor responses', 'error');
+      console.warn(`Failed to fetch attempts: ${res.status} ${res.statusText}`);
+      // Show modal with no responses message even if API fails
+      const attempts = [];
+      showDonorResponseModal(request, attempts);
       return;
     }
 
     const data = await res.json();
+    console.log('Donor attempts data:', data);
     const attempts = data.attempts || [];
 
-    // Create modal
-    const overlay = document.createElement('div');
-    overlay.className = 'donor-response-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
+    showDonorResponseModal(request, attempts);
+
+  } catch (error) {
+    console.error('Error opening donor response modal:', error);
+    window.showToast('Error loading responses', 'error');
+  }
+}
+
+function showDonorResponseModal(request, attempts) {
+  console.log('[MODAL] Creating donor response modal with', attempts.length, 'attempts for request:', request.id);
+  
+  // Create modal
+  const overlay = document.createElement('div');
+  overlay.className = 'donor-response-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
       left: 0;
       right: 0;
       bottom: 0;
@@ -538,7 +557,50 @@ async function brOpenDonorResponseModal(request) {
             </div>
         `;
 
-        if (isAccepted) {
+        if (isAccepted && attempt.blood_units) {
+          // Show donation details when donor has completed and submitted
+          content += `
+            <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
+              <p style="margin: 0; font-weight: 600; color: #92400e; font-size: 0.9rem;">Donation Ready for Review</p>
+              <div style="margin-top: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Units Donated</p>
+                  <p style="margin: 0.25rem 0 0 0; font-weight: 700; color: #1e293b; font-size: 1rem;">${attempt.blood_units || 'N/A'}</p>
+                </div>
+                <div>
+                  <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Blood Type</p>
+                  <p style="margin: 0.25rem 0 0 0; font-weight: 700; color: #1e293b; font-size: 1rem;">${attempt.blood_type_donated || 'N/A'}</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <button class="confirm-donation-btn" data-attempt-id="${attempt.id}" style="
+                  flex: 1;
+                  background: #16A34A;
+                  color: white;
+                  border: none;
+                  padding: 0.65rem;
+                  border-radius: 6px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  font-size: 0.9rem;
+                  transition: all 0.2s;
+                ">Confirm Donation</button>
+                <button class="request-recheck-btn" data-attempt-id="${attempt.id}" style="
+                  flex: 1;
+                  background: #e2e8f0;
+                  color: #1e293b;
+                  border: 1px solid #cbd5e1;
+                  padding: 0.65rem;
+                  border-radius: 6px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  font-size: 0.9rem;
+                  transition: all 0.2s;
+                ">Request Recheck</button>
+              </div>
+            </div>
+          `;
+        } else if (isAccepted) {
           content += `
             <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 0.75rem; text-align: center; color: #16A34A; font-weight: 600; font-size: 0.95rem;">
               ✓ Accepted
@@ -605,42 +667,79 @@ async function brOpenDonorResponseModal(request) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // Event listeners
-    overlay.querySelector('.close-modal-btn')?.addEventListener('click', () => overlay.remove());
+    // Event listeners - properly delegate to all close buttons
+    const closeBtns = overlay.querySelectorAll('.close-modal-btn');
+    closeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('[MODAL] Close button clicked');
+        overlay.remove();
+      });
+    });
     
     const acceptBtns = modal.querySelectorAll('.accept-donor-btn');
     const declineBtns = modal.querySelectorAll('.decline-donor-btn');
+    const confirmDonationBtns = modal.querySelectorAll('.confirm-donation-btn');
+    const requestRecheckBtns = modal.querySelectorAll('.request-recheck-btn');
 
-    acceptBtns.forEach(btn => {
+    console.log('[MODAL] Found', acceptBtns.length, 'accept buttons,', declineBtns.length, 'decline buttons,', confirmDonationBtns.length, 'confirm buttons');
+
+    acceptBtns.forEach((btn, idx) => {
       btn.addEventListener('click', async () => {
+        console.log('[DONOR RESPONSE] Accept button clicked for attempt:', btn.dataset.attemptId);
         const attemptId = btn.dataset.attemptId;
-        await handleDonorResponse(attemptId, 'accepted', overlay, request.id);
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        await handleDonorResponse(attemptId, 'accepted', overlay, request.id, btn);
       });
     });
 
-    declineBtns.forEach(btn => {
+    declineBtns.forEach((btn, idx) => {
       btn.addEventListener('click', async () => {
+        console.log('[DONOR RESPONSE] Decline button clicked for attempt:', btn.dataset.attemptId);
         const attemptId = btn.dataset.attemptId;
         await handleDonorResponse(attemptId, 'declined', overlay, request.id);
       });
     });
 
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
+    confirmDonationBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', async () => {
+        console.log('[DONOR RESPONSE] Confirm donation button clicked for attempt:', btn.dataset.attemptId);
+        const attemptId = btn.dataset.attemptId;
+        await window.handleConfirmDonation(attemptId, overlay, request.id);
+      });
     });
 
-  } catch (error) {
-    console.error('Error opening donor response modal:', error);
-    showToast('Error loading responses', 'error');
-  }
+    requestRecheckBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', async () => {
+        console.log('[DONOR RESPONSE] Request recheck button clicked for attempt:', btn.dataset.attemptId);
+        showToast('Please contact the donor for re-verification', 'info');
+      });
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        console.log('[MODAL] Overlay click to close');
+        overlay.remove();
+      }
+    });
 }
 
 async function handleDonorResponse(attemptId, status, overlay, requestId) {
+  console.log('[DONOR RESPONSE] Processing:', { attemptId, status, requestId });
+  
   const token = localStorage.getItem('token');
-  if (!token) return;
+  if (!token) {
+    console.error('[DONOR RESPONSE] No token found');
+    window.showToast('Please log in first', 'error');
+    return;
+  }
 
   try {
-    const res = await fetch(`/api/donation-attempts/${attemptId}/${status}`, {
+    const endpoint = `/api/donation-attempts/${attemptId}/${status}`;
+    console.log('[DONOR RESPONSE] Calling endpoint:', endpoint);
+    
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -648,21 +747,86 @@ async function handleDonorResponse(attemptId, status, overlay, requestId) {
       }
     });
 
+    console.log('[DONOR RESPONSE] Response status:', res.status);
+
     if (!res.ok) {
-      showToast(`Failed to ${status === 'accepted' ? 'accept' : 'decline'} donor`, 'error');
+      const errorData = await res.json().catch(() => ({}));
+      console.error('[DONOR RESPONSE] Error response:', errorData);
+      window.showToast(`Failed to ${status === 'accepted' ? 'accept' : 'decline'} donor: ${errorData.message || res.statusText}`, 'error');
       return;
     }
 
-    showToast(`Donor ${status} successfully`, 'success');
+    const data = await res.json();
+    console.log('[DONOR RESPONSE] Success:', data);
+    window.showToast(`Donor ${status} successfully`, 'success');
 
-    // Refresh the modal
+    // Refresh the modal after a short delay
     overlay.remove();
     const req = cachedRequests.find(r => String(r.id) === String(requestId));
     if (req) {
-      setTimeout(() => brOpenDonorResponseModal(req), 300);
+      console.log('[DONOR RESPONSE] Refreshing modal for request:', requestId);
+      setTimeout(() => brOpenDonorResponseModal(req), 500);
     }
   } catch (error) {
-    console.error('Error handling donor response:', error);
-    showToast('Error processing response', 'error');
+    console.error('[DONOR RESPONSE] Error:', error);
+    window.showToast(`Error: ${error.message}`, 'error');
   }
 }
+
+window.handleConfirmDonation = async function(attemptId, overlay, requestId) {
+  console.log('[DONATION CONFIRM] Processing confirmation for attempt:', attemptId);
+  
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('[DONATION CONFIRM] No token found');
+    window.showToast('Please log in first', 'error');
+    return;
+  }
+
+  try {
+    const endpoint = `/api/donation-attempts/${attemptId}/confirm-complete`;
+    console.log('[DONATION CONFIRM] Calling endpoint:', endpoint);
+    
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    console.log('[DONATION CONFIRM] Response status:', res.status);
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('[DONATION CONFIRM] Error response:', errorData);
+      window.showToast(`Failed to confirm donation: ${errorData.message || res.statusText}`, 'error');
+      return;
+    }
+
+    const data = await res.json();
+    console.log('[DONATION CONFIRM] Success:', data);
+    window.showToast('Donation confirmed successfully! Thank you for saving lives.', 'success');
+
+    // Refresh the modal after a short delay
+    overlay.remove();
+    const req = window.cachedRequests.find(r => String(r.id) === String(requestId));
+    if (req) {
+      console.log('[DONATION CONFIRM] Refreshing modal for request:', requestId);
+      setTimeout(() => window.brOpenDonorResponseModal(req), 500);
+    }
+  } catch (error) {
+    console.error('[DONATION CONFIRM] Error:', error);
+    window.showToast(`Error: ${error.message}`, 'error');
+  }
+};
+
+// ESC to close
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') brCloseModal(null);
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// DONOR RESPONSE MODAL
+// ─────────────────────────────────────────────────────────────────────
+// Modal functionality is in the showDonorResponseModal function above

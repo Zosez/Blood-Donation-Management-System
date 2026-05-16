@@ -1154,6 +1154,15 @@ button {
   background: #cbd5e1;
 }
 
+.btn-orange {
+  background: #EA580C !important;
+  color: white !important;
+}
+
+.btn-orange:hover {
+  background: #D64E04 !important;
+}
+
 .donor-attempts-panel {
   padding: 1rem;
 }

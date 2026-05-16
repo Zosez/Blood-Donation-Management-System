@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Protect admin route
   if (!ADMIN_AUTH.protectRoute()) return;
 
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = '/api';
   const token = localStorage.getItem('token');
 
   /* ─── LOAD DASHBOARD DATA ─── */

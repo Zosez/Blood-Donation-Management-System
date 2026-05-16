@@ -1,260 +1,234 @@
 document.addEventListener('DOMContentLoaded', () => {
-  let toastTimeout = null;
-  let activeToast = null;
+    const API_URL = '/api';
 
-  function showToast(message, type = 'default') {
-    const colors = {
-      default: { bg: '#ffffff', border: '#e2e8f0', text: '#1e293b' },
-      success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
-      warning: { bg: '#fff7ed', border: '#fdba74', text: '#92400e' },
-      danger: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-      info: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+    // DOM Elements - Display
+    const displayName = document.getElementById('displayName');
+    const displayRole = document.getElementById('displayRole');
+    const displayAdminId = document.getElementById('displayAdminId');
+    const displayClearance = document.getElementById('displayClearance');
+    const displayDepartment = document.getElementById('displayDepartment');
+    
+    const infoName = document.getElementById('infoName');
+    const infoEmail = document.getElementById('infoEmail');
+    const infoPhone = document.getElementById('infoPhone');
+    const infoRole = document.getElementById('infoRole');
+    
+    const navAvatarName = document.querySelector('.nav-avatar-name');
+    const dropdownName = document.querySelector('.dropdown-name');
+    const dropdownRole = document.querySelector('.dropdown-role');
+    const dropdownAdminId = document.querySelector('.avatar-dropdown .dropdown-item:nth-child(2) strong');
+    const dropdownClearance = document.querySelector('.avatar-dropdown .dropdown-item:nth-child(3) strong');
+
+    // DOM Elements - Form
+    const profileForm = document.getElementById('profileForm');
+    const profileNameInput = document.getElementById('profileName');
+    const profileRoleInput = document.getElementById('profileRole');
+    const profileAdminIdInput = document.getElementById('profileAdminId');
+    const profileClearanceInput = document.getElementById('profileClearance');
+    const profileEmailInput = document.getElementById('profileEmail');
+    const profilePhoneInput = document.getElementById('profilePhone');
+    const profileDepartmentInput = document.getElementById('profileDepartment');
+
+    // Modals & UI Controls
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const profileModal = document.getElementById('profileModal');
+    const modalClose = document.getElementById('modalClose');
+    const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+    const navAvatar = document.getElementById('navAvatar');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+    const logoutBtn = document.getElementById('dropdownLogoutBtn');
+    const toast = document.getElementById('toast');
+
+    // Sidebar Links - Use absolute paths for consistency
+    const sidebarLinks = {
+        'admin-dashboard': '/adminDashboard',
+        'admin-requests': '/pendingRequests',
+        'nav-inventory': '/adminInventory',
+        'admin-notification': '/adminNotification',
+        'admin-users': '/adminUsers',
+        'admin-events': '/adminEvents',
+        'admin-profile': '/adminProfile'
     };
 
-    const c = colors[type] || colors.default;
-
-    if (toastTimeout) clearTimeout(toastTimeout);
-    if (activeToast) activeToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'll-toast';
-    toast.textContent = message;
-
-    Object.assign(toast.style, {
-      background: c.bg,
-      border: `1px solid ${c.border}`,
-      color: c.text,
-      opacity: '0',
-      transform: 'translateY(20px)'
+    // Initialize sidebar navigation
+    Object.keys(sidebarLinks).forEach(id => {
+        const link = document.getElementById(id);
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = sidebarLinks[id];
+            });
+        }
     });
 
-    document.body.appendChild(toast);
-    activeToast = toast;
+    // Helper: Get Auth Token
+    const getAuthToken = () => localStorage.getItem('token');
 
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
-
-    toastTimeout = setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-      }, 300);
-    }, 3000);
-  }
-
-  const navAvatar = document.getElementById('navAvatar');
-  const avatarDropdown = document.getElementById('avatarDropdown');
-
-  if (navAvatar && avatarDropdown) {
-    navAvatar.addEventListener('click', (e) => {
-      e.stopPropagation();
-      avatarDropdown.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!navAvatar.contains(e.target) && !avatarDropdown.contains(e.target)) {
-        avatarDropdown.classList.remove('show');
-      }
-    });
-  }
-
-  function handleLogout(e) {
-    if (e) e.preventDefault();
-
-    if (avatarDropdown) avatarDropdown.classList.remove('show');
-
-    showToast('Logging out… Goodbye, Admin User!', 'warning');
-
-    setTimeout(() => {
-      showToast('Session ended. Redirecting…', 'danger');
-    }, 1800);
-
-    setTimeout(() => {
-      window.location.href = '../login/login.html';
-    }, 3000);
-  }
-
-  document.getElementById('dropdownLogoutBtn')?.addEventListener('click', handleLogout);
-  document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
-
-  document.getElementById('notifBtn')?.addEventListener('click', () => {
-    showToast('You have 2 unread notifications.', 'info');
-  });
-
-  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const sidebar = document.getElementById('sidebar');
-  const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-  if (mobileMenuBtn && sidebar && sidebarOverlay) {
-    mobileMenuBtn.addEventListener('click', () => {
-      sidebar.classList.add('open');
-      sidebarOverlay.classList.add('active');
-    });
-
-    sidebarOverlay.addEventListener('click', () => {
-      sidebar.classList.remove('open');
-      sidebarOverlay.classList.remove('active');
-    });
-  }
-
-  const profileModal = document.getElementById('profileModal');
-  const editProfileBtn = document.getElementById('editProfileBtn');
-  const modalClose = document.getElementById('modalClose');
-  const cancelProfileBtn = document.getElementById('cancelProfileBtn');
-  const profileForm = document.getElementById('profileForm');
-
-  const profileName = document.getElementById('profileName');
-  const profileRole = document.getElementById('profileRole');
-  const profileAdminId = document.getElementById('profileAdminId');
-  const profileClearance = document.getElementById('profileClearance');
-  const profileEmail = document.getElementById('profileEmail');
-  const profilePhone = document.getElementById('profilePhone');
-  const profileDepartment = document.getElementById('profileDepartment');
-
-  function getDefaultProfile() {
-    return {
-      name: 'Admin User',
-      role: 'Hematology Lead',
-      adminId: 'ADM-7842',
-      clearance: 'Level 5',
-      email: 'admin@lifelink.com',
-      phone: '+977 9800000000',
-      department: 'Blood Operations'
-    };
-  }
-
-  function saveProfile(profile) {
-    localStorage.setItem('adminProfile', JSON.stringify(profile));
-  }
-
-  function loadProfile() {
-    return JSON.parse(localStorage.getItem('adminProfile') || 'null') || getDefaultProfile();
-  }
-
-  function renderProfile(profile) {
-    document.getElementById('displayName').textContent = profile.name;
-    document.getElementById('displayRole').textContent = profile.role;
-    document.getElementById('displayAdminId').textContent = profile.adminId;
-    document.getElementById('displayClearance').textContent = profile.clearance;
-    document.getElementById('displayDepartment').textContent = profile.department;
-
-    document.getElementById('infoName').textContent = profile.name;
-    document.getElementById('infoEmail').textContent = profile.email;
-    document.getElementById('infoPhone').textContent = profile.phone;
-    document.getElementById('infoRole').textContent = profile.role;
-
-    document.querySelector('.dropdown-name').textContent = profile.name;
-    document.querySelector('.dropdown-role').textContent = profile.role;
-
-    const dropdownStrong = document.querySelectorAll('.dropdown-item strong');
-    if (dropdownStrong[0]) dropdownStrong[0].textContent = profile.adminId;
-    if (dropdownStrong[1]) dropdownStrong[1].textContent = profile.clearance;
-  }
-
-  function fillForm(profile) {
-    profileName.value = profile.name;
-    profileRole.value = profile.role;
-    profileAdminId.value = profile.adminId;
-    profileClearance.value = profile.clearance;
-    profileEmail.value = profile.email;
-    profilePhone.value = profile.phone;
-    profileDepartment.value = profile.department;
-  }
-
-  function openModal() {
-    fillForm(loadProfile());
-    profileModal.classList.add('show');
-  }
-
-  function closeModal() {
-    profileModal.classList.remove('show');
-  }
-
-  editProfileBtn?.addEventListener('click', openModal);
-  modalClose?.addEventListener('click', closeModal);
-  cancelProfileBtn?.addEventListener('click', closeModal);
-
-  profileModal?.addEventListener('click', (e) => {
-    if (e.target === profileModal) closeModal();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && profileModal?.classList.contains('show')) {
-      closeModal();
-    }
-  });
-
-  profileForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const profile = {
-      name: profileName.value.trim(),
-      role: profileRole.value.trim(),
-      adminId: profileAdminId.value.trim(),
-      clearance: profileClearance.value.trim(),
-      email: profileEmail.value.trim(),
-      phone: profilePhone.value.trim(),
-      department: profileDepartment.value.trim()
-    };
-
-    if (!profile.name || !profile.role || !profile.adminId || !profile.clearance || !profile.email || !profile.phone || !profile.department) {
-      showToast('Please fill all profile fields.', 'warning');
-      return;
+    // Helper: Show Toast
+    function showToast(message, type = 'success') {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = `ll-toast show ${type}`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    saveProfile(profile);
-    renderProfile(profile);
-    closeModal();
+    // Helper: Redirect to login if unauthorized
+    const handleUnauthorized = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
 
-    showToast('Profile updated successfully.', 'success');
-  });
+    // Toggle Avatar Dropdown
+    if (navAvatar) {
+        navAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            avatarDropdown.classList.toggle('active');
+        });
+    }
 
-  document.querySelectorAll('.sidebar-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      const href = link.getAttribute('href');
-
-      if (href && href !== '#') return;
-
-      e.preventDefault();
-
-      document.querySelectorAll('.sidebar-link').forEach(item => {
-        item.classList.remove('active');
-      });
-
-      link.classList.add('active');
-
-      const label = link.textContent.trim();
-      showToast(`${label} — coming soon!`, 'info');
+    document.addEventListener('click', () => {
+        if (avatarDropdown) avatarDropdown.classList.remove('active');
     });
-  });
 
-  renderProfile(loadProfile());
-});
+    // Modal Control
+    if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', () => {
+            profileModal.classList.add('active');
+        });
+    }
 
+    const closeModal = () => {
+        profileModal.classList.remove('active');
+    };
 
-document.getElementById('admin-dashboard')?.addEventListener('click', (e) => {
-  window.location.href = '/adminDashboard';
-});
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    if (cancelProfileBtn) cancelProfileBtn.addEventListener('click', closeModal);
 
-document.getElementById('admin-requests')?.addEventListener('click', (e) => {
-  window.location.href = '/pendingRequests';
-});
+    // Fetch Admin Profile
+    async function fetchProfile() {
+        const token = getAuthToken();
+        if (!token) return handleUnauthorized();
 
-document.getElementById('admin-notification')?.addEventListener('click', (e) => {
-  window.location.href = '/adminNotification';
-});
+        try {
+            const response = await fetch(`${API_URL}/admin/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-document.getElementById('admin-users')?.addEventListener('click', (e) => {
-  window.location.href = '/adminUsers';
-});
+            if (response.status === 401 || response.status === 403) {
+                return handleUnauthorized();
+            }
 
-  document.getElementById('admin-events')?.addEventListener('click', (e) => {
-  window.location.href = '/adminEvents';
-}); 
+            const data = await response.json();
+            if (response.ok) {
+                updateUI(data.admin);
+            } else {
+                console.error('Failed to fetch profile:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }
 
-document.getElementById('nav-inventory')?.addEventListener('click', () => {
-  window.location.href = '/adminInventory';
+    // Update UI with Admin Data
+    function updateUI(admin) {
+        const formattedId = `ADM-${admin.id.toString().padStart(4, '0')}`;
+        
+        // Display values
+        if (displayName) displayName.textContent = admin.fullname;
+        if (displayRole) displayRole.textContent = admin.role === 'admin' ? 'System Administrator' : admin.role;
+        if (displayAdminId) displayAdminId.textContent = formattedId;
+        
+        if (infoName) infoName.textContent = admin.fullname;
+        if (infoEmail) infoEmail.textContent = admin.email;
+        if (infoPhone) infoPhone.textContent = admin.phone || 'Not provided';
+        if (infoRole) infoRole.textContent = admin.role === 'admin' ? 'System Administrator' : admin.role;
+
+        if (navAvatarName) navAvatarName.textContent = admin.fullname.split(' ')[0];
+        if (dropdownName) dropdownName.textContent = admin.fullname;
+        if (dropdownRole) dropdownRole.textContent = admin.role === 'admin' ? 'System Administrator' : admin.role;
+        if (dropdownAdminId) dropdownAdminId.textContent = formattedId;
+
+        // Form values
+        if (profileNameInput) profileNameInput.value = admin.fullname;
+        if (profileEmailInput) profileEmailInput.value = admin.email;
+        if (profilePhoneInput) profilePhoneInput.value = admin.phone || '';
+        if (profileAdminIdInput) profileAdminIdInput.value = formattedId;
+        if (profileRoleInput) profileRoleInput.value = admin.role === 'admin' ? 'System Administrator' : admin.role;
+        
+        // Disable non-editable fields in demo
+        if (profileEmailInput) profileEmailInput.disabled = true;
+        if (profileAdminIdInput) profileAdminIdInput.disabled = true;
+    }
+
+    // Handle Form Submission
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const token = getAuthToken();
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            const updateData = {
+                fullname: profileNameInput.value,
+                phone: profilePhoneInput.value,
+                province: 'Bagmati Province',
+                city: 'Kathmandu'
+            };
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+
+                const response = await fetch(`${API_URL}/admin/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Profile updated successfully!');
+                    closeModal();
+                    fetchProfile();
+                } else {
+                    showToast(data.message || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+
+    // Logout Handler
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            const token = getAuthToken();
+            try {
+                await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            handleUnauthorized();
+        });
+    }
+
+    // Initialize Page
+    fetchProfile();
 });

@@ -65,6 +65,7 @@ async function initializeDatabase() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT NOT NULL,
                 donation_date DATE NOT NULL,
+                blood_type VARCHAR(10),
                 blood_units DECIMAL(3,1) DEFAULT 1.0,
                 donation_center VARCHAR(255),
                 next_eligible_date DATE,
@@ -73,6 +74,11 @@ async function initializeDatabase() {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
+
+        // Migration: add blood_type to donations if missing
+        try {
+            await db.execute(`ALTER TABLE donations ADD COLUMN blood_type VARCHAR(10) AFTER donation_date`);
+        } catch (e) { /* column already exists */ }
 
         // Create blood_requests table
         await db.execute(`
@@ -139,6 +145,14 @@ async function initializeDatabase() {
             console.log('[DB] date_of_birth column already exists or skipped');
         }
 
+        // Migrate: add total_donations column to users if missing
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN total_donations INT DEFAULT 0`);
+            console.log('[DB] Added total_donations column to users table');
+        } catch (e) {
+            console.log('[DB] total_donations column already exists or skipped');
+        }
+
         // Create indexes for frequently queried columns
         try {
             await db.execute(`CREATE INDEX IF NOT EXISTS idx_email ON users(email)`);
@@ -163,9 +177,9 @@ async function initializeDatabase() {
         try {
             await db.execute(`
                 ALTER TABLE blood_requests 
-                MODIFY COLUMN status ENUM('pending','approved','rejected','fulfilled','cancelled') DEFAULT 'pending'
+                MODIFY COLUMN status ENUM('pending','approved','rejected','fulfilled','cancelled','ongoing','completed') DEFAULT 'pending'
             `);
-            console.log('[DB] blood_requests.status ENUM updated to include rejected');
+            console.log('[DB] blood_requests.status ENUM updated to include ongoing and completed');
         } catch (e) {
             console.log('[DB] blood_requests.status ENUM already up to date');
         }
@@ -222,6 +236,45 @@ async function initializeDatabase() {
             )
         `);
         console.log('[DB] event_registrations table ready');
+
+        // Create donation_attempts table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS donation_attempts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                request_id INT NOT NULL,
+                donor_id INT NOT NULL,
+                donor_name VARCHAR(255),
+                donor_phone VARCHAR(20),
+                donor_email VARCHAR(255),
+                status ENUM('pending', 'accepted', 'declined') DEFAULT 'pending',
+                questionnaire_passed BOOLEAN DEFAULT true,
+                blood_units INT,
+                blood_type_donated VARCHAR(10),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (request_id) REFERENCES blood_requests(id) ON DELETE CASCADE,
+                FOREIGN KEY (donor_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_request_id (request_id),
+                INDEX idx_donor_id (donor_id),
+                INDEX idx_status (status)
+            )
+        `);
+        console.log('[DB] donation_attempts table ready');
+
+        // Migrate: add blood_units and blood_type_donated columns if missing
+        try {
+            await db.execute(`ALTER TABLE donation_attempts ADD COLUMN blood_units INT`);
+            console.log('[DB] Added blood_units column to donation_attempts');
+        } catch (e) {
+            console.log('[DB] blood_units column already exists');
+        }
+
+        try {
+            await db.execute(`ALTER TABLE donation_attempts ADD COLUMN blood_type_donated VARCHAR(10)`);
+            console.log('[DB] Added blood_type_donated column to donation_attempts');
+        } catch (e) {
+            console.log('[DB] blood_type_donated column already exists');
+        }
 
         // Re-enable foreign key checks
         await db.execute('SET FOREIGN_KEY_CHECKS=1');
