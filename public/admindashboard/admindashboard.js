@@ -532,6 +532,11 @@ document.getElementById('admin-request')?.addEventListener('click', () => {
 document.getElementById('admin-profile')?.addEventListener('click', () => {
   window.location.href = '/adminProfile';
 });
+
 document.getElementById('admin-events')?.addEventListener('click', () => {
   window.location.href = '/adminEvents';
+});
+
+document.getElementById('nav-inventory')?.addEventListener('click', () => {
+  window.location.href = '/adminInventory';
 });

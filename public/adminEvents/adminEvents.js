@@ -776,9 +776,13 @@ document.getElementById('admin-notifications').addEventListener('click', () => {
 });
 
 document.getElementById('user-management').addEventListener('click', () => {
-  window.location.href = '/adminUserManagement';
+  window.location.href = '/adminUsers';
 });
 
 document.getElementById('admin-profile').addEventListener('click', () => {
   window.location.href = '/adminProfile';
+});
+
+document.getElementById('nav-inventory')?.addEventListener('click', () => {
+  window.location.href = '/adminInventory';
 });

@@ -233,3 +233,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderProfile(loadProfile());
 });
+
+
+document.getElementById('admin-dashboard')?.addEventListener('click', (e) => {
+  window.location.href = '/adminDashboard';
+});
+
+document.getElementById('admin-requests')?.addEventListener('click', (e) => {
+  window.location.href = '/pendingRequests';
+});
+
+document.getElementById('admin-notification')?.addEventListener('click', (e) => {
+  window.location.href = '/adminNotification';
+});
+
+document.getElementById('admin-users')?.addEventListener('click', (e) => {
+  window.location.href = '/adminUsers';
+});
+
+  document.getElementById('admin-events')?.addEventListener('click', (e) => {
+  window.location.href = '/adminEvents';
+}); 
+
+document.getElementById('nav-inventory')?.addEventListener('click', () => {
+  window.location.href = '/adminInventory';
+});

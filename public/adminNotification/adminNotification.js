@@ -139,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarBadge = document.querySelector('.sidebar-badge');
     if (sidebarBadge) {
       sidebarBadge.textContent = count;
-      sidebarBadge.style.display = count > 0 ? 'flex' : 'none';
     }
   }
 
@@ -293,4 +292,12 @@ document.getElementById('admin-request').addEventListener('click', () => {
 
 document.getElementById('admin-profile').addEventListener('click', () => {
   window.location.href = '/adminProfile';
+});
+
+document.getElementById('admin-users').addEventListener('click', () => {
+  window.location.href = '/adminUsers';
+});
+
+document.getElementById('nav-inventory')?.addEventListener('click', () => {
+  window.location.href = '/adminInventory';
 });

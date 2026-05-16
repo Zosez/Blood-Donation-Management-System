@@ -190,6 +190,14 @@ app.get('/adminEvents', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/adminEvents/adminEvents.html'));
 });
 
+app.get('/adminProfile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminProfile/adminProfile.html'));
+});
+
+app.get('/adminInventory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/adminInventory/adminInventory.html'));
+});
+
 app.get('/welcome', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/welcome/welcome.html'));
 });

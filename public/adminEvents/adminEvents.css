@@ -237,6 +237,18 @@ html, body {
   height: calc(100vh - var(--nav-h));
   overflow-y: auto;
 }
+.sidebar-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px; height: 18px;
+  border-radius: 50px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px;
+  font-family: 'Sora', sans-serif;
+}
 
 .sidebar-nav {
   display: flex;

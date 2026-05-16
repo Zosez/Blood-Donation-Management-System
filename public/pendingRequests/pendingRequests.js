@@ -127,11 +127,15 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault(); window.location.href = '/adminUsers';
   });
   document.getElementById('admin-profile')?.addEventListener('click', (e) => {
-    e.preventDefault();
+    e.preventDefault(); window.location.href = '/adminProfile';
   });
   document.getElementById('admin-events')?.addEventListener('click', (e) => {
     e.preventDefault(); window.location.href = '/adminEvents';
   });
+  document.getElementById('nav-inventory')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.location.href = '/adminInventory';
+  });
+
 
   /* ── Modal ───────────────────────────────────────────── */
   const requestModal = document.getElementById('requestModal');
