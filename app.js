@@ -161,6 +161,10 @@ app.get('/requestBlood', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/requestBlood/requestBlood.html'));
 });
 
+app.get('/userDonations', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/userDonations/userDonations.html'));
+});
+
 app.get('/donorRequest', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/donorRequest/donorRequest.html'));
 });

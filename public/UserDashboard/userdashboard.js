@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${r.city} &bull; ${r.units_required || r.units || '1'} Units Needed
           </p>
         </div>
-        <button class="req-btn ${btnClass}" onclick="window.location.href='/bloodRequest'">${btnLabel}</button>
+        <button class="req-btn ${btnClass}" onclick="window.location.href='/userDonations'">${btnLabel}</button>
       </div>
         `;
     }).join('');
@@ -271,7 +271,201 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadDonorData();
 
-  /* ─── Request buttons ─── */
+  /* ─── DYNAMIC RECEIVER DATA LOADING ─── */
+  async function loadReceiverData() {
+    if (!token) {
+      console.warn('No token for receiver data');
+      return;
+    }
+
+    try {
+      // Fetch user's blood requests using correct endpoint
+      const reqRes = await fetch('/api/blood-requests/my', { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
+
+      console.log('Receiver data response status:', reqRes.status);
+
+      if (reqRes.ok) {
+        const data = await reqRes.json();
+        const requests = data.requests || data;
+        
+        console.log('Receiver requests:', requests);
+
+        if (requests && requests.length > 0) {
+          // Show active request (most recent)
+          renderActiveRequest(requests[0]);
+          // Show request history (all requests)
+          renderRequestHistory(requests);
+        } else {
+          // Show empty state for active request
+          renderEmptyActiveRequest();
+          renderEmptyRequestHistory();
+        }
+      } else {
+        console.warn('Failed to fetch receiver data:', reqRes.status, reqRes.statusText);
+        renderEmptyActiveRequest();
+        renderEmptyRequestHistory();
+      }
+    } catch (err) {
+      console.error('Failed loading receiver data:', err);
+      renderEmptyActiveRequest();
+      renderEmptyRequestHistory();
+    }
+  }
+
+  function renderActiveRequest(request) {
+    const activeCard = document.querySelector('.active-request-card');
+    if (!activeCard) return;
+
+    const bloodType = request.blood_type || 'N/A';
+    const createdTime = getTimeAgo(request.created_at);
+    const requestId = request.id || 'N/A';
+
+    // TODO: Get actual donor counts from donations/notifications table
+    // For now, using placeholder counts (0) until backend provides these metrics
+    const notified = 0;  // request.notified_count
+    const accepted = 0;  // request.accepted_count  
+    const confirmed = 0; // request.confirmed_count
+
+    console.log('Rendering active request:', request);
+
+    activeCard.innerHTML = `
+      <div class="active-req-left">
+        <div class="active-req-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="active-req-id">Active Request #${requestId}</p>
+          <p class="active-req-meta">Blood Type: <span class="blood-${getBgClass(bloodType)}">${bloodType}</span> &bull; Created ${createdTime}</p>
+        </div>
+      </div>
+      <div class="active-req-stats">
+        <div class="req-stat">
+          <span class="req-stat-num">${String(notified).padStart(2, '0')}</span>
+          <span class="req-stat-label">NOTIFIED</span>
+        </div>
+        <div class="req-stat">
+          <span class="req-stat-num green-num">${String(accepted).padStart(2, '0')}</span>
+          <span class="req-stat-label">ACCEPTED</span>
+          <div class="req-stat-bar"><div class="req-stat-fill" style="width: ${accepted * 10}%"></div></div>
+        </div>
+        <div class="req-stat">
+          <span class="req-stat-num">${String(confirmed).padStart(2, '0')}</span>
+          <span class="req-stat-label">CONFIRMED</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmptyActiveRequest() {
+    const activeCard = document.querySelector('.active-request-card');
+    if (!activeCard) return;
+
+    activeCard.innerHTML = `
+      <div class="active-req-left">
+        <div class="active-req-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="active-req-id">No Active Request</p>
+          <p class="active-req-meta" style="color: #9CA3AF;">Submit a blood request to get started.</p>
+        </div>
+      </div>
+      <div class="active-req-stats">
+        <div class="req-stat">
+          <span class="req-stat-num">00</span>
+          <span class="req-stat-label">NOTIFIED</span>
+        </div>
+        <div class="req-stat">
+          <span class="req-stat-num">00</span>
+          <span class="req-stat-label">ACCEPTED</span>
+          <div class="req-stat-bar"><div class="req-stat-fill"></div></div>
+        </div>
+        <div class="req-stat">
+          <span class="req-stat-num">00</span>
+          <span class="req-stat-label">CONFIRMED</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRequestHistory(requests) {
+    const tbody = document.querySelector('.history-table tbody');
+    if (!tbody) return;
+
+    if (!requests || requests.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9CA3AF; padding: 2rem;">No request history available.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = requests.map(req => {
+      const bloodType = req.blood_type || 'N/A';
+      const units = req.units_required || 1;
+      const dateStr = new Date(req.created_at || req.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      const status = req.status || 'pending';
+      const statusClass = status.toLowerCase() === 'completed' ? 'completed' : 
+                         status.toLowerCase() === 'cancelled' ? 'cancelled' : 'pending';
+
+      return `
+        <tr>
+          <td class="req-id-cell">#${req.id}</td>
+          <td><span class="blood-chip">${bloodType}</span> ${units} Unit${units !== 1 ? 's' : ''}</td>
+          <td>${dateStr}</td>
+          <td><span class="status-pill ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+          <td><a href="#" class="action-link">View Details</a></td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach event listeners to dynamically created action links
+    document.querySelectorAll('.history-table .action-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        showToast('Opening request details.', 'info');
+      });
+    });
+  }
+
+  function renderEmptyRequestHistory() {
+    const tbody = document.querySelector('.history-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9CA3AF; padding: 2rem;">No request history available.</td></tr>';
+  }
+
+  function getTimeAgo(dateString) {
+    if (!dateString) return 'recently';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  }
+
+  function getBgClass(bloodType) {
+    if (!bloodType) return 'neutral';
+    const type = bloodType.toLowerCase();
+    if (type.includes('neg') || type.includes('-')) return 'neg';
+    return 'pos';
+  }
+
+  loadReceiverData();
   // Old hardcoded buttons listener removed because we added onclick directly into the new DOM html.
 
   /* ─── Submit blood request ─── */
@@ -319,7 +513,7 @@ document.getElementById("user-profile").addEventListener("click", () => {
 
 // ───────── donorRequest REDIRECT ─────────
 document.getElementById("donor-request").addEventListener("click", () => {
-    window.location.href = "/donorRequest";
+    window.location.href = "/userDonations";
 });
 
 // ───────── userProfile REDIRECT ─────────

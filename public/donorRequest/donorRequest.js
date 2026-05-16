@@ -1,5 +1,21 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+  // ──────────────────────────────────────────────
+  // Authorization Check
+  // ──────────────────────────────────────────────
+  function checkAuthorization() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return false;
+    }
+    return true;
+  }
+
+  if (!checkAuthorization()) {
+    return;
+  }
+
   const form      = document.getElementById('donorForm');
   const btnSubmit = document.querySelector('.btn-submit');
   const btnCancel = document.querySelector('.btn-cancel');

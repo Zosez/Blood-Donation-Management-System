@@ -450,3 +450,7 @@ document.getElementById("blood-request").addEventListener("click", () => {
 document.getElementById("dashboard").addEventListener("click", () => {
     window.location.href = "/userDashboard";
 });
+
+document.getElementById("donations").addEventListener("click", () => {
+    window.location.href = "/userDonations";
+});

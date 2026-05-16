@@ -50,6 +50,8 @@ nav {
   align-items: center;
   gap: 0.7rem;
   text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .logo-img {
@@ -81,6 +83,7 @@ nav {
   text-decoration: none;
   transition: all 0.2s;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -107,6 +110,7 @@ nav {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
 }
 
 /* BELL */
@@ -126,6 +130,7 @@ nav {
   cursor: pointer;
   transition: color 0.2s;
   font-family: 'Inter', sans-serif;
+  white-space: nowrap;
 }
 
 .btn-login:hover {
@@ -144,6 +149,7 @@ nav {
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Sora', sans-serif;
+  white-space: nowrap;
 }
 
 .btn-register:hover {
@@ -528,100 +534,31 @@ body.dark .settings-group select {
   transform: translateY(-2px);
 }
 
-/* ─── LAB ILLUSTRATION ─── */
+/* ─── MISSION IMAGE ─── */
 .mission-visual {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.lab-illustration {
+.mission-img-wrapper {
   width: 100%;
-  max-width: 420px;
-}
-
-.lab-card {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a7b 100%);
+  max-width: 600px;
   border-radius: 24px;
-  padding: 60px 40px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.2);
-  position: relative;
   overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.lab-card::before {
-  content: '';
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 50%;
-  top: -60px;
-  right: -60px;
+.mission-img-wrapper:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 28px 65px rgba(0,0,0,0.18);
 }
 
-.lab-beakers {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 20px;
-  margin-bottom: 40px;
-  position: relative;
-  z-index: 2;
-}
-
-.beaker {
-  width: 60px;
-  background: rgba(255,255,255,0.1);
-  border: 3px solid rgba(255,255,255,0.2);
-  border-radius: 8px 8px 12px 12px;
-  position: relative;
-  backdrop-filter: blur(10px);
-}
-
-.beaker-1 { height: 140px; }
-.beaker-2 { height: 180px; }
-.beaker-3 { height: 160px; }
-.beaker-4 { height: 120px; }
-
-.beaker::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(96, 165, 250, 0.6), rgba(59, 130, 246, 0.3));
-  border-radius: 0 0 8px 8px;
-  animation: liquidRise 3s ease-in-out infinite;
-}
-
-.beaker-1::before { height: 70%; animation-delay: 0s; }
-.beaker-2::before { height: 85%; animation-delay: 0.5s; }
-.beaker-3::before { height: 75%; animation-delay: 1s; }
-.beaker-4::before { height: 60%; animation-delay: 1.5s; }
-
-@keyframes liquidRise {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-.lab-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--white);
-  text-align: center;
-  letter-spacing: 3px;
-  margin-bottom: 4px;
-}
-
-.lab-subtitle {
-  font-family: 'Sora', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.6);
-  text-align: center;
-  letter-spacing: 4px;
+.mission-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* ─── MATCHING SECTION ─── */
@@ -1052,17 +989,13 @@ body.dark .footer-bottom {
     gap: 50px;
   }
 
-  .lab-illustration {
-    max-width: 360px;
-    margin: 0 auto;
-  }
+
 }
 
 @media (max-width: 900px) {
-  .nav-links,
-  .nav-right { display: none; }
-
-  .hamburger { display: flex; }
+  nav { padding: 0 1.5rem; }
+  .nav-links { gap: 14px; }
+  .nav-right { gap: 8px; }
 
   .footer-grid { 
     grid-template-columns: 1fr 1fr; 
@@ -1070,6 +1003,11 @@ body.dark .footer-bottom {
 }
 
 @media (max-width: 600px) {
+  .nav-links,
+  .nav-right { display: none; }
+
+  .hamburger { display: flex; }
+
   .matching-grid,
   .collab-grid {
     grid-template-columns: 1fr;

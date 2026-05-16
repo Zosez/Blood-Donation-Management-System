@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <td><span class="urgency ${urgClass}">${urgPrefix}${urgLabel}</span></td>
       <td>${req.city || '—'}</td>
       <td><span class="status-badge ${statusClass}">${req.status.toUpperCase()}</span></td>
-      <td><a href="#" class="view-link" data-id="${req.id}">View Details</a></td>
+      <td><a href="#" class="view-link response-link" data-id="${req.id}">View Response</a></td>
     `;
     return tr;
   }
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  /* ─── 3. VIEW DETAILS LINKS ─── */
+  /* ─── 3. VIEW RESPONSE LINKS ─── */
   tbody.addEventListener('click', (e) => {
     const link = e.target.closest('.view-link');
     if (!link) return;
@@ -158,7 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = link.dataset.id;
     // Find the request object by id from the last loaded data
     const req = cachedRequests.find(r => String(r.id) === String(id));
-    if (req) brOpenModal(req);
+    if (req) {
+      if (link.classList.contains('response-link')) {
+        brOpenDonorResponseModal(req);
+      } else {
+        brOpenModal(req);
+      }
+    }
   });
 
 
@@ -313,6 +319,10 @@ document.getElementById("dashboard").addEventListener("click", () => {
     window.location.href = "/userDashboard";
 });
 
+document.getElementById("donations").addEventListener("click", () => {
+    window.location.href = "/userDonations";
+});
+
 // ───────── Back to Dashboard REDIRECT ─────────
 document.getElementById("back-dashboard").addEventListener("click", () => {
     window.location.href = "/userDashboard";
@@ -408,3 +418,251 @@ function brCloseModal(event) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') brCloseModal(null);
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// DONOR RESPONSE MODAL
+// ─────────────────────────────────────────────────────────────────────
+
+async function brOpenDonorResponseModal(request) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    showToast('Please log in to view responses', 'error');
+    return;
+  }
+
+  try {
+    // Fetch donation attempts for this request
+    const res = await fetch(`/api/donation-attempts/request/${request.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      showToast('Failed to load donor responses', 'error');
+      return;
+    }
+
+    const data = await res.json();
+    const attempts = data.attempts || [];
+
+    // Create modal
+    const overlay = document.createElement('div');
+    overlay.className = 'donor-response-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 1rem;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    `;
+
+    let content = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.5rem; color: #1e293b;">Donor Responses</h2>
+          <p style="margin: 0.5rem 0 0 0; color: #64748b; font-size: 0.9rem;">${request.hospital_name || 'Blood Request'}</p>
+        </div>
+        <button type="button" class="close-modal-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Blood Type Needed</p>
+            <p style="margin: 0.5rem 0 0 0; font-weight: 700; color: #1e293b; font-size: 1.1rem;">${request.blood_type}</p>
+          </div>
+          <div>
+            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Total Responses</p>
+            <p style="margin: 0.5rem 0 0 0; font-weight: 700; color: #1e293b; font-size: 1.1rem;">${attempts.length}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (attempts.length === 0) {
+      content += `
+        <div style="text-align: center; padding: 2rem; color: #64748b;">
+          <p style="font-size: 0.95rem;">No donors have responded to this request yet.</p>
+        </div>
+      `;
+    } else {
+      content += `<div style="display: flex; flex-direction: column; gap: 1rem;">`;
+      attempts.forEach((attempt, idx) => {
+        const attemptDate = new Date(attempt.created_at || attempt.attempted_at);
+        const timeAgo = brTimeAgo(attempt.created_at || attempt.attempted_at);
+        const isAccepted = attempt.status === 'accepted';
+        const isDeclined = attempt.status === 'declined';
+
+        content += `
+          <div class="donor-response-card" data-attempt-id="${attempt.id}" style="
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            ${isAccepted ? 'background: #f0fdf4; border-color: #86efac;' : isDeclined ? 'background: #fef2f2; border-color: #fca5a5;' : ''}
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+              <div>
+                <p style="margin: 0; font-weight: 700; color: #1e293b; font-size: 1rem;">${attempt.donor_name || 'Unknown Donor'}</p>
+                <p style="margin: 0.25rem 0 0 0; color: #64748b; font-size: 0.85rem;">${timeAgo}</p>
+              </div>
+              <span style="background: #C0281C; color: white; padding: 0.4rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Offered to donate</span>
+            </div>
+
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span style="color: #64748b; font-size: 0.9rem;">Phone:</span>
+                <span style="color: #1e293b; font-weight: 500;">${attempt.donor_phone || 'N/A'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b; font-size: 0.9rem;">Email:</span>
+                <span style="color: #1e293b; font-weight: 500;">${attempt.donor_email || 'N/A'}</span>
+              </div>
+            </div>
+        `;
+
+        if (isAccepted) {
+          content += `
+            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 0.75rem; text-align: center; color: #16A34A; font-weight: 600; font-size: 0.95rem;">
+              ✓ Accepted
+            </div>
+          `;
+        } else if (isDeclined) {
+          content += `
+            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.75rem; text-align: center; color: #C0281C; font-weight: 600; font-size: 0.95rem;">
+              ✕ Declined
+            </div>
+          `;
+        } else {
+          content += `
+            <div style="display: flex; gap: 0.75rem;">
+              <button class="accept-donor-btn" data-attempt-id="${attempt.id}" style="
+                flex: 1;
+                background: #16A34A;
+                color: white;
+                border: none;
+                padding: 0.65rem;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 0.9rem;
+                transition: all 0.2s;
+              ">Accept</button>
+              <button class="decline-donor-btn" data-attempt-id="${attempt.id}" style="
+                flex: 1;
+                background: #e2e8f0;
+                color: #1e293b;
+                border: 1px solid #cbd5e1;
+                padding: 0.65rem;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 0.9rem;
+                transition: all 0.2s;
+              ">Decline</button>
+            </div>
+          `;
+        }
+
+        content += `</div>`;
+      });
+      content += `</div>`;
+    }
+
+    content += `
+      <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button class="close-modal-btn" style="
+          flex: 1;
+          padding: 0.75rem;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #1e293b;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+        ">Close</button>
+      </div>
+    `;
+
+    modal.innerHTML = content;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Event listeners
+    overlay.querySelector('.close-modal-btn')?.addEventListener('click', () => overlay.remove());
+    
+    const acceptBtns = modal.querySelectorAll('.accept-donor-btn');
+    const declineBtns = modal.querySelectorAll('.decline-donor-btn');
+
+    acceptBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const attemptId = btn.dataset.attemptId;
+        await handleDonorResponse(attemptId, 'accepted', overlay, request.id);
+      });
+    });
+
+    declineBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const attemptId = btn.dataset.attemptId;
+        await handleDonorResponse(attemptId, 'declined', overlay, request.id);
+      });
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+  } catch (error) {
+    console.error('Error opening donor response modal:', error);
+    showToast('Error loading responses', 'error');
+  }
+}
+
+async function handleDonorResponse(attemptId, status, overlay, requestId) {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const res = await fetch(`/api/donation-attempts/${attemptId}/${status}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) {
+      showToast(`Failed to ${status === 'accepted' ? 'accept' : 'decline'} donor`, 'error');
+      return;
+    }
+
+    showToast(`Donor ${status} successfully`, 'success');
+
+    // Refresh the modal
+    overlay.remove();
+    const req = cachedRequests.find(r => String(r.id) === String(requestId));
+    if (req) {
+      setTimeout(() => brOpenDonorResponseModal(req), 300);
+    }
+  } catch (error) {
+    console.error('Error handling donor response:', error);
+    showToast('Error processing response', 'error');
+  }
+}
