@@ -3,16 +3,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // ──────────────────────────────────────────────
   // Authorization Check
   // ──────────────────────────────────────────────
-  function checkAuthorization() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login';
-      return false;
-    }
-    return true;
-  }
-
-  if (!checkAuthorization()) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = '/login';
     return;
   }
 
@@ -21,12 +14,36 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnCancel = document.querySelector('.btn-cancel');
 
   /* ── Toast ── */
-  function showToast(msg, duration = 3200) {
+  function showToast(msg, type = 'info', duration = 3500) {
     let t = document.getElementById('toast');
-    if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.className = 'toast';
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '1.5rem', right: '1.5rem',
+        padding: '.8rem 1.1rem', borderRadius: '10px',
+        fontFamily: "'Inter', sans-serif", fontWeight: '600',
+        fontSize: '.85rem', zIndex: '9999',
+        boxShadow: '0 8px 24px rgba(0,0,0,.15)',
+        opacity: '0', transition: '.3s', maxWidth: '360px'
+      });
+      document.body.appendChild(t);
+    }
+    const colors = {
+      success: { bg: '#f0fdf4', border: '#86efac', color: '#166534' },
+      danger:  { bg: '#fef2f2', border: '#fca5a5', color: '#991b1b' },
+      warning: { bg: '#fff7ed', border: '#fdba74', color: '#92400e' },
+      info:    { bg: '#eff6ff', border: '#93c5fd', color: '#1e40af' },
+    };
+    const c = colors[type] || colors.info;
+    Object.assign(t.style, {
+      background: c.bg, border: `1px solid ${c.border}`, color: c.color, opacity: '0'
+    });
     t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), duration);
+    requestAnimationFrame(() => { t.style.opacity = '1'; });
+    clearTimeout(t._hide);
+    t._hide = setTimeout(() => { t.style.opacity = '0'; }, duration);
   }
 
   /* ── Field errors ── */
@@ -49,41 +66,210 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ── Validate ── */
   function validate() {
     let ok = true;
-    const req = [
-      { id: 'firstName',    msg: 'First name is required.' },
-      { id: 'lastName',     msg: 'Last name is required.' },
-      { id: 'dob',          msg: 'Date of birth is required.' },
-      { id: 'phone',        msg: 'Phone number is required.' },
-      { id: 'province',     msg: 'Province is required.' },
-      { id: 'district',     msg: 'District / City is required.' },
-    ];
-    req.forEach(({ id, msg }) => {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) { setError(el, msg); ok = false; }
-    });
-    if (!document.getElementById('bloodType').value) {
-      setError(document.getElementById('bloodType'), 'Blood type is required.');
-      ok = false;
-    }
+
+    // Blood type
+    const btEl = document.getElementById('bloodType');
+    if (!btEl.value) { setError(btEl, 'Blood type is required.'); ok = false; }
+
+    // Phone
+    const phoneEl = document.getElementById('phone');
+    if (!phoneEl.value.trim()) { setError(phoneEl, 'Phone number is required.'); ok = false; }
+
+    // Province
+    const provEl = document.getElementById('province');
+    if (!provEl.value) { setError(provEl, 'Province is required.'); ok = false; }
+
+    // District / city
+    const distEl = document.getElementById('district');
+    if (!distEl.value) { setError(distEl, 'District / City is required.'); ok = false; }
+
     return ok;
   }
 
+  /* ── Pre-fill user data from localStorage ── */
+  try {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const phoneEl = document.getElementById('phone');
+    const emailEl = document.getElementById('email');
+    if (phoneEl && userData.phone) phoneEl.value = userData.phone;
+    if (emailEl && userData.email) emailEl.value = userData.email;
+
+    // Pre-select blood type
+    const btEl = document.getElementById('bloodType');
+    if (btEl && userData.blood_type) {
+      [...btEl.options].forEach(opt => {
+        if (opt.text.replace('−', '-') === userData.blood_type ||
+            opt.text === userData.blood_type) {
+          opt.selected = true;
+        }
+      });
+    }
+  } catch (_) {}
+
+  /* ── Lock form when user is unavailable ── */
+  function lockFormUnavailable(msg) {
+    btnSubmit.textContent  = '🚫 Availability Required';
+    btnSubmit.disabled     = true;
+    btnSubmit.style.background     = 'linear-gradient(135deg,#6B7280,#4B5563)';
+    btnSubmit.style.cursor         = 'not-allowed';
+
+    // Show a prominent banner at top of form
+    const existing = document.getElementById('unavail-banner');
+    if (existing) return; // already shown
+    const banner = document.createElement('div');
+    banner.id = 'unavail-banner';
+    Object.assign(banner.style, {
+      background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '10px',
+      padding: '.85rem 1.1rem', marginBottom: '1.2rem', color: '#92400e',
+      fontSize: '.85rem', fontWeight: '600', fontFamily: "'Inter', sans-serif",
+      lineHeight: '1.5', display: 'flex', alignItems: 'flex-start', gap: '8px'
+    });
+    banner.innerHTML = `<span style="font-size:1.1rem;flex-shrink:0;">⚠️</span><span>${msg}</span>`;
+    const firstField = form?.firstElementChild;
+    if (firstField) form.insertBefore(banner, firstField);
+    else document.querySelector('.form-card')?.prepend(banner);
+  }
+
+  /* ── Check user availability then duplicate registrations ── */
+  async function checkUserStatus() {
+    try {
+      // 1. Fetch live user data from /api/auth/me
+      const meRes = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (meRes.ok) {
+        const { user } = await meRes.json();
+
+        if (user.on_cooldown && user.cooldown_days_remaining > 0) {
+          lockFormUnavailable(
+            `You are in a post-donation cooldown period. You can register again in <strong>${user.cooldown_days_remaining} day${user.cooldown_days_remaining === 1 ? '' : 's'}</strong>.`
+          );
+          return; // stop further checks
+        }
+
+        if (!user.is_available_donor) {
+          lockFormUnavailable(
+            'Your availability is currently set to <strong>OFF</strong>. Please enable your availability from your dashboard before registering as a donor.'
+          );
+          return; // stop further checks
+        }
+      }
+
+      // 2. Check for existing pending/approved registration
+      const regRes = await fetch('/api/donor-registrations/my', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!regRes.ok) return;
+      const { registrations } = await regRes.json();
+
+      const pending  = registrations?.find(r => r.status === 'pending');
+      const approved = registrations?.find(r => r.status === 'approved');
+
+      if (approved) {
+        btnSubmit.textContent  = '✓ Already a Registered Donor';
+        btnSubmit.disabled     = true;
+        btnSubmit.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+        showToast('Your donor registration is already approved!', 'success', 4000);
+      } else if (pending) {
+        btnSubmit.textContent  = 'Registration Pending Review';
+        btnSubmit.disabled     = true;
+        btnSubmit.style.background = 'linear-gradient(135deg,#D97706,#B45309)';
+        showToast('You already have a pending donor registration awaiting admin review.', 'warning', 5000);
+      }
+    } catch (err) {
+      console.warn('Could not check user status:', err);
+    }
+  }
+  checkUserStatus();
+
   /* ── Submit ── */
-  btnSubmit.addEventListener('click', () => {
+  btnSubmit.addEventListener('click', async () => {
     if (!validate()) return;
+
+    const bloodTypeEl  = document.getElementById('bloodType');
+    const donationTypeEl = document.getElementById('donationType');
+    const availLevel   = document.querySelector('input[name="avail"]:checked')?.value || 'normal';
+    const phoneEl      = document.getElementById('phone');
+    const emailEl      = document.getElementById('email');
+    const hospitalEl   = document.getElementById('hospital');
+    const provinceEl   = document.getElementById('province');
+    const districtEl   = document.getElementById('district');
+    const lastDonEl    = document.getElementById('lastDonated');
+    const relEl        = document.getElementById('relationship');
+    const notesEl      = document.getElementById('notes');
+
+    // Normalize blood type (replace − with -)
+    const bloodType = bloodTypeEl.value.replace('−', '-');
+
+    // Parse last donated mm/dd/yyyy → ISO
+    let lastDonated = null;
+    if (lastDonEl?.value?.trim()) {
+      const parts = lastDonEl.value.split('/');
+      if (parts.length === 3) {
+        lastDonated = `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+      }
+    }
+
+    const payload = {
+      blood_type:         bloodType,
+      donation_type:      donationTypeEl?.value || 'Whole Blood',
+      availability_level: availLevel,
+      phone:              phoneEl?.value?.trim() || '',
+      email:              emailEl?.value?.trim() || '',
+      hospital:           hospitalEl?.value?.trim() || '',
+      province:           provinceEl?.value || '',
+      city:               districtEl?.value || '',
+      last_donated:       lastDonated,
+      relationship:       relEl?.value || '',
+      notes:              notesEl?.value?.trim() || ''
+    };
+
     btnSubmit.textContent = 'Submitting…';
-    btnSubmit.disabled = true;
-    setTimeout(() => {
-      btnSubmit.textContent = '✓ Registered Successfully!';
-      btnSubmit.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
-      showToast('You are now registered as a donor!', 4000);
-      setTimeout(() => {
-        btnSubmit.textContent = 'Register as Donor';
-        btnSubmit.style.background = '';
-        btnSubmit.disabled = false;
+    btnSubmit.disabled    = true;
+
+    try {
+      const res = await fetch('/api/donor-registrations', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        btnSubmit.textContent  = '✓ Submitted for Review!';
+        btnSubmit.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+        showToast('Registration submitted! An admin will review your request.', 'success', 5000);
         form.reset();
-      }, 3000);
-    }, 1200);
+        // Keep button disabled to prevent re-submit
+        setTimeout(() => {
+          btnSubmit.textContent = 'Registration Pending Review';
+          btnSubmit.style.background = 'linear-gradient(135deg,#D97706,#B45309)';
+        }, 3000);
+      } else if (res.status === 409) {
+        // Duplicate pending
+        btnSubmit.textContent  = 'Registration Pending Review';
+        btnSubmit.style.background = 'linear-gradient(135deg,#D97706,#B45309)';
+        showToast(data.message || 'You already have a pending registration.', 'warning', 5000);
+      } else {
+        btnSubmit.textContent = 'Register as Donor';
+        btnSubmit.disabled    = false;
+        btnSubmit.style.background = '';
+        const errMsg = data.errors
+          ? data.errors.map(e => e.msg).join(', ')
+          : (data.message || 'Submission failed. Please try again.');
+        showToast(errMsg, 'danger');
+      }
+    } catch (err) {
+      console.error('Donor registration error:', err);
+      btnSubmit.textContent = 'Register as Donor';
+      btnSubmit.disabled    = false;
+      btnSubmit.style.background = '';
+      showToast('Network error. Please check your connection and try again.', 'danger');
+    }
   });
 
   /* ── Cancel ── */
@@ -91,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirm('Cancel registration? All entered data will be lost.')) {
       form.reset();
       document.querySelectorAll('input,select,textarea').forEach(clearError);
-      showToast('Form cleared.');
+      showToast('Form cleared.', 'info');
     }
   });
 
@@ -106,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-/* ── Province → District dynamic population (injected fix) ── */
+/* ── Province → District dynamic population ── */
 document.addEventListener('DOMContentLoaded', function () {
   const districts = {
     koshi:         ['Bhojpur','Dhankuta','Ilam','Jhapa','Khotang','Morang','Okhaldhunga','Panchthar','Sankhuwasabha','Solukhumbu','Sunsari','Taplejung','Terhathum','Udayapur'],
@@ -135,5 +321,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.getElementById("dashboard").addEventListener("click", () => {
-    window.location.href = "/userDashboard";
+    window.location.href = "/userdashboard";
 });

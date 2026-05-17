@@ -3,6 +3,9 @@ const { authenticateToken } = require('../middleware/auth');
 const { db } = require('../config/database');
 const Notification = require('../models/Notification');
 const Donation = require('../models/Donation');
+// ADD THIS
+const { updateDonationCount } = require('../services/gamificationService');
+// END ADD THIS
 
 const router = express.Router();
 
@@ -528,26 +531,45 @@ router.post('/:attemptId/confirm-complete', authenticateToken, async (req, res) 
 
     console.log(`[DONATION] Donation confirmed by requester ${userId} for donor ${attempt[0].donor_id}`);
 
-    // Fetch donor info to potentially update profile stats
-    const [donor] = await db.execute(
-      'SELECT id, COALESCE(total_donations, 0) as total_donations FROM users WHERE id = ?',
-      [attempt[0].donor_id]
-    );
+    // ADD THIS — cooldown + gamification (same transaction)
+    let newBadges = [];
+    try {
+      const conn = await db.getConnection();
+      try {
+        await conn.beginTransaction();
 
-    if (donor.length > 0) {
-      // Update donor's total donations count
-      const newCount = donor[0].total_donations + 1;
-      await db.execute(
-        'UPDATE users SET total_donations = ? WHERE id = ?',
-        [newCount, attempt[0].donor_id]
-      );
-      console.log(`[DONATION] Updated donor ${attempt[0].donor_id} total_donations to ${newCount}`);
+        // 1. Apply 56-day cooldown and increment lives_impacted
+        await conn.execute(
+          `UPDATE users
+           SET is_available_donor = 0,
+               cooldown_ends_at   = DATE_ADD(NOW(), INTERVAL 56 DAY),
+               lives_impacted     = COALESCE(lives_impacted, 0) + 1
+           WHERE id = ?`,
+          [attempt[0].donor_id]
+        );
+
+        // 2. Recount donations, update tier + award badges
+        const gamResult = await updateDonationCount(attempt[0].donor_id, conn);
+        newBadges = gamResult.newlyAwardedBadges;
+
+        await conn.commit();
+        console.log(`[GAMIFICATION] Donor ${attempt[0].donor_id} → tier=${gamResult.newTier}, count=${gamResult.newCount}, cooldown set, newBadges=${newBadges}`);
+      } catch (txErr) {
+        await conn.rollback();
+        console.error('[GAMIFICATION] Transaction error (non-fatal):', txErr.message);
+      } finally {
+        conn.release();
+      }
+    } catch (gamErr) {
+      console.error('[GAMIFICATION] updateDonationCount failed (non-fatal):', gamErr.message);
     }
+    // END ADD THIS
 
     res.json({
       success: true,
       message: 'Donation confirmed successfully',
-      donor_updated: true
+      donor_updated: true,
+      newBadges,  // array of badge IDs awarded — frontend can show toast
     });
   } catch (error) {
     console.error('Error confirming donation:', error);

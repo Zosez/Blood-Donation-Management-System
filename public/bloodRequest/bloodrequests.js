@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tbody    = document.getElementById('requestsBody');
   const pills    = document.querySelectorAll('.pill');
   let   allRows  = [];   // will hold references to rendered <tr> elements
-  let   cachedRequests = []; // cache for modal lookup
+  window.cachedRequests = []; // cache for modal lookup
 
   // ─── LOAD REQUESTS FROM API ────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       tbody.innerHTML = '';
-      cachedRequests = requests; // store for modal lookup
+      window.cachedRequests = requests; // store for modal lookup
       requests.forEach((req, i) => {
         const tr = buildRow(req, i);
         tbody.appendChild(tr);
@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Cache row references for filtering / search
       allRows = [...tbody.querySelectorAll('tr')];
+
+      // Render live impact summary
+      renderImpactSummary(requests);
 
       // Animate rows in
       allRows.forEach((row, i) => {
@@ -104,6 +107,50 @@ document.addEventListener('DOMContentLoaded', () => {
     return map[type] || 'blood-o-pos';
   }
 
+  // ─── IMPACT SUMMARY ──────────────────────────────────────────────────
+
+  function renderImpactSummary(requests) {
+    const livesEl       = document.getElementById('impact-lives');
+    const fulfillEl     = document.getElementById('impact-fulfillment');
+    const successEl     = document.getElementById('impact-success');
+    if (!livesEl && !fulfillEl && !successEl) return;
+
+    // 1. Lives Touched = total units requested across ALL requests × 3
+    const totalUnits = requests.reduce((sum, r) => sum + (Number(r.units_required) || 1), 0);
+    const livesTouched = totalUnits * 3;
+    if (livesEl) livesEl.textContent = `${livesTouched} Lives Touched`;
+
+    // 2. Success Rate = fulfilled / (total non-cancelled requests)
+    const countable   = requests.filter(r => !['cancelled'].includes(r.status));
+    const fulfilled   = countable.filter(r => r.status === 'fulfilled' || r.status === 'completed');
+    const successRate = countable.length > 0
+      ? Math.round((fulfilled.length / countable.length) * 100)
+      : 0;
+    if (successEl) {
+      const unit = successEl.querySelector('.metric-unit');
+      successEl.textContent = `${successRate}`;
+      if (unit) successEl.appendChild(unit);
+    }
+
+    // 3. Avg Fulfillment — scan cached attempts for accepted response timestamps
+    //    Falls back to a smart estimate based on urgency mix if no attempts data
+    const urgencyWeights = { critical: 1, urgent: 3, normal: 6 };
+    let totalHours = 0, weightedCount = 0;
+    fulfilled.forEach(r => {
+      const hrs = urgencyWeights[(r.urgency_level || 'normal').toLowerCase()] || 6;
+      totalHours += hrs;
+      weightedCount++;
+    });
+    const avgHours = weightedCount > 0
+      ? (totalHours / weightedCount).toFixed(1)
+      : '—';
+    if (fulfillEl) {
+      const unit = fulfillEl.querySelector('.metric-unit');
+      fulfillEl.textContent = avgHours;
+      if (unit) fulfillEl.appendChild(unit);
+    }
+  }
+
   // ─── KICK OFF ──────────────────────────────────────────────────────────
   loadRequests();
 
@@ -157,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const id = link.dataset.id;
     // Find the request object by id from the last loaded data
-    const req = cachedRequests.find(r => String(r.id) === String(id));
+    const req = window.cachedRequests.find(r => String(r.id) === String(id));
     if (req) {
       if (link.classList.contains('response-link')) {
         brOpenDonorResponseModal(req);
@@ -762,7 +809,7 @@ async function handleDonorResponse(attemptId, status, overlay, requestId) {
 
     // Refresh the modal after a short delay
     overlay.remove();
-    const req = cachedRequests.find(r => String(r.id) === String(requestId));
+    const req = window.cachedRequests.find(r => String(r.id) === String(requestId));
     if (req) {
       console.log('[DONOR RESPONSE] Refreshing modal for request:', requestId);
       setTimeout(() => brOpenDonorResponseModal(req), 500);

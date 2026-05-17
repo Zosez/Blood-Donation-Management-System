@@ -453,51 +453,76 @@ router.delete('/users/:userId', async (req, res) => {
 
 /**
  * GET /api/admin/inventory
- * Get blood stock details and list of available donors
+ * Get blood stock from inventory table + list of available donors
  */
 router.get('/inventory', async (req, res) => {
     try {
-        // 1. Get blood stock (sum of blood units by type)
+        // 1. Blood stock from the new inventory table (source of truth)
         const [stockRows] = await db.execute(`
-            SELECT blood_type, SUM(blood_units) as total_units 
-            FROM donations 
-            WHERE status = 'completed' 
+            SELECT blood_type, SUM(units) AS total_units
+            FROM inventory
             GROUP BY blood_type
         `);
 
-        // 2. Get available donors (verified users who haven't donated recently)
+        // 2. Available donors (verified, is_available_donor=1, 56-day filtered)
         const [donorRows] = await db.execute(`
-            SELECT 
+            SELECT
                 u.id, u.fullname, u.email, u.phone, u.blood_type, u.city,
-                MAX(d.donation_date) as last_donation_date
+                MAX(i.received_at) AS last_donation_date
             FROM users u
-            LEFT JOIN donations d ON u.id = d.user_id AND d.status = 'completed'
-            WHERE u.role = 'user' 
-              AND u.is_verified = 1 
+            LEFT JOIN inventory i ON i.donor_registration_id IN (
+                SELECT id FROM donor_registrations WHERE user_id = u.id
+            )
+            WHERE u.role = 'user'
+              AND u.is_verified = 1
               AND u.is_available_donor = 1
             GROUP BY u.id
             ORDER BY u.fullname ASC
         `);
 
-        // 3. Filter donors based on 56-day rule (can also do this in SQL but JS is fine for moderate user counts)
         const today = new Date();
         const availableDonors = donorRows.filter(donor => {
             if (!donor.last_donation_date) return true;
-            const lastDate = new Date(donor.last_donation_date);
-            const daysDiff = Math.ceil((today - lastDate) / (1000 * 60 * 60 * 24));
+            const daysDiff = Math.ceil((today - new Date(donor.last_donation_date)) / (1000 * 60 * 60 * 24));
             return daysDiff >= 56;
         });
 
+        // 3. Network nodes = distinct cities with verified users
+        const [nodeRows] = await db.execute(`
+            SELECT COUNT(DISTINCT LOWER(TRIM(city))) AS node_count
+            FROM users
+            WHERE role = 'user' AND is_verified = 1
+              AND city IS NOT NULL AND city != ''
+        `);
+        const networkNodes = Number(nodeRows[0]?.node_count) || 0;
+
+        // 4. Pending donor registration requests
+        const [pendingRegs] = await db.execute(`
+            SELECT COUNT(*) AS pending_count
+            FROM donor_registrations WHERE status = 'pending'
+        `);
+        const pendingDonorRequests = Number(pendingRegs[0]?.pending_count) || 0;
+
+        // 5. Critical blood types (stock < 5 units)
+        const stockMap = {};
+        stockRows.forEach(r => { stockMap[r.blood_type] = Number(r.total_units); });
+        const allTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+        const criticalTypes = allTypes.filter(t => (stockMap[t] || 0) < 5).length;
+
         res.json({
-            stock: stockRows,
-            donors: availableDonors,
-            totalStock: stockRows.reduce((acc, curr) => acc + Number(curr.total_units), 0)
+            stock:                stockRows,
+            donors:               availableDonors,
+            totalStock:           stockRows.reduce((acc, r) => acc + Number(r.total_units), 0),
+            networkNodes,
+            pendingDonorRequests,
+            criticalTypes
         });
     } catch (error) {
         console.error('Get inventory error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 /**
  * GET /api/admin/profile
@@ -539,6 +564,302 @@ router.put('/profile', async (req, res) => {
         res.json({ message: 'Admin profile updated successfully' });
     } catch (error) {
         console.error('Update admin profile error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/admin/donor-registrations
+ * Returns donor registration requests
+ * Query: ?status=pending|approved|rejected|completed|active(=pending+approved)|all
+ */
+router.get('/donor-registrations', async (req, res) => {
+    try {
+        const { status = 'active' } = req.query;
+        let whereClause = '';
+        const params = [];
+
+        if (status === 'active') {
+            whereClause = "WHERE dr.status IN ('pending','approved')";
+        } else if (status !== 'all') {
+            whereClause = 'WHERE dr.status = ?';
+            params.push(status);
+        }
+
+        const [rows] = await db.execute(`
+            SELECT
+                dr.id, dr.user_id, dr.fullname, dr.blood_type, dr.donation_type,
+                dr.availability_level, dr.phone, dr.email, dr.hospital,
+                dr.province, dr.city, dr.last_donated, dr.relationship, dr.notes,
+                dr.status, dr.created_at, dr.reviewed_at,
+                u2.fullname AS reviewed_by_name
+            FROM donor_registrations dr
+            LEFT JOIN users u2 ON dr.reviewed_by = u2.id
+            ${whereClause}
+            ORDER BY
+                CASE dr.status WHEN 'approved' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END,
+                dr.created_at DESC
+            LIMIT 200
+        `, params);
+
+        res.json({ registrations: rows, total: rows.length });
+    } catch (error) {
+        console.error('Get donor registrations error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/donor-registrations/:id/approve
+ * Approve a donor registration → marks the user as available donor
+ */
+router.post('/donor-registrations/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [regs] = await db.execute(
+            'SELECT * FROM donor_registrations WHERE id = ?', [id]
+        );
+        if (regs.length === 0) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+        if (regs[0].status !== 'pending') {
+            return res.status(400).json({ message: 'Registration already processed' });
+        }
+
+        const reg = regs[0];
+
+        // Mark registration approved
+        await db.execute(
+            `UPDATE donor_registrations
+             SET status = 'approved', reviewed_by = ?, reviewed_at = NOW()
+             WHERE id = ?`,
+            [req.user.id, id]
+        );
+
+        // Set user as available donor + update city if provided
+        await db.execute(
+            `UPDATE users
+             SET is_available_donor = 1,
+                 city               = COALESCE(NULLIF(?, ''), city)
+             WHERE id = ?`,
+            [reg.city || '', reg.user_id]
+        );
+
+        // Notify user
+        try {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                user_id:  reg.user_id,
+                type:     'donor_approved',
+                title:    'Donor Registration Approved!',
+                message:  'Your donor registration has been approved. You are now listed as an available donor.',
+                blood_request_id: null,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[DONOR REG] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Donor registration #${id} approved by admin ${req.user.id}`);
+        res.json({ message: 'Registration approved successfully', registration_id: id });
+    } catch (error) {
+        console.error('Approve donor registration error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/donor-registrations/:id/complete
+ * Admin records the actual donation: blood_type, units, donation_date
+ * → inserts into inventory table, marks registration completed, updates user stats
+ */
+router.post('/donor-registrations/:id/complete', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { blood_type, units, donation_date, notes } = req.body;
+
+        if (!blood_type || !units || !donation_date) {
+            return res.status(400).json({ message: 'blood_type, units, and donation_date are required' });
+        }
+        const parsedUnits = parseFloat(units);
+        if (isNaN(parsedUnits) || parsedUnits <= 0) {
+            return res.status(400).json({ message: 'units must be a positive number' });
+        }
+
+        const [regs] = await db.execute(
+            'SELECT * FROM donor_registrations WHERE id = ?', [id]
+        );
+        if (regs.length === 0) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+        if (regs[0].status !== 'approved') {
+            return res.status(400).json({ message: 'Only approved registrations can be completed' });
+        }
+        const reg = regs[0];
+
+        // 1. Mark registration as completed
+        await db.execute(
+            `UPDATE donor_registrations
+             SET status = 'completed', reviewed_by = ?, reviewed_at = NOW()
+             WHERE id = ?`,
+            [req.user.id, id]
+        );
+
+        // 2. Insert into inventory table
+        const [invResult] = await db.execute(
+            `INSERT INTO inventory
+             (blood_type, units, source_type, donor_registration_id, received_at, notes, recorded_by)
+             VALUES (?, ?, 'donation', ?, ?, ?, ?)`,
+            [blood_type, parsedUnits, id, donation_date, notes || null, req.user.id]
+        );
+
+        // 3. Update user stats (total_donations, lives_impacted) + set cooldown
+        await db.execute(
+            `UPDATE users
+             SET total_donations  = COALESCE(total_donations, 0) + 1,
+                 lives_impacted   = COALESCE(lives_impacted, 0) + 1,
+                 is_available_donor = 0,
+                 cooldown_ends_at   = DATE_ADD(?, INTERVAL 56 DAY)
+             WHERE id = ?`,
+            [donation_date, reg.user_id]
+        );
+
+        // 4. Notify donor
+        try {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                user_id:  reg.user_id,
+                type:     'donation_completed',
+                title:    'Donation Recorded — Thank You!',
+                message:  `Your donation of ${parsedUnits} unit(s) of ${blood_type} blood on ${donation_date} has been recorded. You have saved lives! Your next eligible donation date is 56 days from now.`,
+                blood_request_id: null,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[DONOR COMPLETE] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Donation completed: reg #${id}, ${parsedUnits}u ${blood_type}, inventory entry #${invResult.insertId}`);
+
+        res.json({
+            success: true,
+            message: 'Donation recorded and inventory updated successfully',
+            inventory_id: invResult.insertId
+        });
+    } catch (error) {
+        console.error('Complete donation error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/admin/inventory-log
+ * Returns paginated inventory entries for audit
+ */
+router.get('/inventory-log', async (req, res) => {
+    try {
+        const limit  = Math.min(parseInt(req.query.limit)  || 50, 200);
+        const offset = parseInt(req.query.offset) || 0;
+
+        const [rows] = await db.execute(`
+            SELECT
+                i.id, i.blood_type, i.units, i.source_type, i.received_at,
+                i.notes, i.created_at,
+                dr.fullname  AS donor_name,
+                u.fullname   AS recorded_by_name
+            FROM inventory i
+            LEFT JOIN donor_registrations dr ON i.donor_registration_id = dr.id
+            LEFT JOIN users u ON i.recorded_by = u.id
+            ORDER BY i.received_at DESC, i.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+
+        const [countRes] = await db.execute('SELECT COUNT(*) AS total FROM inventory');
+
+        res.json({ entries: rows, total: Number(countRes[0].total) });
+    } catch (error) {
+        console.error('Inventory log error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/inventory/manual
+ * Admin manually adds blood units (e.g. from external donation drives)
+ */
+router.post('/inventory/manual', async (req, res) => {
+    try {
+        const { blood_type, units, received_at, notes, source_type } = req.body;
+        if (!blood_type || !units || !received_at) {
+            return res.status(400).json({ message: 'blood_type, units, and received_at are required' });
+        }
+        const parsedUnits = parseFloat(units);
+        if (isNaN(parsedUnits) || parsedUnits <= 0) {
+            return res.status(400).json({ message: 'units must be positive' });
+        }
+        const [result] = await db.execute(
+            `INSERT INTO inventory (blood_type, units, source_type, received_at, notes, recorded_by)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [blood_type, parsedUnits, source_type || 'manual', received_at, notes || null, req.user.id]
+        );
+        res.status(201).json({ success: true, message: 'Inventory entry added', inventory_id: result.insertId });
+    } catch (error) {
+        console.error('Manual inventory error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/donor-registrations/:id/reject
+ * Reject a donor registration
+ */
+router.post('/donor-registrations/:id/reject', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const [regs] = await db.execute(
+            'SELECT * FROM donor_registrations WHERE id = ?', [id]
+        );
+        if (regs.length === 0) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+        if (regs[0].status !== 'pending') {
+            return res.status(400).json({ message: 'Registration already processed' });
+        }
+
+        const reg = regs[0];
+
+        await db.execute(
+            `UPDATE donor_registrations
+             SET status = 'rejected', reviewed_by = ?, reviewed_at = NOW(),
+                 notes  = CONCAT(IFNULL(notes, ''), IF(? IS NOT NULL, CONCAT('\nAdmin: ', ?), ''))
+             WHERE id = ?`,
+            [req.user.id, reason || null, reason || null, id]
+        );
+
+        // Notify user
+        try {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                user_id:  reg.user_id,
+                type:     'donor_rejected',
+                title:    'Donor Registration Update',
+                message:  reason
+                            ? `Your donor registration was not approved: ${reason}`
+                            : 'Your donor registration was not approved at this time.',
+                blood_request_id: null,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[DONOR REG] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Donor registration #${id} rejected by admin ${req.user.id}`);
+        res.json({ message: 'Registration rejected', registration_id: id });
+    } catch (error) {
+        console.error('Reject donor registration error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

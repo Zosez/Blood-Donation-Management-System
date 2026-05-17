@@ -102,14 +102,14 @@ class BloodRequest {
     static async findMatchedRequests(bloodType, userCity = null) {
         let query = 'SELECT * FROM blood_requests WHERE status = ? AND blood_type = ?';
         let params = ['pending', bloodType];
-        
+
         if (userCity) {
             query += ' AND city = ?';
             params.push(userCity);
         }
-        
+
         query += ' ORDER BY FIELD(urgency_level, \'critical\', \'urgent\', \'normal\') ASC, created_at DESC LIMIT 10';
-        
+
         const [rows] = await db.execute(query, params);
         return rows;
     }
@@ -125,7 +125,7 @@ class BloodRequest {
             ORDER BY FIELD(urgency_level, 'critical', 'urgent', 'normal') ASC, created_at DESC
             LIMIT 10
         `;
-        
+
         const [rows] = await db.execute(query, [...compatibleTypes, userCity]);
         return rows;
     }
@@ -140,7 +140,7 @@ class BloodRequest {
             AND is_available_donor = 1
             AND role = 'user'
         `;
-        
+
         const [rows] = await db.execute(query, compatibleTypes);
         return rows;
     }

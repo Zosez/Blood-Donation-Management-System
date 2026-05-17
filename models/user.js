@@ -28,7 +28,12 @@ class User {
     // Find user by ID
     static async findById(id) {
         const [rows] = await db.execute(
-            'SELECT id, fullname, email, password, phone, province, city, blood_type, role, is_available_donor, is_verified, onboarded, date_of_birth, created_at FROM users WHERE id = ?',
+            `SELECT id, fullname, email, password, phone, province, city, blood_type, role,
+                    is_available_donor, is_verified, onboarded, date_of_birth, created_at,
+                    COALESCE(total_donations, 0) AS total_donations,
+                    COALESCE(lives_impacted, 0)  AS lives_impacted,
+                    cooldown_ends_at
+             FROM users WHERE id = ?`,
             [id]
         );
         return rows[0] || null;
@@ -44,10 +49,13 @@ class User {
         return result.affectedRows > 0;
     }
 
-    // Update availability
+    // Update availability (also clears cooldown when manually re-enabling)
     static async updateAvailability(id, isAvailable) {
         const [result] = await db.execute(
-            'UPDATE users SET is_available_donor = ? WHERE id = ?',
+            `UPDATE users
+             SET is_available_donor = ?,
+                 cooldown_ends_at   = ${isAvailable ? 'NULL' : 'cooldown_ends_at'}
+             WHERE id = ?`,
             [isAvailable ? 1 : 0, id]
         );
         return result.affectedRows > 0;

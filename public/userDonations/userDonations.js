@@ -48,10 +48,10 @@ async function fetchBloodRequests() {
       console.warn('Could not get current user ID:', e);
     }
 
-    // Filter out completed, fulfilled and cancelled requests
+    // Filter out completed requests (as requested by user)
     requests = requests.filter(req => {
       const status = (req.status || '').toLowerCase();
-      return status !== 'fulfilled' && status !== 'cancelled' && status !== 'completed';
+      return status !== 'completed';
     });
     
     // Store for later filtering of 'ongoing' requests
@@ -655,13 +655,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[RENDER] Starting render with', requests.length, 'requests');
     requestsGrid.innerHTML = '';
     
-    // Filter out user's own requests and fulfilled/cancelled requests
-    const filteredRequests = requests.filter(req => {
-      const isOwnRequest = req.user_id === currentUserId;
-      const status = (req.status || '').toLowerCase();
-      const isFulfilled = status === 'fulfilled' || status === 'cancelled';
-      return !isOwnRequest && !isFulfilled;
-    });
+    const currentUserId = window.currentUserId;
+
+    // Keep all requests as filtered by fetchBloodRequests (only completed are hidden)
+    let filteredRequests = requests;
     
     console.log('[RENDER] Filtered to', filteredRequests.length, 'requests (excluded own + fulfilled/cancelled)');
     
@@ -680,25 +677,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       attemptsByRequest[att.request_id] = att;
     });
 
-    // Filter out 'ongoing' requests from users who are not the donor or requester
-    const currentUserId = window.currentUserId;
-    filteredRequests = filteredRequests.filter(req => {
-      const status = (req.status || '').toLowerCase();
-      
-      // Hide 'ongoing' requests from other users (only show to donor or requester)
-      if (status === 'ongoing') {
-        const hasAttempt = attemptsByRequest[req.id];
-        const isDonor = hasAttempt && Number(hasAttempt.donor_id) === Number(currentUserId);
-        const isRequester = Number(req.user_id) === Number(currentUserId);
-        
-        // Only show ongoing to donor or requester
-        if (!isDonor && !isRequester) {
-          console.log('[DONATIONS PAGE] Hiding ongoing request', req.id, 'from user', currentUserId);
-          return false;
-        }
-      }
-      return true;
-    });
+    // Ongoing requests are now shown to everyone as requested
 
     filteredRequests.forEach(request => {
       const card = createRequestCard(request);
@@ -707,9 +686,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       const detailsBtn = card.querySelector('.details-btn');
       const donateBtn = card.querySelector('.donate-btn');
       const hasAttempt = attemptsByRequest[request.id];
+      const isOngoing = (request.status || '').toLowerCase() === 'ongoing';
 
-      // Update button label and behavior based on attempt status
-      if (hasAttempt) {
+      // Store attempt info in dataset for filtering
+      card.dataset.hasAttempt = hasAttempt ? 'true' : 'false';
+
+      // For ongoing requests with no personal attempt — hide the donate button
+      if (isOngoing && !hasAttempt) {
+        donateBtn.style.display = 'none';
+        // Add an "In Progress" badge instead
+        const badge = document.createElement('span');
+        badge.textContent = '🔄 In Progress';
+        badge.style.cssText = 'padding: 0.5rem 1rem; background: #fef3c7; color: #92400e; border-radius: 6px; font-weight: 600; font-size: 0.85rem;';
+        donateBtn.parentElement.appendChild(badge);
+      } else if (hasAttempt) {
+        // User has a personal attempt — update button label
         if (hasAttempt.status === 'accepted') {
           donateBtn.textContent = 'Complete Donation';
           donateBtn.classList.remove('btn-red');
@@ -834,6 +825,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                      cardCity === userCity;
       } else {
         // All Requests - Show everything
+        shouldShow = true;
+      }
+
+      // Always show cards where the user has an attempt (ongoing or pending)
+      if (card.dataset.hasAttempt === 'true') {
         shouldShow = true;
       }
 
@@ -1013,8 +1009,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const requests = await fetchBloodRequests();
       const donations = await fetchUserDonations();
 
-      // Render blood requests
-      renderBloodRequests(requests);
+      // Render blood requests (await so cards have data-has-attempt set before filtering)
+      await renderBloodRequests(requests);
 
       // Update stats
       updateStats();

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
   --red: #C0281C;
@@ -150,15 +150,29 @@ button {
 }
 
 .notif-dot {
+  display: none;
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
-  background: #EF4444;
-  border-radius: 50%;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: #C0281C;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  line-height: 1;
+  border-radius: 999px;
   border: 2px solid #fff;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
 }
+.notif-dot.visible { display: flex; }
 
 .notif-dropdown {
   position: absolute;

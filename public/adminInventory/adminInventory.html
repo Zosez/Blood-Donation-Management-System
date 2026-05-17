@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -247,6 +247,7 @@
                 <th>DONOR ID</th>
                 <th>DONOR NAME</th>
                 <th>BLOOD TYPE</th>
+                <th>DONATION TYPE</th>
                 <th>STATUS</th>
                 <th>REQUEST DATE</th>
                 <th>ACTIONS</th>
@@ -310,7 +311,7 @@
 
   <script src="adminInventory.js"></script>
 
-  <!-- ═══ MODAL OVERLAY ═══ -->
+  <!-- ═══ EMERGENCY MODAL ═══ -->
   <div class="modal-overlay" id="emergencyModal">
     <div class="modal">
       <div class="modal-header">
@@ -326,9 +327,76 @@
     </div>
   </div>
 
+  <!-- ═══ COMPLETE DONATION MODAL ═══ -->
+  <div class="modal-overlay" id="completeDonationModal">
+    <div class="modal" style="width:100%;max-width:480px;">
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 class="modal-title" style="margin:0;">🩸 Record Completed Donation</h3>
+        <button id="closeCompleteDonationModal" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#6B7280;">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Donor info (read-only) -->
+        <div id="donorInfoBanner" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.75rem 1rem;margin-bottom:1.2rem;font-size:.85rem;color:#374151;">
+          <span style="font-weight:600;">Donor:</span> <span id="modalDonorName">—</span> &nbsp;|&nbsp;
+          <span style="font-weight:600;">Registered Blood Type:</span> <span id="modalDonorBloodType">—</span>
+        </div>
+
+        <!-- Blood Type -->
+        <div style="margin-bottom:1rem;">
+          <label for="completeBloodType" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+            Blood Type Donated <span style="color:#ef4444;">*</span>
+          </label>
+          <select id="completeBloodType" style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;background:#fff;cursor:pointer;">
+            <option value="">Select blood type</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+
+        <!-- Units + Date row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem;">
+          <div>
+            <label for="completeUnits" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+              Units Donated <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="number" id="completeUnits" min="0.5" max="10" step="0.5" value="1.0"
+              style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;box-sizing:border-box;">
+          </div>
+          <div>
+            <label for="completeDonationDate" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+              Donation Date <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="date" id="completeDonationDate"
+              style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;box-sizing:border-box;">
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div style="margin-bottom:1.4rem;">
+          <label for="completeNotes" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+            Notes <span style="color:#9CA3AF;font-weight:400;">(optional)</span>
+          </label>
+          <textarea id="completeNotes" rows="2" placeholder="Any remarks about the donation…"
+            style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div class="modal-actions" style="display:flex;gap:.75rem;justify-content:flex-end;">
+          <button class="btn-secondary" id="cancelCompleteDonation">Cancel</button>
+          <button id="confirmCompleteDonation"
+            style="background:linear-gradient(135deg,#C0281C,#991b1b);color:#fff;border:none;padding:.65rem 1.4rem;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.2s;">
+            ✓ Record Donation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ TOAST ═══ -->
   <div class="ll-toast" id="toast"></div>
 
+<script src="../utils/avatarWidget.js"></script>
 </body>
 
 </html>

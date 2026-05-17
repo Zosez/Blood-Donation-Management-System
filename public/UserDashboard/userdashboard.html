@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -24,7 +24,7 @@
     <li><a href="#" data-section="Dashboard" class="active">Dashboard</a></li>
     <li><a href="#" data-section="Donations" id="donor-request">Donations</a></li>
     <li><a href="#" data-section="Requests" id="blood-request">Requests</a></li>
-    <li><a href="#" data-section="Profile" id="user-profile">Profile</a></li>
+    <li><a href="#" data-section="Profile" id="user-profile">My Profile</a></li>
   </ul>
 
   <div class="nav-right">
@@ -43,37 +43,16 @@
       <div class="notif-dropdown" id="notifPanel">
         <div class="notif-panel-header">
           <span>Notifications</span>
-          <button class="notif-close" id="notifClose">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="notif-mark-all" id="notifMarkAll" title="Mark all as read" style="font-size:0.72rem;font-weight:600;color:#C0281C;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0;opacity:0;pointer-events:none;">Mark all read</button>
+            <button class="notif-close" id="notifClose">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
-        <ul class="notif-list">
-          <li class="notif-item unread">
-            <span class="notif-icon red">
-              <svg width="14" height="16" viewBox="0 0 18 22" fill="none"><path d="M9 1C9 1 1 9.5 1 14.5a8 8 0 0 0 16 0C17 9.5 9 1 9 1z" fill="#C0281C"/></svg>
-            </span>
-            <div>
-              <p class="notif-text">Critical request near you — City General Hospital needs AB+ urgently.</p>
-              <p class="notif-time">2 min ago</p>
-            </div>
-          </li>
-          <li class="notif-item unread">
-            <span class="notif-icon orange">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            </span>
-            <div>
-              <p class="notif-text">2 donors accepted your request #RF-9921.</p>
-              <p class="notif-time">1 hour ago</p>
-            </div>
-          </li>
-          <li class="notif-item">
-            <span class="notif-icon green">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </span>
-            <div>
-              <p class="notif-text">Your donation to St. Jude Medical Center was confirmed.</p>
-              <p class="notif-time">Yesterday</p>
-            </div>
+        <ul class="notif-list" id="notifList">
+          <li class="notif-item" id="notifLoading" style="justify-content:center;padding:2rem 1rem;color:#9CA3AF;font-size:.82rem;">
+            Loading…
           </li>
         </ul>
       </div>
@@ -145,10 +124,12 @@
         </div>
       </div>
     </div>
+    <!-- Cooldown notice — shown by JS when user is in 56-day post-donation cooldown -->
+    <div id="cooldown-notice" style="display:none; margin: 0 0 1rem 0; padding: 0.65rem 1rem; background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; color: #92400e; font-size: 0.82rem; font-weight: 600; font-family: 'Outfit', sans-serif;"></div>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <p class="stat-label">TOTAL DONATIONS</p>
+        <p class="stat-label">TOTAL UNITS</p>
         <div class="stat-value" id="total-units-val">0 <span class="stat-unit">Units</span></div>
         <div class="stat-bar"><div class="stat-bar-fill" style="width:0%"></div></div>
       </div>
@@ -162,19 +143,13 @@
       </div>
       <div class="stat-card">
         <p class="stat-label">DONOR TIER</p>
-        <div class="stat-value tier-silver">
-          Silver
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-        <p class="stat-hint">3 donations until Gold</p>
+        <div class="stat-value" id="donor-tier-val">—</div>
+        <p class="stat-hint" id="donor-tier-hint">Loading...</p>
       </div>
       <div class="stat-card next-badge-card">
         <p class="stat-label">NEXT BADGE</p>
-        <div class="badge-name">Centurion Blood Guard</div>
-        <div class="badge-chips">
-          <span class="badge-chip blue">C</span>
-          <span class="badge-chip teal">B</span>
-        </div>
+        <div class="badge-name" id="next-badge-name">—</div>
+        <div id="next-badge-icon" style="font-size:1.6rem;margin-top:4px;"></div>
       </div>
     </div>
 
@@ -286,5 +261,7 @@
 </footer>
 
 <script src="userdashboard.js"></script>
+<script src="../utils/avatarWidget.js"></script>
 </body>
 </html>
+

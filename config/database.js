@@ -276,7 +276,129 @@ async function initializeDatabase() {
             console.log('[DB] blood_type_donated column already exists');
         }
 
-        // Re-enable foreign key checks
+        // Create donor_registrations table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS donor_registrations (
+                id                 INT AUTO_INCREMENT PRIMARY KEY,
+                user_id            INT NOT NULL,
+                fullname           VARCHAR(255) NOT NULL,
+                blood_type         VARCHAR(10)  NOT NULL,
+                donation_type      VARCHAR(50)  DEFAULT 'Whole Blood',
+                availability_level ENUM('normal','weekday','emergency') DEFAULT 'normal',
+                phone              VARCHAR(30),
+                email              VARCHAR(255),
+                hospital           VARCHAR(255),
+                province           VARCHAR(100),
+                city               VARCHAR(100),
+                last_donated       DATE,
+                relationship       VARCHAR(50),
+                notes              TEXT,
+                status             ENUM('pending','approved','rejected') DEFAULT 'pending',
+                reviewed_by        INT,
+                reviewed_at        DATETIME,
+                created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
+                INDEX idx_dr_user_id (user_id),
+                INDEX idx_dr_status  (status)
+            )
+        `);
+        console.log('[DB] donor_registrations table ready');
+
+        // Migration: add lives_impacted if missing
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN lives_impacted INT DEFAULT 0`);
+            console.log('[DB] Added lives_impacted column to users table');
+        } catch (e) {
+            console.log('[DB] lives_impacted column already exists or skipped');
+        }
+
+        // Migration: add cooldown_ends_at if missing
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN cooldown_ends_at DATETIME`);
+            console.log('[DB] Added cooldown_ends_at column to users table');
+        } catch (e) {
+            console.log('[DB] cooldown_ends_at column already exists or skipped');
+        }
+
+        // Create inventory table — blood bank stock (source of truth for live blood supply)
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS inventory (
+                id                    INT AUTO_INCREMENT PRIMARY KEY,
+                blood_type            VARCHAR(10)  NOT NULL,
+                units                 DECIMAL(5,1) NOT NULL DEFAULT 1.0,
+                source_type           ENUM('donation','manual','event') DEFAULT 'donation',
+                donor_registration_id INT,
+                received_at           DATE NOT NULL,
+                notes                 TEXT,
+                recorded_by           INT,
+                created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (donor_registration_id) REFERENCES donor_registrations(id) ON DELETE SET NULL,
+                FOREIGN KEY (recorded_by)           REFERENCES users(id)               ON DELETE SET NULL,
+                INDEX idx_inv_blood_type   (blood_type),
+                INDEX idx_inv_received_at  (received_at)
+            )
+        `);
+        console.log('[DB] inventory table ready');
+
+        // Migrate donor_registrations.status to include completed
+        try {
+            await db.execute(`
+                ALTER TABLE donor_registrations
+                MODIFY COLUMN status ENUM('pending','approved','rejected','completed') DEFAULT 'pending'
+            `);
+            console.log('[DB] donor_registrations.status ENUM updated');
+        } catch (e) { console.log('[DB] donor_registrations.status already updated'); }
+
+        // ── GAMIFICATION TABLES ───────────────────────────────────────────────
+
+        // Badge definitions (seeded once)
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS badges (
+                id          VARCHAR(50)  PRIMARY KEY,
+                name        VARCHAR(100) NOT NULL,
+                description TEXT,
+                icon        VARCHAR(10)  NOT NULL,
+                unlocks_at  INT          NOT NULL
+            )
+        `);
+
+        // Seed badge definitions (INSERT IGNORE = safe to re-run)
+        await db.execute(`
+            INSERT IGNORE INTO badges (id, name, description, icon, unlocks_at) VALUES
+              ('first_drop',         'First Drop',       'Awarded for your very first confirmed donation.',          '🩸', 1),
+              ('life_saver_5',       'Life Saver',        'You have saved up to 15 lives — keep it up!',             '❤️', 5),
+              ('dedicated_donor_10', 'Dedicated Donor',   'Double digits! You are a true dedicated donor.',          '⭐', 10),
+              ('gold_heart_15',      'Gold Heart',        'Fifteen donations — your heart is pure gold.',            '💛', 15),
+              ('champion_25',        'Champion Donor',    'Twenty-five donations — a true blood donation champion.', '🏅', 25),
+              ('platinum_legend_30', 'Platinum Legend',   'Thirty donations — you have reached legendary status.',   '🏆', 30)
+        `);
+        console.log('[DB] badges table ready + seeded');
+
+        // User badges earned (UNIQUE guard prevents duplicates)
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS user_badges (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                user_id    INT         NOT NULL,
+                badge_id   VARCHAR(50) NOT NULL,
+                awarded_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_badge (user_id, badge_id),
+                FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+                FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE,
+                INDEX idx_ub_user_id (user_id)
+            )
+        `);
+        console.log('[DB] user_badges table ready');
+
+        // Add donor_tier column to users (safe migration)
+        try {
+            await db.execute(`ALTER TABLE users ADD COLUMN donor_tier ENUM('Bronze','Silver','Gold','Platinum') DEFAULT 'Bronze'`);
+            console.log('[DB] Added donor_tier column to users');
+        } catch (e) { console.log('[DB] donor_tier column already exists'); }
+
+        // ─────────────────────────────────────────────────────────────────────
+
         await db.execute('SET FOREIGN_KEY_CHECKS=1');
 
         console.log('Database tables initialized successfully');

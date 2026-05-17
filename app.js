@@ -7,8 +7,47 @@ const path = require('path');
 dotenv.config();
 
 // Initialize database (creates tables if they don't exist)
-const { initializeDatabase } = require('./config/database');
+const { initializeDatabase, db } = require('./config/database');
 initializeDatabase();
+
+// ── Donor cooldown restore job ──────────────────────────────
+// Runs every hour; re-enables donors whose 56-day cooldown has passed
+async function restoreExpiredCooldowns() {
+    try {
+        const [result] = await db.execute(
+            `UPDATE users
+             SET is_available_donor = 1,
+                 cooldown_ends_at   = NULL
+             WHERE is_available_donor = 0
+               AND cooldown_ends_at IS NOT NULL
+               AND cooldown_ends_at <= NOW()`
+        );
+        if (result.affectedRows > 0) {
+            console.log(`[COOLDOWN] Restored ${result.affectedRows} donor(s) whose 56-day cooldown expired`);
+        }
+    } catch (err) {
+        console.error('[COOLDOWN] Error restoring donors:', err.message);
+    }
+
+    // Auto-cancel approved requests whose date_needed has passed
+    try {
+        const [expired] = await db.execute(
+            `UPDATE blood_requests
+             SET status = 'cancelled'
+             WHERE status = 'approved'
+               AND date_needed IS NOT NULL
+               AND date_needed < CURDATE()`
+        );
+        if (expired.affectedRows > 0) {
+            console.log(`[EXPIRY] Auto-cancelled ${expired.affectedRows} expired blood request(s)`);
+        }
+    } catch (err) {
+        console.error('[EXPIRY] Error cancelling expired requests:', err.message);
+    }
+}
+// Run immediately on startup, then every hour
+restoreExpiredCooldowns();
+setInterval(restoreExpiredCooldowns, 60 * 60 * 1000);
 
 const app = express();
 
@@ -41,6 +80,8 @@ const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
 const eventsRoutes = require('./routes/events');
 const donationAttemptsRoutes = require('./routes/donationAttempts');
+const donorRegistrationsRoutes = require('./routes/donorRegistrations');
+const gamificationRoutes = require('./routes/gamification');
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -50,6 +91,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/donation-attempts', donationAttemptsRoutes);
+app.use('/api/donor-registrations', donorRegistrationsRoutes);
+app.use('/api/gamification', gamificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

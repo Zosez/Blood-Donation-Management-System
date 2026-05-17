@@ -347,6 +347,18 @@ router.get('/me', authenticateToken, async (req, res) => {
         sanitized.is_donation_eligible = donationEligibility.eligible;
         sanitized.days_until_eligible = donationEligibility.daysUntilEligible;
 
+        // Add cooldown info
+        const now = new Date();
+        const cooldownEnds = user.cooldown_ends_at ? new Date(user.cooldown_ends_at) : null;
+        sanitized.on_cooldown = cooldownEnds ? cooldownEnds > now : false;
+        sanitized.cooldown_ends_at = user.cooldown_ends_at || null;
+        if (sanitized.on_cooldown && cooldownEnds) {
+            const diffDays = Math.ceil((cooldownEnds - now) / (1000 * 60 * 60 * 24));
+            sanitized.cooldown_days_remaining = diffDays;
+        } else {
+            sanitized.cooldown_days_remaining = 0;
+        }
+
         res.json({ user: sanitized });
     } catch (error) {
         console.error('Get user error:', error);
@@ -364,6 +376,25 @@ router.put('/availability', authenticateToken, [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Block re-enabling if still on 56-day cooldown
+        if (req.body.is_available === true || req.body.is_available === 'true') {
+            const now = new Date();
+            const cooldownEnds = user.cooldown_ends_at ? new Date(user.cooldown_ends_at) : null;
+            if (cooldownEnds && cooldownEnds > now) {
+                const diffDays = Math.ceil((cooldownEnds - now) / (1000 * 60 * 60 * 24));
+                return res.status(400).json({
+                    message: `You are on a 56-day donation cooldown. You can donate again in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
+                    cooldown_days_remaining: diffDays,
+                    cooldown_ends_at: user.cooldown_ends_at
+                });
+            }
         }
 
         const success = await User.updateAvailability(req.user.id, req.body.is_available);

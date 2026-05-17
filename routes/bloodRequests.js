@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
 const BloodRequest = require('../models/BloodRequest');
@@ -82,7 +82,9 @@ async function notifyAdmins(requestId, requestData, requester) {
 // ──────────────────────────────────────────────
 router.get('/', async (req, res) => {
     try {
-        const requests = await BloodRequest.findAll({ status: 'approved' });
+        const allRequests = await BloodRequest.findAll();
+        // Show ONLY active requests on the public page
+        const requests = allRequests.filter(r => r.status === 'approved' || r.status === 'ongoing');
         res.json({ requests });
     } catch (error) {
         console.error('Get all active requests error:', error);

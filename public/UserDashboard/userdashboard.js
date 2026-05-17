@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
 
   let toastTimeout = null;
   let activeToast  = null;
@@ -62,26 +62,164 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
       /* ─── Notification Panel ─── */
-    const notifBtn   = document.getElementById('notifBtn');
-    const notifPanel = document.getElementById('notifPanel');
-    const notifClose = document.getElementById('notifClose');
+  const notifBtn      = document.getElementById('notifBtn');
+  const notifPanel    = document.getElementById('notifPanel');
+  const notifClose    = document.getElementById('notifClose');
+  const notifList     = document.getElementById('notifList');
+  const notifDot      = notifBtn?.querySelector('.notif-dot');
+  const notifMarkAll  = document.getElementById('notifMarkAll');
+  let   notifLoaded   = false;
 
-    function openNotif()  { notifPanel?.classList.add('open'); }
-    function closeNotif() { notifPanel?.classList.remove('open'); }
+  const NOTIF_ICONS = {
+    blood_request:        `<svg width="14" height="16" viewBox="0 0 18 22" fill="none"><path d="M9 1C9 1 1 9.5 1 14.5a8 8 0 0 0 16 0C17 9.5 9 1 9 1z" fill="#C0281C"/></svg>`,
+    donation_completed:   `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    donor_approved:       `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    donor_rejected:       `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0281C" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+    donation_accepted:    `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    default:              `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+  };
+  const NOTIF_COLOR = {
+    blood_request:      'red',
+    donation_completed: 'green',
+    donor_approved:     'green',
+    donor_rejected:     'red',
+    donation_accepted:  'orange',
+    default:            'grey'
+  };
 
-    notifBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      avatarDropdown?.classList.remove('show'); // close other dropdown
-      notifPanel?.classList.contains('open') ? closeNotif() : openNotif();
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr);
+    const m = Math.floor(diff / 60000);
+    if (m < 1)   return 'Just now';
+    if (m < 60)  return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)  return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return d === 1 ? 'Yesterday' : `${d} days ago`;
+  }
+
+  function renderNotifications(notifications) {
+    if (!notifList) return;
+    if (!notifications.length) {
+      notifList.innerHTML = `<li class="notif-item" style="justify-content:center;padding:2.5rem 1rem;color:#9CA3AF;font-size:.82rem;text-align:center;flex-direction:column;gap:4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" style="margin:0 auto 6px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        No notifications yet
+      </li>`;
+      return;
+    }
+    notifList.innerHTML = notifications.map(n => {
+      const type   = n.type || 'default';
+      const icon   = NOTIF_ICONS[type] || NOTIF_ICONS.default;
+      const color  = NOTIF_COLOR[type] || 'grey';
+      const unread = !n.is_read ? ' unread' : '';
+      return `<li class="notif-item${unread}" data-id="${n.id}" style="cursor:pointer;">
+        <span class="notif-icon ${color}">${icon}</span>
+        <div>
+          <p class="notif-text">${n.message || n.title || ''}</p>
+          <p class="notif-time">${timeAgo(n.created_at)}</p>
+        </div>
+      </li>`;
+    }).join('');
+
+    // Click individual item → mark read
+    notifList.querySelectorAll('.notif-item[data-id]').forEach(li => {
+      li.addEventListener('click', () => markOneRead(li.dataset.id, li));
     });
+  }
 
-    notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
+  function updateBadge(unreadCount) {
+    if (!notifDot) return;
+    if (unreadCount > 0) {
+      notifDot.style.display = 'flex';
+      notifDot.textContent      = unreadCount > 9 ? '9+' : String(unreadCount);
+      // Show "Mark all read" button
+      if (notifMarkAll) { notifMarkAll.style.opacity = '1'; notifMarkAll.style.pointerEvents = 'auto'; }
+    } else {
+      notifDot.style.display    = 'none';
+      if (notifMarkAll) { notifMarkAll.style.opacity = '0'; notifMarkAll.style.pointerEvents = 'none'; }
+    }
+  }
 
-    document.addEventListener('click', (e) => {
-      if (notifPanel && notifBtn) {
-        if (!notifPanel.contains(e.target) && !notifBtn.contains(e.target)) closeNotif();
+  async function loadNotifications() {
+    const token = localStorage.getItem('token');
+    if (!token || !notifList) return;
+    if (!notifLoaded) {
+      notifList.innerHTML = `<li class="notif-item" style="justify-content:center;padding:2rem;color:#9CA3AF;font-size:.82rem;">Loading…</li>`;
+    }
+    try {
+      const res = await fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      const notifications = data.notifications || [];
+      renderNotifications(notifications);
+      const unread = notifications.filter(n => !n.is_read).length;
+      updateBadge(unread);
+      notifLoaded = true;
+    } catch (err) {
+      console.error('Notification fetch error:', err);
+      if (!notifLoaded) {
+        notifList.innerHTML = `<li class="notif-item" style="justify-content:center;padding:2rem;color:#EF4444;font-size:.82rem;">Failed to load notifications.</li>`;
       }
-    });
+    }
+  }
+
+  async function fetchUnreadCount() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) return;
+      const data = await res.json();
+      const unread = (data.notifications || []).filter(n => !n.is_read).length;
+      updateBadge(unread);
+    } catch (_) {}
+  }
+
+  async function markOneRead(id, liEl) {
+    if (!liEl.classList.contains('unread')) return;
+    const token = localStorage.getItem('token');
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` } });
+      liEl.classList.remove('unread');
+      // Decrement badge
+      const remaining = notifList.querySelectorAll('.notif-item.unread').length;
+      updateBadge(remaining);
+    } catch (_) {}
+  }
+
+  async function markAllRead() {
+    const token = localStorage.getItem('token');
+    try {
+      await fetch('/api/notifications/read-all', { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` } });
+      notifList.querySelectorAll('.notif-item.unread').forEach(li => li.classList.remove('unread'));
+      updateBadge(0);
+    } catch (_) {}
+  }
+
+  function openNotif()  {
+    notifPanel?.classList.add('open');
+    loadNotifications(); // always refresh on open
+  }
+  function closeNotif() { notifPanel?.classList.remove('open'); }
+
+  notifBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    avatarDropdown?.classList.remove('show');
+    notifPanel?.classList.contains('open') ? closeNotif() : openNotif();
+  });
+  notifClose?.addEventListener('click', (e) => { e.stopPropagation(); closeNotif(); });
+  notifMarkAll?.addEventListener('click', (e) => { e.stopPropagation(); markAllRead(); });
+
+  document.addEventListener('click', (e) => {
+    if (notifPanel && notifBtn) {
+      if (!notifPanel.contains(e.target) && !notifBtn.contains(e.target)) closeNotif();
+    }
+  });
+
+  // Poll unread count every 60 s
+  fetchUnreadCount();
+  setInterval(fetchUnreadCount, 60000);
 
     /* ─── Avatar dropdown ─── */
     const navAvatar      = document.getElementById('navAvatar');
@@ -173,19 +311,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* Client-side rate limiter: max 3 toggles per 60 seconds */
+  const toggleRateLimit = {
+    attempts: [],
+    maxAttempts: 3,
+    windowMs: 60 * 1000,
+    check() {
+      const now = Date.now();
+      this.attempts = this.attempts.filter(t => now - t < this.windowMs);
+      if (this.attempts.length >= this.maxAttempts) return false;
+      this.attempts.push(now);
+      return true;
+    },
+    remainingSeconds() {
+      if (!this.attempts.length) return 0;
+      const oldest = Math.min(...this.attempts);
+      return Math.ceil((this.windowMs - (Date.now() - oldest)) / 1000);
+    }
+  };
+
+  function setCooldownUI(daysRemaining) {
+    const cooldownEl = document.getElementById('cooldown-notice');
+    if (cooldownEl) {
+      cooldownEl.textContent = `⏳ Donation cooldown active — ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining before you can mark yourself as available again.`;
+      cooldownEl.style.display = 'block';
+    }
+    if (availToggle) {
+      availToggle.disabled = true;
+      availToggle.title    = `Cooldown: ${daysRemaining} days remaining`;
+      if (availToggle.parentElement) {
+        availToggle.parentElement.style.opacity = '0.5';
+        availToggle.parentElement.style.cursor  = 'not-allowed';
+        availToggle.parentElement.title = `Cooldown: ${daysRemaining} days remaining`;
+      }
+    }
+  }
+
   availToggle?.addEventListener('change', async () => {
-    updateAvailabilityUI(availToggle.checked);
+    /* Rate limit check */
+    if (!toggleRateLimit.check()) {
+      availToggle.checked = !availToggle.checked; // revert
+      const secs = toggleRateLimit.remainingSeconds();
+      showToast(`Too many changes. Please wait ${secs}s before toggling again.`, 'warning');
+      return;
+    }
+
+    const wantAvailable = availToggle.checked;
+    updateAvailabilityUI(wantAvailable);
+
     const token = localStorage.getItem('token');
-    if (token) {
-        try {
-            await fetch('/api/auth/availability', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ is_available: availToggle.checked })
-            });
-        } catch(e) {
-            console.error('Failed saving availability', e);
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/auth/availability', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ is_available: wantAvailable })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        /* Revert toggle to previous state */
+        availToggle.checked = !wantAvailable;
+        updateAvailabilityUI(!wantAvailable, false);
+        showToast(data.message || 'Could not update availability.', 'danger');
+
+        /* If cooldown info returned, lock the toggle */
+        if (data.cooldown_days_remaining > 0) {
+          setCooldownUI(data.cooldown_days_remaining);
         }
+      }
+    } catch(e) {
+      console.error('Failed saving availability:', e);
+      /* Revert toggle */
+      availToggle.checked = !wantAvailable;
+      updateAvailabilityUI(!wantAvailable, false);
+      showToast('Network error. Please try again.', 'danger');
     }
   });
 
@@ -211,15 +412,67 @@ document.addEventListener('DOMContentLoaded', () => {
               }
           }
 
-          // 2. Fetch stats
-          const statsRes = await fetch('/api/donations/stats', { headers: { 'Authorization': `Bearer ${token}` } });
-          if (statsRes.ok) {
-              const { stats } = await statsRes.json();
+          // 2. Fetch fresh user data from backend for live stats
+          const meRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (meRes.ok) {
+              const meData = await meRes.json();
+              const freshUser = meData.user || {};
               const unitsEl = document.getElementById('total-units-val');
               const livesEl = document.getElementById('lives-impacted-val');
-              if (unitsEl) unitsEl.innerHTML = `${stats.total_units} <span class="stat-unit">Units</span>`;
-              if (livesEl) livesEl.innerHTML = `${stats.total_units * 3} <span class="stat-unit">People</span>`;
+              const totalUnits  = freshUser.total_donations || 0;
+              const livesHelped = totalUnits * 3;   // 1 unit = 3 people
+              if (unitsEl) unitsEl.innerHTML = `${totalUnits} <span class="stat-unit">Units</span>`;
+              if (livesEl) livesEl.innerHTML = `${livesHelped} <span class="stat-unit">People</span>`;
+
+              // Sync availability toggle with fresh backend value
+              if (availToggle) {
+                  availToggle.checked = freshUser.is_available_donor === 1;
+                  updateAvailabilityUI(availToggle.checked, false);
+              }
+
+              // If on 56-day cooldown: lock the toggle and show notice
+              if (freshUser.on_cooldown && freshUser.cooldown_days_remaining > 0) {
+                  setCooldownUI(freshUser.cooldown_days_remaining);
+              } else {
+                  // Clear any stale cooldown notice
+                  const cooldownEl = document.getElementById('cooldown-notice');
+                  if (cooldownEl) cooldownEl.style.display = 'none';
+                  if (availToggle) {
+                      availToggle.disabled = false;
+                      availToggle.title = '';
+                      if (availToggle.parentElement) {
+                          availToggle.parentElement.style.opacity = '';
+                          availToggle.parentElement.style.cursor  = '';
+                          availToggle.parentElement.title = '';
+                      }
+                  }
+              }
           }
+
+          // 3. Fetch gamification stats (tier + next badge)
+          try {
+              const gamRes = await fetch('/api/gamification/stats', { headers: { 'Authorization': 'Bearer ' + token } });
+              if (gamRes.ok) {
+                  const gamData = await gamRes.json();
+                  if (gamData.success) {
+                      const s = gamData.data;
+                      const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#9CA3AF', Gold: '#D97706', Platinum: '#6B7280' };
+                      const unitsEl = document.getElementById('total-units-val');
+                      const livesEl = document.getElementById('lives-impacted-val');
+                      if (unitsEl) unitsEl.innerHTML = s.donationCount + ' <span class="stat-unit">Units</span>';
+                      if (livesEl) livesEl.innerHTML = (s.donationCount * 3) + ' <span class="stat-unit">People</span>';
+                      const tierEl = document.getElementById('donor-tier-val');
+                      const hintEl = document.getElementById('donor-tier-hint');
+                      if (tierEl) { tierEl.textContent = s.currentTier; tierEl.style.color = TIER_COLORS[s.currentTier] || '#111827'; }
+                      if (hintEl) hintEl.textContent = s.nextTier ? (s.donationsToNextTier + ' donation' + (s.donationsToNextTier !== 1 ? 's' : '') + ' to ' + s.nextTier) : 'Maximum tier reached!';
+                      const nb = s.lockedBadges && s.lockedBadges[0];
+                      const nbName = document.getElementById('next-badge-name');
+                      const nbIcon = document.getElementById('next-badge-icon');
+                      if (nbName) nbName.textContent = nb ? nb.name : 'All badges earned!';
+                      if (nbIcon) nbIcon.textContent = nb ? nb.icon : '🏆';
+                  }
+              }
+          } catch (gamErr) { console.warn('[DASHBOARD] Gamification stats failed:', gamErr.message); }
 
           // 3. Fetch matched requests
           const matchRes = await fetch('/api/blood-requests/matched', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -279,31 +532,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Fetch user's blood requests using correct endpoint
-      const reqRes = await fetch('/api/blood-requests/my', { 
-        headers: { 'Authorization': `Bearer ${token}` } 
+      const reqRes = await fetch('/api/blood-requests/my', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      console.log('Receiver data response status:', reqRes.status);
 
       if (reqRes.ok) {
         const data = await reqRes.json();
         const requests = data.requests || data;
-        
-        console.log('Receiver requests:', requests);
 
         if (requests && requests.length > 0) {
-          // Show active request (most recent)
-          renderActiveRequest(requests[0]);
-          // Show request history (all requests)
+          // For the most recent (active) request, fetch real attempt counts
+          const activeReq = requests[0];
+          let attemptStats = { notified: 0, accepted: 0, confirmed: 0 };
+
+          try {
+            const attRes = await fetch(`/api/donation-attempts/request/${activeReq.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (attRes.ok) {
+              const attData = await attRes.json();
+              const attempts = attData.attempts || [];
+              attemptStats.notified  = attempts.length;
+              attemptStats.accepted  = attempts.filter(a => a.status === 'accepted').length;
+              attemptStats.confirmed = attempts.filter(a => a.blood_units).length;
+            }
+          } catch (e) {
+            console.warn('Could not fetch attempt stats:', e);
+          }
+
+          renderActiveRequest(activeReq, attemptStats);
           renderRequestHistory(requests);
         } else {
-          // Show empty state for active request
           renderEmptyActiveRequest();
           renderEmptyRequestHistory();
         }
       } else {
-        console.warn('Failed to fetch receiver data:', reqRes.status, reqRes.statusText);
+        console.warn('Failed to fetch receiver data:', reqRes.status);
         renderEmptyActiveRequest();
         renderEmptyRequestHistory();
       }
@@ -314,21 +578,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderActiveRequest(request) {
+  function renderActiveRequest(request, stats = {}) {
     const activeCard = document.querySelector('.active-request-card');
     if (!activeCard) return;
 
     const bloodType = request.blood_type || 'N/A';
     const createdTime = getTimeAgo(request.created_at);
     const requestId = request.id || 'N/A';
+    const statusLabel = (request.status || 'pending').toUpperCase();
+    const statusColor = request.status === 'ongoing' ? '#16A34A' : request.status === 'completed' ? '#2563EB' : '#D97706';
 
-    // TODO: Get actual donor counts from donations/notifications table
-    // For now, using placeholder counts (0) until backend provides these metrics
-    const notified = 0;  // request.notified_count
-    const accepted = 0;  // request.accepted_count  
-    const confirmed = 0; // request.confirmed_count
-
-    console.log('Rendering active request:', request);
+    const notified  = stats.notified  || 0;
+    const accepted  = stats.accepted  || 0;
+    const confirmed = stats.confirmed || 0;
 
     activeCard.innerHTML = `
       <div class="active-req-left">
@@ -338,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </svg>
         </div>
         <div>
-          <p class="active-req-id">Active Request #${requestId}</p>
+          <p class="active-req-id">Active Request #${requestId} &nbsp;<span style="font-size:0.75rem;font-weight:700;color:${statusColor};">${statusLabel}</span></p>
           <p class="active-req-meta">Blood Type: <span class="blood-${getBgClass(bloodType)}">${bloodType}</span> &bull; Created ${createdTime}</p>
         </div>
       </div>
@@ -350,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="req-stat">
           <span class="req-stat-num green-num">${String(accepted).padStart(2, '0')}</span>
           <span class="req-stat-label">ACCEPTED</span>
-          <div class="req-stat-bar"><div class="req-stat-fill" style="width: ${accepted * 10}%"></div></div>
+          <div class="req-stat-bar"><div class="req-stat-fill" style="width: ${Math.min(accepted * 20, 100)}%"></div></div>
         </div>
         <div class="req-stat">
           <span class="req-stat-num">${String(confirmed).padStart(2, '0')}</span>
@@ -525,6 +787,8 @@ document.getElementById("home-logo").addEventListener("click", () => {
 document.getElementById("submit-request").addEventListener("click", () => {
     window.location.href = "/requestBlood";
 });
+
+
 
 
 

@@ -1,4 +1,4 @@
-/* ─── TOAST UTILITY ─── */
+﻿/* ─── TOAST UTILITY ─── */
 let toastTimeout = null;
 let activeToast = null;
 
@@ -326,16 +326,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadEventsFromAPI() {
     if (!eventsGrid) return;
+
+    // Show loading state
+    const loadingEl = document.getElementById('events-loading');
+    if (loadingEl) loadingEl.style.display = 'flex';
+
     try {
       const res = await fetch('/api/events');
       if (!res.ok) throw new Error('API unavailable');
       const { events } = await res.json();
 
+      // Hide skeleton
+      if (loadingEl) loadingEl.remove();
+
       if (events && events.length > 0) {
-        // Replace any static/hardcoded cards with live data
         eventsGrid.innerHTML = events.map(buildEventCard).join('');
 
-        // Re-run scroll reveal on new cards
+        // Scroll reveal on dynamic cards
         const newCards = eventsGrid.querySelectorAll('.reveal');
         if ('IntersectionObserver' in window) {
           const obs = new IntersectionObserver(entries => {
@@ -346,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           newCards.forEach(el => el.classList.add('visible'));
         }
 
-        // Wire up register buttons on dynamic cards
+        // Wire register buttons
         eventsGrid.querySelectorAll('.btn-register-event').forEach(button => {
           button.addEventListener('click', () => {
             const card = button.closest('.event-card');
@@ -355,13 +362,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         });
 
-        // Update results count
         const resultsInfo = document.getElementById('resultsInfo');
-        if (resultsInfo) resultsInfo.innerHTML = `Showing <strong>${events.length}</strong> event${events.length !== 1 ? 's' : ''}`;
+        if (resultsInfo) resultsInfo.innerHTML = 'Showing <strong>' + events.length + '</strong> event' + (events.length !== 1 ? 's' : '');
+
+      } else {
+        // Empty state — no events in DB yet
+        eventsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:#6B7280;"><div style="font-size:3rem;margin-bottom:1rem;">📅</div><h3 style="font-size:1.1rem;font-weight:600;color:#374151;margin-bottom:.5rem;">No upcoming events</h3><p style="font-size:.9rem;">Check back soon — new blood drive events will appear here when scheduled by our admin team.</p></div>';
+        const resultsInfo = document.getElementById('resultsInfo');
+        if (resultsInfo) resultsInfo.innerHTML = 'Showing <strong>0</strong> events';
       }
     } catch (err) {
-      console.warn('[EVENTS] API load failed, using static content:', err.message);
-      // Static HTML cards remain visible as fallback
+      console.error('[EVENTS] API load failed:', err.message);
+      if (loadingEl) loadingEl.remove();
+      eventsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:#6B7280;"><div style="font-size:3rem;margin-bottom:1rem;">⚠️</div><h3 style="font-size:1.1rem;font-weight:600;color:#374151;margin-bottom:.5rem;">Could not load events</h3><p style="font-size:.9rem;">Please refresh the page or try again later.</p></div>';
     }
   }
 

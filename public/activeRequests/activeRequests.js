@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── DATA ─── */
   let allRequests = [];
@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       // Map database fields to the structure expected by the UI
-      allRequests = data.requests.map(r => {
+      // Filter to ONLY active requests (safety net — backend also filters)
+      allRequests = (data.requests || []).filter(r => r.status === 'approved' || r.status === 'ongoing').map(r => {
         // Calculate remaining time until date_needed
         let expiresStr = 'Not specified';
         if (r.date_needed) {
