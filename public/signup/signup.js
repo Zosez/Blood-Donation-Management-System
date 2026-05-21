@@ -73,12 +73,22 @@ provinceSelect.addEventListener('change', () => {
 // Password visibility toggle
 const pwInput = document.getElementById('password');
 const togglePwBtn = document.getElementById('togglePw');
+const confirmPwInput = document.getElementById('confirmPassword');
+const toggleConfirmPwBtn = document.getElementById('toggleConfirmPw');
 
 if (togglePwBtn) {
     togglePwBtn.addEventListener('click', () => {
         const type = pwInput.type === 'password' ? 'text' : 'password';
         pwInput.type = type;
         togglePwBtn.textContent = type === 'password' ? '👁' : '🙈';
+    });
+}
+
+if (toggleConfirmPwBtn) {
+    toggleConfirmPwBtn.addEventListener('click', () => {
+        const type = confirmPwInput.type === 'password' ? 'text' : 'password';
+        confirmPwInput.type = type;
+        toggleConfirmPwBtn.textContent = type === 'password' ? '👁' : '🙈';
     });
 }
 
@@ -363,7 +373,7 @@ signupForm.addEventListener('submit', async (e) => {
     // Validate terms
     const termsCheckbox = document.getElementById('terms');
     if (!termsCheckbox.checked) {
-        alert('Please agree to the Terms of Service and Privacy Policy.');
+        showModal('Please agree to the Terms of Service and Privacy Policy.', { type: 'warning', title: 'Terms Required' });
         if (!hasError) {
             termsCheckbox.focus();
             hasError = true;
@@ -416,16 +426,16 @@ signupForm.addEventListener('submit', async (e) => {
             btn.style.background = '';
             
             if (data.errors && data.errors.length > 0) {
-                alert(data.errors[0].msg);
+                showModal(data.errors[0].msg, { type: 'error' });
             } else if (data.message) {
                 if (data.message.includes('Email already registered')) {
                     setEmailState(false, 'This email is already registered. Please login instead.');
                     emailInput.focus();
                 } else {
-                    alert(data.message);
+                    showModal(data.message, { type: 'error' });
                 }
             } else {
-                alert('Registration failed. Please try again.');
+                showModal('Registration failed. Please try again.', { type: 'error' });
             }
         }
     } catch (error) {
@@ -433,7 +443,7 @@ signupForm.addEventListener('submit', async (e) => {
         btn.textContent = originalText;
         btn.disabled = false;
         btn.style.background = '';
-        alert('Network error. Please make sure the backend server is running on port 5000.');
+        showModal('Network error. Please make sure the backend server is running on port 5000.', { type: 'error', title: 'Connection Failed' });
     }
 });
 

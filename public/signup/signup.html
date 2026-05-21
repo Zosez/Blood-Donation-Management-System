@@ -50,7 +50,10 @@
 
           <div class="form-group">
             <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" autocomplete="new-password"/>
+            <div class="password-wrap">
+              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" autocomplete="new-password"/>
+              <button type="button" class="toggle-pw" id="toggleConfirmPw" aria-label="Show confirm password">👁</button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -144,6 +147,7 @@
   </div>
 </footer>
 
+<script src="../utils/modal.js"></script>
 <script src="signup.js"></script>
 </body>
 </html>

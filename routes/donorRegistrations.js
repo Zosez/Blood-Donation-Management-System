@@ -15,8 +15,8 @@ router.post(
     [
         body('blood_type').trim().notEmpty().withMessage('Blood type is required'),
         body('phone').trim().notEmpty().withMessage('Phone number is required'),
-        body('province').trim().notEmpty().withMessage('Province is required'),
-        body('city').trim().notEmpty().withMessage('City is required'),
+        body('latitude').isFloat({ min: -90, max: 90 }).withMessage('Valid latitude is required'),
+        body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Valid longitude is required'),
     ],
     async (req, res) => {
         try {
@@ -61,8 +61,8 @@ router.post(
                 phone,
                 email,
                 hospital,
-                province,
-                city,
+                latitude,
+                longitude,
                 last_donated,
                 relationship,
                 notes,
@@ -98,7 +98,7 @@ router.post(
             const [result] = await db.execute(
                 `INSERT INTO donor_registrations
                  (user_id, fullname, blood_type, donation_type, availability_level,
-                  phone, email, hospital, province, city, last_donated, relationship, notes)
+                  phone, email, hospital, latitude, longitude, last_donated, relationship, notes)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     userId,
@@ -109,8 +109,8 @@ router.post(
                     phone,
                     email || null,
                     hospital || null,
-                    province || null,
-                    city,
+                    parseFloat(latitude),
+                    parseFloat(longitude),
                     lastDonatedDate,
                     relationship || null,
                     notes || null

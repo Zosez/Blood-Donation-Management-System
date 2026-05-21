@@ -5,7 +5,7 @@
     const PRIMARY_COLOR = "#E11D2E"; // LifeLink red
     // =================================
 
-    const API_KEY = "APIKEYHERE";
+    const API_KEY = "#";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
     if (document.getElementById('lifeLinkAIChat')) return;

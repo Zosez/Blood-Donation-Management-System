@@ -417,6 +417,9 @@
           if (meRes.ok) {
               const meData = await meRes.json();
               const freshUser = meData.user || {};
+              // Update localStorage with fresh user data
+              localStorage.setItem('user', JSON.stringify(freshUser));
+              
               const unitsEl = document.getElementById('total-units-val');
               const livesEl = document.getElementById('lives-impacted-val');
               const totalUnits  = freshUser.total_donations || 0;
@@ -523,6 +526,24 @@
   }
 
   loadDonorData();
+
+  // Auto-refresh donor stats every 30 seconds for real-time updates
+  setInterval(() => {
+    if (document.visibilityState !== 'hidden') {
+      loadDonorData();
+    }
+  }, 30000);
+
+  // Refresh donor stats when page regains focus (after admin completes donation)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      loadDonorData();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    loadDonorData();
+  });
 
   /* ─── DYNAMIC RECEIVER DATA LOADING ─── */
   async function loadReceiverData() {

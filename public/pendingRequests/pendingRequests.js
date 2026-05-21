@@ -210,11 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const units = requests.filter(r => r.status === 'pending')
       .reduce((sum, r) => sum + (r.units_required || 0), 0);
 
-    document.getElementById('pendingCount').textContent = pending;
-    document.getElementById('approvedCount').textContent = approved;
-    document.getElementById('criticalCount').textContent = critical;
-    document.getElementById('unitCount').textContent = units;
-    document.getElementById('pendingBadge').textContent = pending;
+    const el1 = document.getElementById('pendingCount');
+    const el2 = document.getElementById('approvedCount');
+    const el3 = document.getElementById('criticalCount');
+    const el4 = document.getElementById('unitCount');
+    const el5 = document.getElementById('pendingBadge');
+
+    if (el1) el1.textContent = pending;
+    if (el2) el2.textContent = approved;
+    if (el3) el3.textContent = critical;
+    if (el4) el4.textContent = units;
+    if (el5) el5.textContent = pending;
   }
 
   /* ── Helpers ─────────────────────────────────────────── */

@@ -98,15 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (avatarDropdown) avatarDropdown.classList.remove('show');
 
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
     showToast('Logging out… Goodbye, Admin User!', 'warning');
 
     setTimeout(() => {
-      showToast('Session ended. Redirecting…', 'danger');
-    }, 1800);
-
-    setTimeout(() => {
-      window.location.href = '../login/login.html';
-    }, 3000);
+      window.location.href = '/login';
+    }, 1500);
   }
 
   document.getElementById('dropdownLogoutBtn')?.addEventListener('click', handleLogout);
@@ -761,6 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.createEventRow = window._createEventRow;
 
   loadEventsFromAPI();
+
 });
 
 document.getElementById('admin-dashboard').addEventListener('click', () => {

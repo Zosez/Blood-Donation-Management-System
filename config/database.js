@@ -351,6 +351,17 @@ async function initializeDatabase() {
             console.log('[DB] donor_registrations.status ENUM updated');
         } catch (e) { console.log('[DB] donor_registrations.status already updated'); }
 
+        // Migrate: add latitude and longitude columns to donor_registrations for geolocation
+        try {
+            await db.execute(`ALTER TABLE donor_registrations ADD COLUMN latitude DECIMAL(10,8)`);
+            console.log('[DB] Added latitude column to donor_registrations');
+        } catch (e) { console.log('[DB] latitude column already exists'); }
+
+        try {
+            await db.execute(`ALTER TABLE donor_registrations ADD COLUMN longitude DECIMAL(11,8)`);
+            console.log('[DB] Added longitude column to donor_registrations');
+        } catch (e) { console.log('[DB] longitude column already exists'); }
+
         // ── GAMIFICATION TABLES ───────────────────────────────────────────────
 
         // Badge definitions (seeded once)

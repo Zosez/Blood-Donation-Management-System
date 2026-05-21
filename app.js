@@ -82,6 +82,7 @@ const eventsRoutes = require('./routes/events');
 const donationAttemptsRoutes = require('./routes/donationAttempts');
 const donorRegistrationsRoutes = require('./routes/donorRegistrations');
 const gamificationRoutes = require('./routes/gamification');
+const statsRoutes = require('./routes/stats');
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -93,6 +94,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/donation-attempts', donationAttemptsRoutes);
 app.use('/api/donor-registrations', donorRegistrationsRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

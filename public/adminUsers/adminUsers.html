@@ -34,7 +34,7 @@
     </a>
 
     <div class="nav-right">
-      <div class="nav-bell-wrapper" style="position:relative;display:flex;align-items:center;">
+      <div class="nav-bell-wrapper">
         <button class="nav-bell" aria-label="Notifications" id="navBellBtn">
           <span class="bell-badge" id="bellBadge" style="display:none;"></span>
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -44,9 +44,9 @@
           </svg>
         </button>
       </div>
-      <div class="nav-avatar-wrapper" style="position:relative;display:flex;align-items:center;">
-        <div class="nav-avatar" id="profileTrigger">
-          <div class="avatar" style="background:#fce7f3;color:#be185d;width:32px;height:32px;font-size:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">SJ</div>
+      <div class="nav-avatar-wrapper">
+        <div class="nav-avatar" id="navAvatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=b6e3f4" alt="Admin" />
           <span class="nav-avatar-name">Admin</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -54,7 +54,7 @@
           </svg>
         </div>
 
-        <div class="avatar-dropdown" id="profileDropdown">
+        <div class="avatar-dropdown" id="avatarDropdown">
           <div class="dropdown-header">
             <div class="dropdown-name">Admin User</div>
             <div class="dropdown-role">Hematology Lead</div>
@@ -102,7 +102,7 @@
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           Pending Requests
-          <span class="sidebar-badge" id="pendingBadge">12</span>
+          
         </a>
 
         <a href="#" class="sidebar-link" data-page="inventory" id="nav-inventory" id="nav-inventory">
@@ -112,7 +112,7 @@
             <line x1="12" y1="22.08" x2="12" y2="12"/>
           </svg>
           Inventory Management
-          <span class="sidebar-badge" id="inventoryBadge">12</span>
+          
         </a>
 
         <a href="#" class="sidebar-link" data-page="notifications" id="admin-notification">
@@ -434,6 +434,8 @@
 
   <div class="ll-toast" id="toast"></div>
 
+  <script src="../utils/adminAuth.js"></script>
+  <script src="../utils/notificationBell.js"></script>
   <script src="adminUsers.js"></script>
 <script src="../utils/avatarWidget.js"></script>
 </body>

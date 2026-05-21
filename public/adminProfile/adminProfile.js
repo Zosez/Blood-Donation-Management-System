@@ -83,23 +83,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navAvatar) {
         navAvatar.addEventListener('click', (e) => {
             e.stopPropagation();
-            avatarDropdown.classList.toggle('active');
+            avatarDropdown.classList.toggle('show');
         });
     }
 
     document.addEventListener('click', () => {
-        if (avatarDropdown) avatarDropdown.classList.remove('active');
+        if (avatarDropdown) avatarDropdown.classList.remove('show');
     });
 
     // Modal Control
     if (editProfileBtn) {
         editProfileBtn.addEventListener('click', () => {
-            profileModal.classList.add('active');
+            profileModal.classList.add('show');
         });
     }
 
     const closeModal = () => {
-        profileModal.classList.remove('active');
+        profileModal.classList.remove('show');
     };
 
     if (modalClose) modalClose.addEventListener('click', closeModal);

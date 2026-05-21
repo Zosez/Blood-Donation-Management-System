@@ -30,12 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (suspendBtn) {
     suspendBtn.addEventListener('click', () => {
-      const confirmed = confirm(
-        "Suspend Julian Thorne's account?\n\nThey will not be able to request or donate blood until the account is reinstated."
-      );
-      if (confirmed) {
-        alert('Account has been suspended. A notification email has been sent to julian.thorne@healthlink.org.');
-      }
+      showModal("Suspend Julian Thorne's account?\n\nThey will not be able to request or donate blood until the account is reinstated.", {
+        type: 'warning',
+        title: 'Suspend Account',
+        confirmText: 'Yes, Suspend',
+        cancelText: 'Cancel'
+      }).then((confirmed) => {
+        if (confirmed) {
+          showModal('Account has been suspended. A notification email has been sent to julian.thorne@healthlink.org.', { type: 'success', title: 'Account Suspended' });
+        }
+      });
     });
   }
 
@@ -44,12 +48,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      const confirmed = confirm(
-        'Send a password reset email to julian.thorne@healthlink.org?'
-      );
-      if (confirmed) {
-        alert('Password reset link sent to julian.thorne@healthlink.org.');
-      }
+      showModal('Send a password reset email to julian.thorne@healthlink.org?', {
+        type: 'warning',
+        title: 'Reset Password',
+        confirmText: 'Send Reset Link',
+        cancelText: 'Cancel'
+      }).then((confirmed) => {
+        if (confirmed) {
+          showModal('Password reset link sent to julian.thorne@healthlink.org.', { type: 'success', title: 'Reset Link Sent' });
+        }
+      });
     });
   }
 
@@ -58,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (downloadBtn) {
     downloadBtn.addEventListener('click', () => {
-      alert('Generating report for Julian Thorne… Download will begin shortly.');
+      showModal('Generating report for Julian Thorne… Download will begin shortly.', { type: 'info', title: 'Report Generation' });
     });
   }
 
@@ -68,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (backBtn) {
     backBtn.addEventListener('click', () => {
       // In a real app: history.back() or router.push('/user-management')
-      alert('Navigating back to User Management…');
+      showModal('Navigating back to User Management…', { type: 'info', title: 'Navigation' });
     });
   }
 

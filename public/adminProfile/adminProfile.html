@@ -22,7 +22,7 @@
       </svg>
     </button>
 
-    <a href="../Admin_Dashboard/admindashboard.html" class="nav-logo">
+    <a href="/adminDashboard" class="nav-logo">
       <img src="../images/lifelink_logo.svg" alt="LifeLink Logo" class="logo-img"
         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
       <div class="logo-fallback" style="display:none;">
@@ -101,7 +101,7 @@
            <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           Pending Requests
-          <span class="sidebar-badge" id="pendingBadge">5</span>
+          
        </a>
 
         <a href="#" class="sidebar-link" data-page="inventory" id="nav-inventory">
@@ -113,7 +113,7 @@
             <line x1="12" y1="22.08" x2="12" y2="12" />
           </svg>
           Inventory Management
-          <span class="sidebar-badge" id="inventoryBadge">12</span>
+          
         </a>
 
         <a href="#" class="sidebar-link" id="admin-notification">
@@ -348,6 +348,8 @@
   <!-- Toast -->
   <div class="ll-toast" id="toast"></div>
 
+  <script src="../utils/adminAuth.js"></script>
+  <script src="../utils/notificationBell.js"></script>
   <script src="adminProfile.js"></script>
 <script src="../utils/avatarWidget.js"></script>
 </body>

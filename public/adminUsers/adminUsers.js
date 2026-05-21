@@ -10,6 +10,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const showingText = document.querySelector('.showing-text');
     const toast = document.getElementById('toast');
 
+    // ── MODAL UTILITIES ──────────────────────────────
+    function showConfirmModal(message, title = 'Confirm') {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+            overlay.innerHTML = `
+                <div style="background:#fff;width:100%;max-width:400px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:1px solid #E5E7EB;overflow:hidden;">
+                    <div style="padding:24px;text-align:center;">
+                        <h3 style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:#111827;margin-bottom:8px;">${title}</h3>
+                        <p style="font-family:'Inter',sans-serif;font-size:0.9rem;color:#6B7280;margin-bottom:24px;white-space:pre-line;line-height:1.5;">${message}</p>
+                        <div style="display:flex;gap:12px;justify-content:center;">
+                            <button class="btn-confirm" style="background:#C0281C;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">OK</button>
+                            <button class="btn-cancel" style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            const confirmBtn = overlay.querySelector('.btn-confirm');
+            const cancelBtn = overlay.querySelector('.btn-cancel');
+            confirmBtn.addEventListener('mouseenter', () => confirmBtn.style.background = '#A01C15');
+            confirmBtn.addEventListener('mouseleave', () => confirmBtn.style.background = '#C0281C');
+            cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.background = '#E5E7EB');
+            cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.background = '#F3F4F6');
+            const closeModal = () => { overlay.remove(); };
+            confirmBtn.addEventListener('click', () => { resolve(true); closeModal(); });
+            cancelBtn.addEventListener('click', () => { resolve(false); closeModal(); });
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) { resolve(false); closeModal(); } });
+        });
+    }
+
     // Modals
     const editUserModal = document.getElementById('editUserModal');
     const editUserForm = document.getElementById('editUserForm');
@@ -229,7 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle User Deletion
     async function handleDeleteUser(userId) {
-        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+        const confirmed = await showConfirmModal('Are you sure you want to delete this user? This action cannot be undone.', 'Delete User');
+        if (!confirmed) return;
 
         const token = getAuthToken();
         try {
@@ -311,17 +343,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dropdownLogoutBtn) dropdownLogoutBtn.addEventListener('click', logout);
 
     // Profile Dropdown
-    const profileTrigger = document.getElementById('profileTrigger');
-    const profileDropdown = document.getElementById('profileDropdown');
+    const navAvatar = document.getElementById('navAvatar');
+    const avatarDropdown = document.getElementById('avatarDropdown');
     
-    if (profileTrigger) {
-        profileTrigger.addEventListener('click', (e) => {
+    if (navAvatar) {
+        navAvatar.addEventListener('click', (e) => {
             e.stopPropagation();
-            profileDropdown.classList.toggle('show');
+            avatarDropdown.classList.toggle('show');
         });
     }
     document.addEventListener('click', () => {
-        if (profileDropdown) profileDropdown.classList.remove('show');
+        if (avatarDropdown) avatarDropdown.classList.remove('show');
     });
 
     // Initialize

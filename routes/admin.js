@@ -114,6 +114,52 @@ router.get('/dashboard-stats', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/sidebar-counts
+ * Lightweight endpoint for sidebar badge counts
+ * Returns: pending requests, inventory items needing action
+ */
+router.get('/sidebar-counts', async (req, res) => {
+    try {
+        // Count pending blood requests
+        const [pendingResult] = await db.execute(
+            'SELECT COUNT(*) as count FROM blood_requests WHERE status = "pending"'
+        );
+        const pendingRequests = pendingResult[0].count;
+
+        // Count inventory items needing action (low stock or pending donor regs)
+        const [inventoryResult] = await db.execute(`
+            SELECT COUNT(*) as count FROM inventory WHERE units < 5
+        `);
+        const lowStockItems = inventoryResult[0].count;
+
+        // Also get pending donor registrations to include in inventory count
+        const [pendingRegsResult] = await db.execute(
+            'SELECT COUNT(*) as count FROM donor_registrations WHERE status = "pending"'
+        );
+        const pendingDonorRegs = pendingRegsResult[0].count;
+
+        // Total inventory action items = low stock + pending registrations
+        const inventoryActionItems = lowStockItems + pendingDonorRegs;
+
+        res.json({
+            success: true,
+            pendingRequests,
+            inventoryActionItems,
+            lowStockItems,
+            pendingDonorRegs
+        });
+    } catch (error) {
+        console.error('[SIDEBAR-COUNTS] Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            pendingRequests: 0,
+            inventoryActionItems: 0
+        });
+    }
+});
+
+/**
  * GET /api/admin/recent-activity
  * Returns a unified activity feed from real DB events:
  *   - Blood requests submitted, approved, rejected
@@ -590,7 +636,7 @@ router.get('/donor-registrations', async (req, res) => {
             SELECT
                 dr.id, dr.user_id, dr.fullname, dr.blood_type, dr.donation_type,
                 dr.availability_level, dr.phone, dr.email, dr.hospital,
-                dr.province, dr.city, dr.last_donated, dr.relationship, dr.notes,
+                dr.latitude, dr.longitude, dr.last_donated, dr.relationship, dr.notes,
                 dr.status, dr.created_at, dr.reviewed_at,
                 u2.fullname AS reviewed_by_name
             FROM donor_registrations dr
@@ -712,6 +758,14 @@ router.post('/donor-registrations/:id/complete', async (req, res) => {
              (blood_type, units, source_type, donor_registration_id, received_at, notes, recorded_by)
              VALUES (?, ?, 'donation', ?, ?, ?, ?)`,
             [blood_type, parsedUnits, id, donation_date, notes || null, req.user.id]
+        );
+
+        // 2b. Create donations record for gamification tracking
+        await db.execute(
+            `INSERT INTO donations
+             (user_id, blood_type, blood_units, status, donation_date)
+             VALUES (?, ?, ?, 'completed', ?)`,
+            [reg.user_id, blood_type, parsedUnits, donation_date]
         );
 
         // 3. Update user stats (total_donations, lives_impacted) + set cooldown

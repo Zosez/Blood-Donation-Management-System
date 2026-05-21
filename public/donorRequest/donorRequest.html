@@ -118,28 +118,15 @@
           <input type="text" id="hospital" placeholder="e.g. Bir Hospital, Kathmandu">
         </div>
 
-        <!-- Province & City / District -->
+        <!-- Geolocation -->
         <div class="field" style="width:100%">
-          <label>Province &amp; City / District<span class="required">*</span></label>
-          <div class="row-2col" style="margin-top:0">
-            <div class="field">
-              <select id="province">
-                <option value="" disabled selected>Select Province</option>
-                <option value="koshi">Koshi Province</option>
-                <option value="madhesh">Madhesh Province</option>
-                <option value="bagmati">Bagmati Province</option>
-                <option value="gandaki">Gandaki Province</option>
-                <option value="lumbini">Lumbini Province</option>
-                <option value="karnali">Karnali Province</option>
-                <option value="sudurpashchim">Sudurpashchim Province</option>
-              </select>
-            </div>
-            <div class="field">
-              <select id="district" disabled>
-                <option value="" disabled selected>Select Province first</option>
-              </select>
-            </div>
+          <label>Your Location<span class="required">*</span></label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="text" id="locationDisplay" placeholder="Click to capture your location" readonly style="flex:1;background:#f3f4f6;cursor:pointer;">
+            <button type="button" id="captureLocationBtn" style="padding:8px 16px;background:#C0281C;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;font-family:'Sora',sans-serif;white-space:nowrap;">📍 Capture</button>
           </div>
+          <input type="hidden" id="latitude">
+          <input type="hidden" id="longitude">
         </div>
 
         <!-- ── SECTION: Donation History ── -->

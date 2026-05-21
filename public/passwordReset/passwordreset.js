@@ -323,11 +323,11 @@ function showError(message) {
             console.log('[Error] Showing:', message);
         } else {
             console.error('[Error] Error element not found in DOM');
-            alert('Error: ' + message);
+            showModal(message, { type: 'error' });
         }
     } catch (err) {
         console.error('[Error] showError failed:', err);
-        alert('Error: ' + message);
+        showModal(message, { type: 'error' });
     }
 }
 

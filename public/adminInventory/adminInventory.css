@@ -54,7 +54,7 @@ html, body {
 .navbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  z-index: 999;
+  z-index: 1001;
   display: flex;
   align-items: center;
   padding: 0 2.5rem;
@@ -62,6 +62,7 @@ html, body {
   background: #ffffff;
   border-bottom: 1px solid var(--border);
   gap: 12px;
+  overflow: visible;
 }
 
 .mobile-menu-btn {
@@ -107,6 +108,7 @@ html, body {
   align-items: center;
   gap: 16px;
   margin-left: auto;
+  overflow: visible;
 }
 
 /* Emergency button in navbar */
@@ -227,7 +229,7 @@ html, body {
   opacity: 0;
   transform: translateY(8px);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .avatar-dropdown.show {
@@ -513,7 +515,9 @@ html, body {
 }
 
 /* ── INVENTORY GRID ── */
-.inventory-card {}
+.inventory-card {
+  margin-bottom: 24px;
+}
 
 .inventory-grid {
   display: grid;
@@ -562,11 +566,17 @@ html, body {
 }
 
 /* ── TABLE ── */
-.table-card {}
+.table-card {
+  margin-bottom: 24px;
+}
 
 .table-header {
+  display: flex !important;
   flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
+  padding: 16px 24px !important;
 }
 
 .table-tabs {
@@ -574,6 +584,8 @@ html, body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .tab-title {
@@ -650,11 +662,12 @@ html, body {
 }
 
 .req-table td {
-  padding: 16px 20px;
+  padding: 14px 20px;
   font-size: 13px;
   border-bottom: 1px solid var(--border);
   color: var(--dark);
   font-family: 'Inter', sans-serif;
+  vertical-align: middle;
 }
 
 .req-table tbody tr:hover {
@@ -746,7 +759,15 @@ html, body {
 
 .action-cell {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: fit-content;
+}
+
+.action-cell button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .table-footer {
@@ -1109,6 +1130,12 @@ html, body {
   .page-body { padding: 32px; }
 }
 
+@media (max-width: 900px) {
+  .inventory-grid { grid-template-columns: repeat(6, 1fr); }
+  .req-table th, .req-table td { font-size: 12px; }
+  .req-table td { padding: 12px 14px; }
+}
+
 @media (max-width: 960px) {
   .bottom-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -1153,4 +1180,25 @@ html, body {
   .stats-row { grid-template-columns: 1fr; }
   .inventory-grid { grid-template-columns: repeat(2, 1fr); }
   .btn-emergency span { display: none; }
+  
+  .req-table {
+    font-size: 12px;
+  }
+  
+  .req-table td {
+    padding: 12px 12px;
+  }
+  
+  .action-cell {
+    gap: 4px;
+  }
+  
+  .table-tabs {
+    gap: 4px;
+  }
+  
+  .chip {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
 }

@@ -73,6 +73,45 @@ document.addEventListener('DOMContentLoaded', () => {
     revealEls.forEach(el => observer.observe(el));
   }
 
+  /* ─── 3.5. FETCH DYNAMIC STATS ─── */
+  async function fetchStats() {
+    try {
+      const response = await fetch('/api/stats');
+      const data = await response.json();
+
+      if (data.success) {
+        const { donors, livesHelped, typesSupported } = data.stats;
+
+        // Update data-target attributes with fetched values
+        const statItems = document.querySelectorAll('.stat-item');
+        if (statItems[0]) {
+          const donorElement = statItems[0].querySelector('.stat-num');
+          if (donorElement) {
+            donorElement.dataset.target = donors;
+          }
+        }
+        if (statItems[1]) {
+          const livesElement = statItems[1].querySelector('.stat-num');
+          if (livesElement) {
+            livesElement.dataset.target = livesHelped;
+          }
+        }
+        if (statItems[2]) {
+          const typesElement = statItems[2].querySelector('.stat-num');
+          if (typesElement) {
+            typesElement.dataset.target = typesSupported;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[STATS] Failed to fetch dynamic stats:', error);
+      // Fall back to static values in HTML
+    }
+  }
+
+  // Fetch stats on page load
+  fetchStats();
+
   /* ─── 4. COUNTER ─── */
   const statNums = document.querySelectorAll('.stat-num[data-target]');
 

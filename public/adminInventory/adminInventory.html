@@ -132,7 +132,7 @@
             <line x1="9" y1="14" x2="15" y2="14" />
           </svg>
           Pending Requests
-          <span class="sidebar-badge" id="pendingBadge">12</span>
+          
         </a>
 
         <a href="#" class="sidebar-link active" data-page="inventory" id="nav-inventory">
@@ -231,7 +231,7 @@
               <span class="chip chip-grey">O-</span>
             </div>
             <div class="table-sort">
-              <span class="sort-text">Sort by: Date</span>
+              <span class="sort-text">Sort by: Distance</span>
               <span class="sort-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
@@ -248,8 +248,8 @@
                 <th>DONOR NAME</th>
                 <th>BLOOD TYPE</th>
                 <th>DONATION TYPE</th>
+                <th>DISTANCE</th>
                 <th>STATUS</th>
-                <th>REQUEST DATE</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
@@ -395,6 +395,10 @@
 
   <!-- ═══ TOAST ═══ -->
   <div class="ll-toast" id="toast"></div>
+
+  <script src="../utils/adminAuth.js"></script>
+  <script src="../utils/notificationBell.js"></script>
+  <script src="adminInventory.js"></script>
 
 <script src="../utils/avatarWidget.js"></script>
 </body>

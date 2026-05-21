@@ -32,9 +32,95 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/login';
     };
 
+    // ── MODAL UTILITIES ──────────────────────────────
+    function showConfirmModal(message, title = 'Confirm') {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+            overlay.innerHTML = `
+                <div style="background:#fff;width:100%;max-width:400px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:1px solid #E5E7EB;overflow:hidden;">
+                    <div style="padding:24px;text-align:center;">
+                        <h3 style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:#111827;margin-bottom:8px;">${title}</h3>
+                        <p style="font-family:'Inter',sans-serif;font-size:0.9rem;color:#6B7280;margin-bottom:24px;white-space:pre-line;line-height:1.5;">${message}</p>
+                        <div style="display:flex;gap:12px;justify-content:center;">
+                            <button class="btn-confirm" style="background:#C0281C;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">OK</button>
+                            <button class="btn-cancel" style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            const confirmBtn = overlay.querySelector('.btn-confirm');
+            const cancelBtn = overlay.querySelector('.btn-cancel');
+            confirmBtn.addEventListener('mouseenter', () => confirmBtn.style.background = '#A01C15');
+            confirmBtn.addEventListener('mouseleave', () => confirmBtn.style.background = '#C0281C');
+            cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.background = '#E5E7EB');
+            cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.background = '#F3F4F6');
+            const closeModal = () => { overlay.remove(); };
+            confirmBtn.addEventListener('click', () => { resolve(true); closeModal(); });
+            cancelBtn.addEventListener('click', () => { resolve(false); closeModal(); });
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) { resolve(false); closeModal(); } });
+        });
+    }
+
+    function showPromptModal(message, title = 'Enter information') {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+            overlay.innerHTML = `
+                <div style="background:#fff;width:100%;max-width:400px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:1px solid #E5E7EB;overflow:hidden;">
+                    <div style="padding:24px;">
+                        <h3 style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:#111827;margin-bottom:16px;">${title}</h3>
+                        <p style="font-family:'Inter',sans-serif;font-size:0.85rem;color:#6B7280;margin-bottom:16px;">${message}</p>
+                        <input type="text" class="prompt-input" placeholder="Enter your response..." style="width:100%;padding:10px 12px;border:1px solid #E5E7EB;border-radius:8px;font-family:'Inter',sans-serif;font-size:0.9rem;box-sizing:border-box;margin-bottom:16px;">
+                        <div style="display:flex;gap:12px;justify-content:flex-end;">
+                            <button class="btn-cancel" style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">Cancel</button>
+                            <button class="btn-confirm" style="background:#C0281C;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:background 0.2s;">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            const input = overlay.querySelector('.prompt-input');
+            const confirmBtn = overlay.querySelector('.btn-confirm');
+            const cancelBtn = overlay.querySelector('.btn-cancel');
+            confirmBtn.addEventListener('mouseenter', () => confirmBtn.style.background = '#A01C15');
+            confirmBtn.addEventListener('mouseleave', () => confirmBtn.style.background = '#C0281C');
+            cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.background = '#E5E7EB');
+            cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.background = '#F3F4F6');
+            const closeModal = () => { overlay.remove(); };
+            input.focus();
+            confirmBtn.addEventListener('click', () => { resolve(input.value); closeModal(); });
+            cancelBtn.addEventListener('click', () => { resolve(null); closeModal(); });
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { resolve(input.value); closeModal(); } });
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) { resolve(null); closeModal(); } });
+        });
+    }
+
     // ── Dropdown ─────────────────────────────────────
-    navAvatar?.addEventListener('click', e => { e.stopPropagation(); avatarDropdown?.classList.toggle('show'); });
-    document.addEventListener('click', () => avatarDropdown?.classList.remove('show'));
+    const navAvatarWrapper = document.querySelector('.nav-avatar-wrapper');
+    let dropdownOpen = false;
+    
+    navAvatar?.addEventListener('click', (e) => { 
+        e.preventDefault();
+        e.stopPropagation(); 
+        dropdownOpen = !dropdownOpen;
+        if (dropdownOpen) {
+            avatarDropdown?.classList.add('show');
+        } else {
+            avatarDropdown?.classList.remove('show');
+        }
+        console.log('[DEBUG] Dropdown now:', dropdownOpen);
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (dropdownOpen && navAvatarWrapper && !navAvatarWrapper.contains(e.target)) {
+            dropdownOpen = false;
+            avatarDropdown?.classList.remove('show');
+            console.log('[DEBUG] Closed dropdown from outside click');
+        }
+    });
+    
     logoutBtn?.addEventListener('click', handleUnauthorized);
 
     // ── Toast ─────────────────────────────────────────
@@ -56,6 +142,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let allRegistrations = [];
     let activeFilter     = 'all';
     let activeRegId      = null;   // set when opening complete-donation modal
+    let adminLat         = null;   // admin's location
+    let adminLng         = null;
+
+    // ── Helper: Calculate distance using Haversine formula (in km) ──
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // ── Get admin location ──
+    function getAdminLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    adminLat = position.coords.latitude;
+                    adminLng = position.coords.longitude;
+                    console.log(`[Admin Location] Lat: ${adminLat}, Lng: ${adminLng}`);
+                    // Re-render with sorted distances
+                    renderRegistrations(allRegistrations);
+                },
+                (error) => {
+                    console.warn('[Geolocation] Failed to get admin location:', error.message);
+                    // Render without distance sorting
+                    renderRegistrations(allRegistrations);
+                }
+            );
+        } else {
+            console.warn('[Geolocation] Not supported in this browser');
+            renderRegistrations(allRegistrations);
+        }
+    }
 
     // ── Chip filter ───────────────────────────────────
     document.querySelectorAll('.table-tabs .chip').forEach(chip => {
@@ -180,6 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered = regs.filter(r => r.blood_type === bt);
         }
 
+        // Sort by distance if admin location is available
+        if (adminLat && adminLng) {
+            filtered = filtered.sort((a, b) => {
+                const distA = calculateDistance(adminLat, adminLng, parseFloat(a.latitude || 0), parseFloat(a.longitude || 0));
+                const distB = calculateDistance(adminLat, adminLng, parseFloat(b.latitude || 0), parseFloat(b.longitude || 0));
+                return distA - distB;
+            });
+        }
+
         if (filtered.length === 0) {
             requestsBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:#9CA3AF;">
                 ${regs.length === 0 ? 'No active donor requests.' : `No requests for blood type "${activeFilter}".`}
@@ -192,43 +322,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPending  = reg.status === 'pending';
             const isApproved = reg.status === 'approved';
 
+            // Calculate distance if location available
+            let distanceStr = '—';
+            if (adminLat && adminLng && reg.latitude && reg.longitude) {
+                const dist = calculateDistance(adminLat, adminLng, parseFloat(reg.latitude), parseFloat(reg.longitude));
+                distanceStr = `${dist.toFixed(1)} km`;
+            }
+
             // Status pill
             const statusPill = isPending
-                ? `<span style="background:#fff7ed;color:#92400e;border:1px solid #fdba74;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;">⏳ Pending</span>`
-                : `<span style="background:#f0fdf4;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;">✓ Approved</span>`;
+                ? `<span style="background:#fff7ed;color:#92400e;border:1px solid #fdba74;padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;display:inline-block;">⏳ Pending</span>`
+                : `<span style="background:#f0fdf4;color:#166534;border:1px solid #86efac;padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;display:inline-block;">✓ Approved</span>`;
 
             // Action buttons
             let actionBtns = '';
             if (isPending) {
                 actionBtns = `
-                    <button class="approve-reg" data-id="${reg.id}" data-name="${esc(reg.fullname)}"
-                        style="background:#16a34a;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;margin-right:4px;">
-                        Approve
+                    <button class="btn-action btn-action-green approve-reg" data-id="${reg.id}" data-name="${esc(reg.fullname)}" style="background:#16a34a;color:#fff;border:none !important;padding:6px 14px;font-size:.8rem;font-weight:600;">
+                        ✓ Approve
                     </button>
-                    <button class="reject-reg" data-id="${reg.id}" data-name="${esc(reg.fullname)}"
-                        style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">
-                        Reject
+                    <button class="btn-action btn-action-red reject-reg" data-id="${reg.id}" data-name="${esc(reg.fullname)}" style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5 !important;padding:6px 14px;font-size:.8rem;font-weight:600;">
+                        ✕ Reject
                     </button>`;
             } else if (isApproved) {
                 actionBtns = `
-                    <button class="complete-donation-btn"
-                        data-id="${reg.id}" data-name="${esc(reg.fullname)}" data-blood="${esc(reg.blood_type)}"
-                        style="background:linear-gradient(135deg,#C0281C,#9b1c1c);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                        🩸 Complete Donation
+                    <button class="complete-donation-btn" data-id="${reg.id}" data-name="${esc(reg.fullname)}" data-blood="${esc(reg.blood_type)}" style="background:linear-gradient(135deg,#C0281C,#9b1c1c);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        🩸 Complete
                     </button>`;
             }
 
             const tr = document.createElement('tr');
+            tr.style.height = '60px';
             tr.innerHTML = `
                 <td class="td-req-id">#DR-${String(reg.id).padStart(4,'0')}</td>
                 <td>
                     <div class="td-facility" style="font-weight:600;">${esc(reg.fullname)}</div>
-                    <div class="td-facility-sub" style="font-size:.75rem;color:#9CA3AF;">${esc(reg.email || reg.phone || '')}</div>
+                    <div class="td-facility-sub" style="font-size:.75rem;color:#9CA3AF;margin-top:2px;">${esc(reg.email || reg.phone || '')}</div>
                 </td>
                 <td><span class="blood-type-box">${esc(reg.blood_type)}</span></td>
-                <td style="font-size:.8rem;color:#6B7280;">${esc(reg.donation_type || 'Whole Blood')}</td>
+                <td style="font-size:.85rem;color:#6B7280;">${esc(reg.donation_type || 'Whole Blood')}</td>
+                <td style="font-size:.85rem;color:#C0281C;font-weight:600;">${distanceStr}</td>
                 <td>${statusPill}</td>
-                <td class="time-cell">${dateStr}</td>
                 <td class="action-cell">${actionBtns}</td>
             `;
             requestsBody.appendChild(tr);
@@ -245,7 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════
 
     async function handleApprove(id, name) {
-        if (!confirm(`Approve donor registration for "${name}"?\n\nThey will be notified and can be called for donation.`)) return;
+        const confirmed = await showConfirmModal(`Approve donor registration for "${name}"?\n\nThey will be notified and can be called for donation.`, 'Approve Registration');
+        if (!confirmed) return;
         const token = getAuthToken();
         try {
             const res = await fetch(`${API_URL}/admin/donor-registrations/${id}/approve`, {
@@ -258,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleReject(id, name) {
-        const reason = prompt(`Reason for rejecting "${name}"'s registration (optional):`);
+        const reason = await showPromptModal(`Reason for rejecting "${name}"'s registration (optional):`, 'Reject Registration');
         if (reason === null) return;
         const token = getAuthToken();
         try {
@@ -359,6 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchInventoryData()
         ]);
         if (invData) renderStats(invData);
+        // Get admin location for distance sorting
+        getAdminLocation();
     }
 
     init();

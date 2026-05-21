@@ -9,9 +9,57 @@ document.addEventListener('DOMContentLoaded', function () {
     return;
   }
 
+  // ──────────────────────────────────────────────
+  // Store Previous Page for Redirect
+  // ──────────────────────────────────────────────
+  const previousPage = document.referrer || '/userdashboard';
+  sessionStorage.setItem('donorRequestPreviousPage', previousPage);
+
   const form      = document.getElementById('donorForm');
   const btnSubmit = document.querySelector('.btn-submit');
   const btnCancel = document.querySelector('.btn-cancel');
+
+  /* ── GEOLOCATION CAPTURE ── */
+  const captureLocationBtn = document.getElementById('captureLocationBtn');
+  const locationDisplay = document.getElementById('locationDisplay');
+  const latitudeInput = document.getElementById('latitude');
+  const longitudeInput = document.getElementById('longitude');
+
+  if (captureLocationBtn) {
+    captureLocationBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (navigator.geolocation) {
+        captureLocationBtn.textContent = '⏳ Getting location...';
+        captureLocationBtn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            latitudeInput.value = lat;
+            longitudeInput.value = lng;
+            locationDisplay.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            locationDisplay.style.color = '#166534';
+            captureLocationBtn.textContent = '✓ Captured';
+            captureLocationBtn.style.background = '#16a34a';
+            setTimeout(() => {
+              captureLocationBtn.textContent = '📍 Capture';
+              captureLocationBtn.disabled = false;
+              captureLocationBtn.style.background = '#C0281C';
+            }, 2000);
+            showToast('Location captured successfully!', 'success');
+          },
+          (error) => {
+            captureLocationBtn.textContent = '📍 Capture';
+            captureLocationBtn.disabled = false;
+            showToast('Failed to get location. Please enable location services.', 'danger');
+            console.warn('Geolocation error:', error);
+          }
+        );
+      } else {
+        showToast('Geolocation is not supported by your browser.', 'warning');
+      }
+    });
+  }
 
   /* ── Toast ── */
   function showToast(msg, type = 'info', duration = 3500) {
@@ -75,13 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const phoneEl = document.getElementById('phone');
     if (!phoneEl.value.trim()) { setError(phoneEl, 'Phone number is required.'); ok = false; }
 
-    // Province
-    const provEl = document.getElementById('province');
-    if (!provEl.value) { setError(provEl, 'Province is required.'); ok = false; }
-
-    // District / city
-    const distEl = document.getElementById('district');
-    if (!distEl.value) { setError(distEl, 'District / City is required.'); ok = false; }
+    // Geolocation
+    const latEl = document.getElementById('latitude');
+    const lngEl = document.getElementById('longitude');
+    if (!latEl.value || !lngEl.value) { setError(locationDisplay, 'Please capture your location.'); ok = false; }
 
     return ok;
   }
@@ -217,8 +262,8 @@ document.addEventListener('DOMContentLoaded', function () {
       phone:              phoneEl?.value?.trim() || '',
       email:              emailEl?.value?.trim() || '',
       hospital:           hospitalEl?.value?.trim() || '',
-      province:           provinceEl?.value || '',
-      city:               districtEl?.value || '',
+      latitude:           parseFloat(document.getElementById('latitude').value),
+      longitude:          parseFloat(document.getElementById('longitude').value),
       last_donated:       lastDonated,
       relationship:       relEl?.value || '',
       notes:              notesEl?.value?.trim() || ''
@@ -244,11 +289,11 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSubmit.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
         showToast('Registration submitted! An admin will review your request.', 'success', 5000);
         form.reset();
-        // Keep button disabled to prevent re-submit
+        // Redirect to previous page after delay to show success message
         setTimeout(() => {
-          btnSubmit.textContent = 'Registration Pending Review';
-          btnSubmit.style.background = 'linear-gradient(135deg,#D97706,#B45309)';
-        }, 3000);
+          const redirectTo = sessionStorage.getItem('donorRequestPreviousPage') || '/userdashboard';
+          window.location.href = redirectTo;
+        }, 2000);
       } else if (res.status === 409) {
         // Duplicate pending
         btnSubmit.textContent  = 'Registration Pending Review';

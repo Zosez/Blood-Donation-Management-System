@@ -97,6 +97,12 @@ html, body {
 }
 
 /* Bell */
+.nav-bell-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .nav-bell {
   background: transparent;
   border: none;
@@ -126,7 +132,13 @@ html, body {
   line-height: 1;
 }
 
-/* Avatar pill */
+/* Avatar */
+.nav-avatar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .nav-avatar {
   display: flex;
   align-items: center;
@@ -139,6 +151,14 @@ html, body {
   transition: border-color .2s, background .2s;
 }
 .nav-avatar:hover { border-color: #CBD5E1; background: var(--bg); }
+
+.nav-avatar img {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg);
+  display: block;
+}
 
 .nav-avatar-name {
   font-size: 0.88rem;
@@ -798,4 +818,4 @@ tbody tr:hover         { background: #FAFBFC; }
 }
 .ll-toast.show { transform: translateY(0); opacity: 1; }
 .ll-toast.error { background: #DC2626; }
-.ll-toast.success { background: #16A34A; }
+.ll-toast.success { background: #16A34A; }
