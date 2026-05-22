@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Populate requests table
       populateRequestsTable(requests);
 
+      // Load inventory stock data
+      await loadInventoryData();
+
       // Load recent activity feed (non-blocking — own try/catch inside)
       loadRecentActivity();
 
@@ -55,6 +58,211 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error loading dashboard data:', error);
       showToast('Failed to load dashboard data', 'danger');
     }
+  }
+
+  /* ─── LOAD INVENTORY DATA ─── */
+  async function loadInventoryData() {
+    try {
+      const invRes = await fetch(`${API_URL}/admin/inventory`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!invRes.ok) throw new Error('Failed to fetch inventory');
+      const { stock, totalStock, donors } = await invRes.json();
+
+      // ═══════════════════════════════════════════════
+      // UPDATE STOCK CARD
+      // ═══════════════════════════════════════════════
+      const stockNum = document.querySelector('.stock-num');
+      const stockLabels = document.querySelector('.stock-labels');
+      const bloodBreakdown = document.querySelector('.blood-breakdown');
+
+      if (stockNum) {
+        stockNum.textContent = totalStock.toLocaleString();
+        stockNum.dataset.count = totalStock;
+      }
+
+      // Update stock labels (0 — max)
+      const MAX_STOCK = 2000;
+      if (stockLabels) {
+        stockLabels.innerHTML = `<span>0</span><span>${MAX_STOCK.toLocaleString()}</span>`;
+      }
+
+      // Update progress bar
+      const stockFill = document.querySelector('.stock-fill');
+      const percentage = Math.min((totalStock / MAX_STOCK) * 100, 100);
+      if (stockFill) {
+        stockFill.style.width = `${percentage}%`;
+      }
+
+      // Map for blood type statuses
+      const stockMap = {};
+      stock.forEach(s => { stockMap[s.blood_type] = Number(s.total_units); });
+
+      // Update blood breakdown
+      if (bloodBreakdown) {
+        const bloodTypes = [
+          { type: 'O-', color: '#DC2626' },
+          { type: 'A+', color: '#2563EB' },
+          { type: 'B+', color: '#059669' },
+          { type: 'AB+', color: '#D97706' }
+        ];
+
+        bloodBreakdown.innerHTML = bloodTypes.map(bt => {
+          const units = stockMap[bt.type] || 0;
+          const status = units < 5 ? 'Low' : 'OK';
+          const statusColor = units < 5 ? '#ef4444' : '#10b981';
+          return `
+            <div class="bb-item">
+              <span class="bb-dot" style="background:${bt.color}"></span>
+              ${bt.type} <b style="color:${statusColor}">${status}</b>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ═══════════════════════════════════════════════
+      // UPDATE ACTIVE DONORS SECTION
+      // ═══════════════════════════════════════════════
+      const donorsNum = document.querySelector('.donors-num');
+      const moreCount = document.querySelector('.d-av.more');
+
+      if (donorsNum && donors) {
+        donorsNum.textContent = donors.length.toLocaleString();
+        donorsNum.dataset.count = donors.length;
+      }
+
+      if (moreCount && donors && donors.length > 4) {
+        moreCount.textContent = `+${donors.length - 4}`;
+      }
+
+      // Update donor avatars with actual donor data
+      const avatarContainers = document.querySelectorAll('.d-av:not(.more)');
+      if (donors && donors.length > 0) {
+        avatarContainers.forEach((container, index) => {
+          if (index < donors.length && index < 4) {
+            const donor = donors[index];
+            const initials = donor.fullname
+              ? donor.fullname.split(' ').map(n => n[0]).join('').toUpperCase()
+              : '?';
+            const bgColor = ['#3B82F6', '#EC4899', '#10B981', '#F59E0B'][index % 4];
+            container.innerHTML = `
+              <div style="width:32px;height:32px;border-radius:50%;background:${bgColor};display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px;">
+                ${initials}
+              </div>
+            `;
+            container.title = donor.fullname || 'Donor';
+          }
+        });
+      }
+
+      // ═══════════════════════════════════════════════
+      // UPDATE BLOOD TYPE DISTRIBUTION CHART
+      // ═══════════════════════════════════════════════
+      if (donors && donors.length > 0) {
+        // Calculate blood type distribution
+        const bloodTypeCount = {};
+        const allTypes = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+        
+        allTypes.forEach(t => { bloodTypeCount[t] = 0; });
+        donors.forEach(d => {
+          if (d.blood_type && bloodTypeCount.hasOwnProperty(d.blood_type)) {
+            bloodTypeCount[d.blood_type]++;
+          }
+        });
+
+        // Group percentages for main types + others
+        const total = donors.length;
+        const mainTypes = {
+          'O-': bloodTypeCount['O-'],
+          'A+': bloodTypeCount['A+'],
+          'B+': bloodTypeCount['B+'],
+          'AB+': bloodTypeCount['AB+'],
+          'O+': bloodTypeCount['O+']
+        };
+        const others = total - Object.values(mainTypes).reduce((a, b) => a + b, 0);
+
+        // Update legend with percentages
+        const legendItems = document.querySelectorAll('.legend-item');
+        const typesArray = [
+          { type: 'O-', color: '#DC2626' },
+          { type: 'A+', color: '#2563EB' },
+          { type: 'B+', color: '#059669' },
+          { type: 'AB+', color: '#D97706' },
+          { type: 'O+', color: '#7C3AED' },
+          { type: 'Others', color: '#DB2777' }
+        ];
+
+        typesArray.forEach((t, idx) => {
+          const count = t.type === 'Others' ? others : mainTypes[t.type];
+          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+          if (legendItems[idx]) {
+            legendItems[idx].innerHTML = `<span style="background:${t.color}"></span>${t.type} &nbsp;${pct}%`;
+          }
+        });
+
+        // Draw pie chart
+        drawBloodTypeChart(mainTypes, others, total);
+      }
+    } catch (error) {
+      console.warn('[INVENTORY] Failed to load:', error.message);
+      // Continue with graceful fallback
+    }
+  }
+
+  /* ─── DRAW BLOOD TYPE PIE CHART ─── */
+  function drawBloodTypeChart(mainTypes, others, total) {
+    const canvas = document.getElementById('bloodChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 80;
+
+    const colors = {
+      'O-': '#DC2626',
+      'A+': '#2563EB',
+      'B+': '#059669',
+      'AB+': '#D97706',
+      'O+': '#7C3AED',
+      'Others': '#DB2777'
+    };
+
+    const data = [
+      { type: 'O-', count: mainTypes['O-'], color: colors['O-'] },
+      { type: 'A+', count: mainTypes['A+'], color: colors['A+'] },
+      { type: 'B+', count: mainTypes['B+'], color: colors['B+'] },
+      { type: 'AB+', count: mainTypes['AB+'], color: colors['AB+'] },
+      { type: 'O+', count: mainTypes['O+'], color: colors['O+'] },
+      { type: 'Others', count: others, color: colors['Others'] }
+    ];
+
+    let currentAngle = -Math.PI / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    data.forEach(d => {
+      const sliceAngle = (d.count / total) * 2 * Math.PI;
+
+      // Draw slice
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      ctx.lineTo(centerX, centerY);
+      ctx.fillStyle = d.color;
+      ctx.fill();
+
+      // Draw border
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      currentAngle += sliceAngle;
+    });
   }
 
   function populateRequestsTable(requests) {

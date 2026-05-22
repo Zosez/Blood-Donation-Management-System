@@ -174,6 +174,15 @@ async function registerForEvent(card, button) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      // Check if already registered (409 Conflict or specific error message)
+      if (response.status === 409 || errorData.message?.toLowerCase().includes('already registered')) {
+        button.textContent = '✓ Registered';
+        button.classList.add('registered');
+        window.showToast('You have already registered for this event.', 'info');
+        return;
+      }
+      
       throw new Error(errorData.message || 'Unable to register for this event.');
     }
 

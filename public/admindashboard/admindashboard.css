@@ -706,20 +706,22 @@ tbody td {
 /* STOCK CARD */
 .stock-big {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   margin-bottom: 16px;
 }
 
 .stock-num {
   font-family: 'Sora', sans-serif;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
   color: var(--dark);
+  line-height: 1;
 }
 
 .stock-unit {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--gray);
   font-weight: 500;
 }
@@ -747,11 +749,12 @@ tbody td {
   font-size: 0.68rem;
   color: var(--gray);
   margin-top: 4px;
+  width: 100%;
 }
 
 .blood-breakdown {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 

@@ -142,6 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalClose = document.getElementById('modalClose');
   const modalDoneBtn = document.getElementById('modalDoneBtn');
 
+  const rejectModal = document.getElementById('rejectModal');
+  const rejectModalClose = document.getElementById('rejectModalClose');
+  const rejectModalCancelBtn = document.getElementById('rejectModalCancelBtn');
+  const rejectModalConfirmBtn = document.getElementById('rejectModalConfirmBtn');
+  const rejectReasonInput = document.getElementById('rejectReasonInput');
+  const charCount = document.getElementById('charCount');
+
+  let pendingRejectId = null;
+  let pendingRejectRowEl = null;
+
   function openRequestModal(req) {
     document.getElementById('modalFacility').textContent = req.hospital_name || req.facility || '—';
     document.getElementById('modalRequestId').textContent = `Request #${req.id}`;
@@ -160,13 +170,60 @@ document.addEventListener('DOMContentLoaded', () => {
     requestModal.classList.remove('show');
   }
 
+  function openRejectModal(id, rowEl) {
+    pendingRejectId = id;
+    pendingRejectRowEl = rowEl;
+    rejectReasonInput.value = '';
+    charCount.textContent = '0 / 20 characters';
+    rejectModalConfirmBtn.disabled = true;
+    rejectReasonInput.focus();
+    rejectModal.classList.add('show');
+  }
+
+  function closeRejectModal() {
+    rejectModal.classList.remove('show');
+    pendingRejectId = null;
+    pendingRejectRowEl = null;
+  }
+
+  // Request modal events
   modalClose?.addEventListener('click', closeRequestModal);
   modalDoneBtn?.addEventListener('click', closeRequestModal);
   requestModal?.addEventListener('click', (e) => {
     if (e.target === requestModal) closeRequestModal();
   });
+
+  // Reject modal events
+  rejectModalClose?.addEventListener('click', closeRejectModal);
+  rejectModalCancelBtn?.addEventListener('click', closeRejectModal);
+  rejectModal?.addEventListener('click', (e) => {
+    if (e.target === rejectModal) closeRejectModal();
+  });
+
+  // Character counter for reject reason
+  rejectReasonInput?.addEventListener('input', (e) => {
+    const len = e.target.value.length;
+    charCount.textContent = `${len} / 20 characters`;
+    rejectModalConfirmBtn.disabled = len < 20;
+  });
+
+  // Confirm rejection
+  rejectModalConfirmBtn?.addEventListener('click', async () => {
+    if (pendingRejectId && pendingRejectRowEl) {
+      const id = pendingRejectId;
+      const rowEl = pendingRejectRowEl;
+      const reason = rejectReasonInput.value.trim();
+      closeRejectModal();
+      await rejectRequest(id, rowEl, reason);
+    }
+  });
+
+  // Escape key for modals
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && requestModal?.classList.contains('show')) closeRequestModal();
+    if (e.key === 'Escape') {
+      if (requestModal?.classList.contains('show')) closeRequestModal();
+      if (rejectModal?.classList.contains('show')) closeRejectModal();
+    }
   });
 
   /* ── Filters ─────────────────────────────────────────── */
@@ -285,24 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function rejectRequest(id, rowEl) {
-    // Prompt for a reason (min 20 chars as required by backend)
-    const reason = window.prompt(
-      'Enter rejection reason (minimum 20 characters):'
-    );
-    if (!reason) return;
-    if (reason.trim().length < 20) {
-      showToast('Rejection reason must be at least 20 characters.', 'warning');
-      return;
-    }
-
+  async function rejectRequest(id, rowEl, reason) {
     const btn = rowEl.querySelector('.reject-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Rejecting…'; }
 
     try {
       const res = await apiFetch(`/admin/reject-request/${id}`, {
         method: 'POST',
-        body: JSON.stringify({ reason: reason.trim() })
+        body: JSON.stringify({ reason: reason })
       });
       if (!res) return;
 
@@ -368,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tr.querySelector('.reject-btn')?.addEventListener('click', () => {
-      rejectRequest(req.id, tr);
+      openRejectModal(req.id, tr);
     });
 
     return tr;

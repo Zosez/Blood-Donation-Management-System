@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     revealEls.forEach(el => observer.observe(el));
   }
 
-  /* ─── 3.5. FETCH DYNAMIC STATS ─── */
+  /* ─── 3.5. FETCH DYNAMIC STATS & COOPERATE WITH COUNTERS ─── */
   async function fetchStats() {
     try {
       const response = await fetch('/api/stats');
@@ -86,26 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const statItems = document.querySelectorAll('.stat-item');
         if (statItems[0]) {
           const donorElement = statItems[0].querySelector('.stat-num');
-          if (donorElement) {
-            donorElement.dataset.target = donors;
-          }
+          if (donorElement) donorElement.dataset.target = donors;
         }
         if (statItems[1]) {
           const livesElement = statItems[1].querySelector('.stat-num');
-          if (livesElement) {
-            livesElement.dataset.target = livesHelped;
-          }
+          if (livesElement) livesElement.dataset.target = livesHelped;
         }
         if (statItems[2]) {
           const typesElement = statItems[2].querySelector('.stat-num');
-          if (typesElement) {
-            typesElement.dataset.target = typesSupported;
-          }
+          if (typesElement) typesElement.dataset.target = typesSupported;
         }
       }
     } catch (error) {
       console.warn('[STATS] Failed to fetch dynamic stats:', error);
       // Fall back to static values in HTML
+    } finally {
+      initCounters();
     }
   }
 
@@ -113,10 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStats();
 
   /* ─── 4. COUNTER ─── */
-  const statNums = document.querySelectorAll('.stat-num[data-target]');
-
   function animateCounter(el) {
-    const target = parseInt(el.dataset.target);
+    const target = parseInt(el.dataset.target) || 0;
     const suffix = el.dataset.suffix || '';
     const duration = 1800;
     const start = performance.now();
@@ -131,38 +125,190 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(tick);
   }
 
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateCounter(entry.target);
-          observer.unobserve(entry.target);
-        }
+  function initCounters() {
+    const statNums = document.querySelectorAll('.stat-num[data-target]');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
       });
-    });
-
-    statNums.forEach(el => observer.observe(el));
+      statNums.forEach(el => observer.observe(el));
+    } else {
+      statNums.forEach(el => animateCounter(el));
+    }
   }
+
+  /* ─── 4.5. FETCH DYNAMIC ACTIVE BLOOD REQUESTS ─── */
+  async function fetchActiveRequests() {
+    const container = document.querySelector('.request-cards');
+    if (!container) return;
+
+    try {
+      const response = await fetch('/api/blood-requests');
+      if (!response.ok) throw new Error('Failed to fetch requests');
+      const data = await response.json();
+
+      // Show ONLY active/approved requests (up to top 3 for aesthetic parity)
+      const activeReqs = (data.requests || [])
+        .filter(r => r.status === 'approved' || r.status === 'ongoing')
+        .slice(0, 3);
+
+      if (activeReqs.length === 0) {
+        renderNoRequestsPlaceholder(container);
+        return;
+      }
+
+      container.innerHTML = activeReqs.map((req, idx) => {
+        // Map urgency level ENUM to corresponding CSS badge classes & translations
+        let urgencyBadge = '';
+        if (req.urgency_level === 'critical') {
+          urgencyBadge = `<span class="urgency-badge emergency" data-key="emergency">Emergency</span>`;
+        } else if (req.urgency_level === 'urgent') {
+          urgencyBadge = `<span class="urgency-badge urgent" data-key="urgent">Urgent</span>`;
+        }
+
+        const transitionDelay = `${idx * 0.1}s`;
+
+        return `
+          <div class="request-card reveal visible" style="transition-delay: ${transitionDelay}">
+            <div class="card-top">
+              <span class="hospital-name">${req.hospital_name}</span>
+              ${urgencyBadge}
+            </div>
+            <div class="location">&#128205; ${req.city || 'Location not specified'}</div>
+            <div class="blood-info">
+              <div>
+                <div class="blood-label" data-key="bloodType">Blood Type</div>
+                <div class="blood-type-large">${req.blood_type}</div>
+              </div>
+              <button class="btn-respond" data-key="respond" 
+                      data-id="${req.id}" 
+                      data-hospital="${req.hospital_name}" 
+                      data-blood="${req.blood_type}">
+                Respond
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Instantly apply translation to dynamically rendered cards
+      if (typeof applyLanguage === 'function') {
+        const currentLang = localStorage.getItem('language') || 'en';
+        applyLanguage(currentLang);
+      }
+
+    } catch (error) {
+      console.warn('[REQUESTS] Failed to fetch dynamic blood requests:', error);
+      // Keep/fall back to hardcoded mock cards if fetch completely errors out
+    }
+  }
+
+  function renderNoRequestsPlaceholder(container) {
+    container.innerHTML = `
+      <div class="no-requests-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: var(--color-card-bg, rgba(255,255,255,0.02)); border: 1.5px dashed var(--color-border, rgba(255, 255, 255, 0.1)); border-radius: 20px; margin: 1rem 0;">
+        <div style="font-size: 3.5rem; margin-bottom: 1.2rem; filter: drop-shadow(0 4px 10px rgba(192, 40, 28, 0.2));">❤️</div>
+        <h3 style="font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-text-main, #ffffff);">No Active Requests</h3>
+        <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--color-text-muted, #94a3b8); max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6;">There are currently no urgent active blood requests. Thank you for your incredible willingness to help save lives!</p>
+        <button class="btn-primary" onclick="window.location.href='/requestBlood'" style="padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; border: none; background: #C0281C; color: #fff; transition: background 0.2s;">
+          Request Blood
+        </button>
+      </div>
+    `;
+  }
+
+  // Fetch active requests on page load
+  fetchActiveRequests();
 
   /* ─── 5. BLOOD TYPE BADGE ─── */
   document.querySelectorAll('.blood-badge').forEach(b => {
     b.addEventListener('click', () => b.classList.toggle('active'));
   });
 
-  /* ─── 6. RESPOND BUTTON ─── */
-  document.querySelectorAll('.btn-respond').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const card = this.closest('.request-card');
-      const type = card.querySelector('.blood-type-large').textContent;
-      const hosp = card.querySelector('.hospital-name').textContent;
+  /* ─── 6. DYNAMIC RESPOND BUTTONS & OFFER SUBMISSION ─── */
+  const requestCardsContainer = document.querySelector('.request-cards');
+  if (requestCardsContainer) {
+    requestCardsContainer.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('btn-respond')) {
+        const btn = e.target;
+        const requestId = btn.dataset.id;
+        const hospitalName = btn.dataset.hospital;
+        const bloodType = btn.dataset.blood;
 
-      this.textContent = 'Sent';
-      this.style.background = '#16A34A';
-      this.disabled = true;
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showToast('Please log in or register to submit a donation offer.', 'warning');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          return;
+        }
 
-      showToast(`Response sent for ${hosp} — Blood type ${type}`, 'success');
+        try {
+          btn.disabled = true;
+          btn.textContent = 'Sending...';
+
+          // Fetch currently logged-in user profile
+          const meResponse = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const meData = await meResponse.json();
+
+          if (!meResponse.ok || !meData.user) {
+            showToast('Session expired. Please log in again.', 'danger');
+            setTimeout(() => { window.location.href = '/login'; }, 1500);
+            return;
+          }
+
+          const user = meData.user;
+
+          // Submit donation offer attempt
+          const attemptResponse = await fetch('/api/donation-attempts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              request_id: parseInt(requestId),
+              donor_id: user.id,
+              donor_name: user.fullname,
+              donor_phone: user.phone || '',
+              donor_email: user.email,
+              questionnaire_passed: true
+            })
+          });
+
+          const attemptData = await attemptResponse.json();
+
+          if (attemptResponse.status === 409) {
+            showToast('You have already submitted an offer for this request.', 'warning');
+            btn.textContent = 'Offered';
+            btn.style.background = '#16A34A';
+            return;
+          }
+
+          if (!attemptResponse.ok) {
+            throw new Error(attemptData.message || 'Failed to submit response');
+          }
+
+          btn.textContent = 'Sent';
+          btn.style.background = '#16A34A';
+          showToast(`Offer successfully sent to ${hospitalName} (${bloodType})`, 'success');
+
+        } catch (error) {
+          console.error('[RESPOND] Error submitting offer:', error);
+          showToast(error.message || 'Error sending response. Please try again.', 'danger');
+          btn.disabled = false;
+          btn.textContent = 'Respond';
+        }
+      }
     });
-  });
+  }
 
   /* ─── 7. TOAST (DASHBOARD STYLE) ─── */
   let toastTimeout = null;

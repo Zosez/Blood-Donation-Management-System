@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
   let toastTimeout = null;
   let activeToast  = null;
@@ -420,12 +420,14 @@
               // Update localStorage with fresh user data
               localStorage.setItem('user', JSON.stringify(freshUser));
               
+              // NOTE: total_donations is just the COUNT of records, not actual units.
+              // The real unit sum comes from the gamification endpoint below.
+              // Show donation count as a temporary placeholder until gamification loads.
               const unitsEl = document.getElementById('total-units-val');
               const livesEl = document.getElementById('lives-impacted-val');
-              const totalUnits  = freshUser.total_donations || 0;
-              const livesHelped = totalUnits * 3;   // 1 unit = 3 people
-              if (unitsEl) unitsEl.innerHTML = `${totalUnits} <span class="stat-unit">Units</span>`;
-              if (livesEl) livesEl.innerHTML = `${livesHelped} <span class="stat-unit">People</span>`;
+              const tempCount  = freshUser.total_donations || 0;
+              if (unitsEl) unitsEl.innerHTML = `${tempCount} <span class="stat-unit">Units</span>`;
+              if (livesEl) livesEl.innerHTML = `${tempCount * 3} <span class="stat-unit">People</span>`;
 
               // Sync availability toggle with fresh backend value
               if (availToggle) {
@@ -462,8 +464,9 @@
                       const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#9CA3AF', Gold: '#D97706', Platinum: '#6B7280' };
                       const unitsEl = document.getElementById('total-units-val');
                       const livesEl = document.getElementById('lives-impacted-val');
-                      if (unitsEl) unitsEl.innerHTML = s.donationCount + ' <span class="stat-unit">Units</span>';
-                      if (livesEl) livesEl.innerHTML = (s.donationCount * 3) + ' <span class="stat-unit">People</span>';
+                      const realUnits = s.totalUnits || s.donationCount || 0;
+                      if (unitsEl) unitsEl.innerHTML = realUnits + ' <span class="stat-unit">Units</span>';
+                      if (livesEl) livesEl.innerHTML = (realUnits * 3) + ' <span class="stat-unit">People</span>';
                       const tierEl = document.getElementById('donor-tier-val');
                       const hintEl = document.getElementById('donor-tier-hint');
                       if (tierEl) { tierEl.textContent = s.currentTier; tierEl.style.color = TIER_COLORS[s.currentTier] || '#111827'; }

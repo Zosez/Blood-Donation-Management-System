@@ -175,6 +175,7 @@ async function getDonationStats(userId) {
 
     return {
         donationCount,
+        totalUnits,
         totalMlDonated:      totalMl,
         displayVolume:       formatVolume(totalMl),
         currentTier:         tierInfo.current,
