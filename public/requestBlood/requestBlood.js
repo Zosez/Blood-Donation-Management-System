@@ -204,7 +204,7 @@ async function handleSubmit() {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('✅ Blood request submitted successfully!', 'success');
+      showToast('Blood request submitted successfully!', 'success');
       setTimeout(() => { window.location.href = '/bloodRequest'; }, 1500);
     } else if (res.status === 401 || res.status === 403) {
       showToast('Session expired. Please log in again.', 'error');

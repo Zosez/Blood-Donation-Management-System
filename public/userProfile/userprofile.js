@@ -99,12 +99,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update sidebar profile
       const userNameEl = document.querySelector('.user-name');
       const userEmailEl = document.querySelector('.user-email');
-      const bloodTagEl = document.querySelector('.tag-val');
+      const bloodTagEl = document.querySelector('.tag-blood .tag-val');
+      const tierTagEl = document.querySelector('.tag-tier .tag-val');
+      const tierSvgEl = document.querySelector('.tag-tier svg');
       const navAvatarName = document.querySelector('.nav-avatar-name');
       
       if (userNameEl) userNameEl.textContent = user.fullname || 'User';
       if (userEmailEl) userEmailEl.textContent = user.email || '';
       if (bloodTagEl) bloodTagEl.textContent = user.blood_type || 'Not Set';
+      if (tierTagEl) {
+        const tier = user.donor_tier || 'Bronze';
+        tierTagEl.textContent = tier;
+        tierTagEl.className = `tag-val tier-${tier.toLowerCase()}`;
+        if (tierSvgEl) {
+          const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#9CA3AF', Gold: '#D97706', Platinum: '#6B7280' };
+          tierSvgEl.setAttribute('stroke', TIER_COLORS[tier] || '#3B82F6');
+        }
+      }
       if (navAvatarName) navAvatarName.textContent = user.fullname?.split(' ')[0] || user.fullname || 'User';
       
       // Fill in form fields
@@ -235,6 +246,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
+  // Password regex pattern: requires uppercase, lowercase, digit, and special character
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
   /* ─── 4. PASSWORD UPDATE ─── */
   const pwdSaveBtn = document.getElementById('pwdSaveBtn');
   if (pwdSaveBtn) {
@@ -249,6 +263,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (next.length < 8) {
         showToast('New password must be at least 8 characters.', 'warn');
+        return;
+      }
+      if (!passwordRegex.test(next)) {
+        showToast('Password must contain uppercase, lowercase, number, and special character (@$!%*?&).', 'warn');
+        return;
+      }
+      if (next === current) {
+        showToast('New password cannot be the same as your current password.', 'warn');
+        highlightError('newPwd');
         return;
       }
       if (next !== confirm) {

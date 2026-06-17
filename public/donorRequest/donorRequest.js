@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
     captureLocationBtn.addEventListener('click', (e) => {
       e.preventDefault();
       if (navigator.geolocation) {
-        captureLocationBtn.textContent = '⏳ Getting location...';
+        captureLocationBtn.textContent = 'Getting location...';
         captureLocationBtn.disabled = true;
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ── Lock form when user is unavailable ── */
   function lockFormUnavailable(msg) {
-    btnSubmit.textContent  = '🚫 Availability Required';
+    btnSubmit.textContent  = 'Availability Required';
     btnSubmit.disabled     = true;
     btnSubmit.style.background     = 'linear-gradient(135deg,#6B7280,#4B5563)';
     btnSubmit.style.cursor         = 'not-allowed';

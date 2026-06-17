@@ -32,6 +32,7 @@ class User {
                     is_available_donor, is_verified, onboarded, date_of_birth, created_at,
                     COALESCE(total_donations, 0) AS total_donations,
                     COALESCE(lives_impacted, 0)  AS lives_impacted,
+                    donor_tier,
                     cooldown_ends_at
              FROM users WHERE id = ?`,
             [id]

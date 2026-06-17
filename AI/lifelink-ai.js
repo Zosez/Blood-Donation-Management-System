@@ -1,4 +1,4 @@
-// lifelink-chat.js – LifeLink AI Chat (no emojis)
+// lifelink-chat.js – LifeLink AI Chat 
 (function () {
     // ========== CUSTOMIZATION ==========
     const CUSTOM_LOGO_URL = null;   // optional: set your logo URL

@@ -1,11 +1,11 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
 const BloodRequest = require('../models/BloodRequest');
 const Notification = require('../models/Notification');
 const { authenticateToken } = require('../middleware/auth');
 const { getCompatibleDonorTypes } = require('../utils/bloodTypeCompatibility');
-const { sendCriticalRequestToAdminsEmail } = require('../config/mailer');
+const { sendCriticalRequestToAdminsEmail, sendUrgentRequestToAdminsEmail } = require('../config/mailer');
 const { db } = require('../config/database');
 
 // Queue for notifications (to avoid blocking requests)
@@ -58,7 +58,22 @@ async function notifyAdmins(requestId, requestData, requester) {
         await Notification.insertMany(notifications);
         console.log(`[ADMIN NOTIF] ${notifications.length} in-app notification(s) sent to admins for request #${requestId}`);
 
-        // Email only if critical
+        // Email admins for URGENT requests (needs admin approval → donors notified after)
+        if (urgency === 'urgent') {
+            const emailResults = await Promise.allSettled(
+                admins
+                    .filter(a => !!a.email)
+                    .map(admin => sendUrgentRequestToAdminsEmail(
+                        admin,
+                        { ...requestData, id: requestId },
+                        requester
+                    ))
+            );
+            const sent = emailResults.filter(r => r.status === 'fulfilled' && r.value === true).length;
+            console.log(`[ADMIN NOTIF] Urgent admin emails: ${sent}/${admins.length} sent`);
+        }
+
+        // Email admins for CRITICAL requests (goes to Receiver Requests panel)
         if (isCritical) {
             const emailResults = await Promise.allSettled(
                 admins
@@ -280,25 +295,32 @@ router.post(
             });
 
             // Find and notify compatible donors asynchronously
-            const compatibleTypes = getCompatibleDonorTypes(blood_type);
-            const eligibleDonors = await BloodRequest.findEligibleDonors(blood_type, compatibleTypes);
-            
-            if (eligibleDonors.length > 0) {
-                const requestTitle = `Blood Request: ${blood_type} (${urgency_level})`;
-                const requestMessage = `A ${urgency_level} blood request for ${blood_type} has been posted at ${hospital_name}. ${units_required} unit(s) needed.`;
-                
-                eligibleDonors.forEach(donor => {
-                    notificationQueue.push({
-                        user_id: donor.id,
-                        type: 'blood_request',
-                        title: requestTitle,
-                        message: requestMessage,
-                        blood_request_id: requestId,
-                        related_user_id: req.user.id
-                    });
-                });
+            // Critical requests do NOT broadcast to donors — they go through
+            // the admin Receiver Requests workflow (approve/complete → inventory).
+            const resolvedUrgency = (urgency_level || 'normal').toLowerCase();
+            let eligibleDonors = [];
 
-                setImmediate(processNotificationQueue);
+            if (resolvedUrgency !== 'critical') {
+                const compatibleTypes = getCompatibleDonorTypes(blood_type);
+                eligibleDonors = await BloodRequest.findEligibleDonors(blood_type, compatibleTypes);
+
+                if (eligibleDonors.length > 0) {
+                    const requestTitle = `Blood Request: ${blood_type} (${urgency_level})`;
+                    const requestMessage = `A ${urgency_level} blood request for ${blood_type} has been posted at ${hospital_name}. ${units_required} unit(s) needed.`;
+
+                    eligibleDonors.forEach(donor => {
+                        notificationQueue.push({
+                            user_id: donor.id,
+                            type: 'blood_request',
+                            title: requestTitle,
+                            message: requestMessage,
+                            blood_request_id: requestId,
+                            related_user_id: req.user.id
+                        });
+                    });
+
+                    setImmediate(processNotificationQueue);
+                }
             }
 
             // ── Notify admins (non-blocking) ──────────────────────────

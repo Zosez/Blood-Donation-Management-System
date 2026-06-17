@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStats(allRequests);
         applyFilters();
-        showToast('✅ Request approved. Matched donors notified.', 'success');
+        showToast('Request approved. Matched donors notified.', 'success');
       } else {
         const err = await res.json().catch(() => ({}));
         showToast(`Approval failed: ${err.message || 'Unknown error'}`, 'danger');
@@ -473,7 +473,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await res.json();
-      allRequests = data.requests || [];
+      // Critical requests are managed exclusively through the
+      // Receiver Requests section in Inventory Management — exclude them here.
+      allRequests = (data.requests || []).filter(r =>
+        (r.urgency_level || '').toLowerCase() !== 'critical'
+      );
 
       updateStats(allRequests);
       applyFilters(); // renders table with current filter state (all by default)

@@ -276,6 +276,15 @@ async function initializeDatabase() {
             console.log('[DB] blood_type_donated column already exists');
         }
 
+        // Migrate: extend donation_attempts.status ENUM to include 'confirmed'
+        try {
+            await db.execute(`
+                ALTER TABLE donation_attempts
+                MODIFY COLUMN status ENUM('pending','accepted','declined','confirmed') DEFAULT 'pending'
+            `);
+            console.log('[DB] donation_attempts.status ENUM updated to include confirmed');
+        } catch (e) { console.log('[DB] donation_attempts.status ENUM already up to date'); }
+
         // Create donor_registrations table
         await db.execute(`
             CREATE TABLE IF NOT EXISTS donor_registrations (

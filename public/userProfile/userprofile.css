@@ -324,6 +324,10 @@ nav {
 }
 
 .tier-elite { color: var(--blue); }
+.tier-bronze { color: #cd7f32; }
+.tier-silver { color: #9CA3AF; }
+.tier-gold { color: #D97706; }
+.tier-platinum { color: #6B7280; }
 
 /* Meta list */
 .meta-list {
@@ -335,15 +339,25 @@ nav {
 .meta-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 11px 0;
   border-bottom: 1px solid #F3F4F6;
   font-size: 0.83rem;
+  gap: 16px;
 }
 
 .meta-row:last-child { border-bottom: none; }
-.meta-key { color: var(--gray); }
-.meta-val { font-weight: 600; color: var(--dark); }
+.meta-key { 
+  color: var(--gray); 
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.meta-val { 
+  font-weight: 600; 
+  color: var(--dark); 
+  text-align: right;
+  word-break: break-word;
+}
 
 .status-eligible {
   display: flex;
@@ -727,52 +741,14 @@ label {
 }
 
 .tier-dot {
-  width: 36px; height: 36px;
-}
-
-/* ─── RESPONSIVE DESIGN ─── */
-
-/* Tablet (481px - 768px) */
-@media (max-width: 768px) {
-  .navbar { padding: 0 1.5rem; }
-  .nav-links { gap: 16px; font-size: 12px; }
-  .user-header { flex-direction: column; text-align: center; }
-  .panel-grid { grid-template-columns: 1fr; }
-  .tier-line { display: none; }
-  .tier-wrapper { flex-wrap: wrap; justify-content: center; }
-}
-
-/* Mobile (320px - 480px) */
-@media (max-width: 480px) {
-  :root { --nav-h: 64px; }
-  .navbar { padding: 0 1rem; height: 64px; }
-  .logo-img { width: 28px; height: 28px; }
-  .logo-text { font-size: 1rem; }
-  .nav-links { display: none; }
-  .nav-search { display: none; }
-  .user-box { flex-direction: column; }
-  .user-header { padding: 1.5rem; }
-  .user-name { font-size: 1.25rem; }
-  .panel-grid { grid-template-columns: 1fr; }
-  .history-table { font-size: 0.75rem; }
-  .panel-card { padding: 1rem; }
-  .tab-panel { padding: 1rem; }
-}
-
-/* Touch targets (min 44x44px) */
-@media (hover: none) and (pointer: coarse) {
-  button, a, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
-  .tab-btn { min-height: 44px; }
-}
-
-/* Extra wide (1441px+) */
-@media (min-width: 1441px) {
-  .user-box { max-width: 1400px; margin: 0 auto; }
-  .panel-grid { grid-template-columns: repeat(3, 1fr); }
-}
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  position: relative; z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .tier-dot.done { background: var(--green); }

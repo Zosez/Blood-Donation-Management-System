@@ -120,6 +120,23 @@ function renderDonorFlow() {
 }
 
 function checkEligibility() {
+  // Gate 0: Availability toggle / cooldown
+  if (currentUser.is_available_donor === false || currentUser.is_available_donor === 0) {
+    const cooldownEnd = currentUser.cooldown_ends ? new Date(currentUser.cooldown_ends) : null;
+    const now = new Date();
+    if (cooldownEnd && cooldownEnd > now) {
+      const daysLeft = Math.ceil((cooldownEnd - now) / (1000 * 60 * 60 * 24));
+      return createBlockingCard(
+        'Donation Cooldown Active',
+        `You recently donated and must wait ${daysLeft} more day${daysLeft !== 1 ? 's' : ''} before donating again (eligible after ${cooldownEnd.toLocaleDateString()}).`
+      );
+    }
+    return createBlockingCard(
+      'Donor Availability Off',
+      'Your donor availability is currently turned off. Please enable it in your Profile settings before you can donate.'
+    );
+  }
+
   // Gate 1: Blood type compatibility
   const canDonate = bloodTypeCompatibility[currentUser.blood_type];
   if (!canDonate || !canDonate.includes(targetRequest.blood_type)) {
@@ -351,28 +368,46 @@ function submitDonation() {
     action: isEditMode ? 'UPDATE_DONATION' : 'DONATION_ATTEMPT',
     donor_id: currentUser.id,
     request_id: targetRequest.id,
-    questionnaire_passed: !isEditMode, // Only for new attempts
+    questionnaire_passed: !isEditMode,
     donor_contact: donorContact,
     attempted_at: new Date().toISOString()
   };
 
   console.log('Donation Response:', response);
 
-  // Save to backend
-  saveDonationAttempt(response);
+  // Show loading state
+  const submitBtn = document.querySelector('#confirmationForm button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+  }
 
-  currentStep = 'success';
-  renderSuccessState();
-
-  // Emit event or send to parent (for integration)
-  window.dispatchEvent(new CustomEvent('donationAttempt', { detail: response }));
+  // Save to backend — only show success if API call succeeds
+  saveDonationAttempt(response).then(result => {
+    if (result && result.success) {
+      currentStep = 'success';
+      renderSuccessState();
+      window.dispatchEvent(new CustomEvent('donationAttempt', { detail: response }));
+    } else {
+      // Show backend error in the UI
+      const container = document.getElementById('donateContent');
+      if (container) {
+        container.innerHTML = createBlockingCard(
+          'Could Not Submit Donation',
+          result?.message || 'An error occurred. Please try again.'
+        ) + `<div class="button-group" style="margin-top:1.5rem">
+          <button class="btn btn-secondary" onclick="location.reload()">Go Back</button>
+        </div>`;
+      }
+    }
+  });
 }
 
 async function saveDonationAttempt(response) {
   const token = localStorage.getItem('token');
   if (!token) {
     console.error('No token available');
-    return;
+    return { success: false, message: 'Please log in first.' };
   }
 
   try {
@@ -395,13 +430,18 @@ async function saveDonationAttempt(response) {
       })
     });
 
+    const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
-      console.error('Failed to save donation attempt:', res.statusText);
-    } else {
-      console.log('Donation attempt saved successfully');
+      console.error('Failed to save donation attempt:', data.message || res.statusText);
+      return { success: false, message: data.message || 'Failed to submit donation.' };
     }
+
+    console.log('Donation attempt saved successfully');
+    return { success: true };
   } catch (error) {
     console.error('Error saving donation attempt:', error);
+    return { success: false, message: 'Network error. Please try again.' };
   }
 }
 

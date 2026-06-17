@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -265,6 +265,52 @@
           </div>
         </div>
 
+        <!-- ── RECEIVER REQUESTS TABLE (Critical Blood Requests) ── -->
+        <div class="card table-card" id="receiverRequestsCard">
+          <div class="card-header table-header">
+            <div class="table-tabs" id="receiverTabs">
+              <span class="tab-title">Receiver Requests</span>
+              <span class="chip chip-red-solid" data-rcv-filter="All Types">All Types</span>
+              <span class="chip chip-grey" data-rcv-filter="A+">A+</span>
+              <span class="chip chip-grey" data-rcv-filter="A-">A-</span>
+              <span class="chip chip-grey" data-rcv-filter="B+">B+</span>
+              <span class="chip chip-grey" data-rcv-filter="B-">B-</span>
+              <span class="chip chip-grey" data-rcv-filter="AB+">AB+</span>
+              <span class="chip chip-grey" data-rcv-filter="AB-">AB-</span>
+              <span class="chip chip-grey" data-rcv-filter="O+">O+</span>
+              <span class="chip chip-grey" data-rcv-filter="O-">O-</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="background:#FEF2F2;color:#C0281C;border:1px solid #fca5a5;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:700;font-family:'Sora',sans-serif;">
+                 Critical Only
+              </span>
+            </div>
+          </div>
+
+          <table class="req-table">
+            <thead>
+              <tr>
+                <th>REQUEST ID</th>
+                <th>PATIENT NAME</th>
+                <th>BLOOD TYPE</th>
+                <th>UNITS NEEDED</th>
+                <th>URGENCY</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="receiverRequestsBody"></tbody>
+          </table>
+
+          <div class="table-footer">
+            <div class="table-info" id="receiverTableInfo">Showing 0 active critical receiver requests</div>
+            <div class="pagination">
+              <button class="page-btn" id="rcvPrevBtn">&#8249;</button>
+              <button class="page-btn" id="rcvNextBtn">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
         <!-- ── BOTTOM GRID ── -->
         <div class="bottom-grid">
           <!-- Map Panel -->
@@ -315,7 +361,7 @@
   <div class="modal-overlay" id="emergencyModal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">🚨 Confirm Emergency Broadcast</h3>
+        <h3 class="modal-title">Confirm Emergency Broadcast</h3>
       </div>
       <div class="modal-body">
         <p>This will immediately alert all available donors in the network. This action cannot be undone.</p>
@@ -331,7 +377,7 @@
   <div class="modal-overlay" id="completeDonationModal">
     <div class="modal" style="width:100%;max-width:480px;">
       <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 class="modal-title" style="margin:0;">🩸 Record Completed Donation</h3>
+        <h3 class="modal-title" style="margin:0;">Record Completed Donation</h3>
         <button id="closeCompleteDonationModal" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#6B7280;">✕</button>
       </div>
       <div class="modal-body">
@@ -387,6 +433,74 @@
           <button id="confirmCompleteDonation"
             style="background:linear-gradient(135deg,#C0281C,#991b1b);color:#fff;border:none;padding:.65rem 1.4rem;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.2s;">
             ✓ Record Donation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COMPLETE RECEIVER REQUEST MODAL ═══ -->
+  <div class="modal-overlay" id="completeReceiverModal">
+    <div class="modal" style="width:100%;max-width:500px;">
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 class="modal-title" style="margin:0;">Fulfill Receiver Request</h3>
+        <button id="closeCompleteReceiverModal" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#6B7280;">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Patient info (read-only) -->
+        <div id="receiverInfoBanner" style="background:#FEF2F2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;margin-bottom:1.2rem;font-size:.85rem;color:#374151;">
+          <span style="font-weight:600;">Patient:</span> <span id="modalReceiverName">—</span> &nbsp;|&nbsp;
+          <span style="font-weight:600;">Requested Blood Type:</span> <span id="modalReceiverBloodType">—</span> &nbsp;|&nbsp;
+          <span style="font-weight:600;">Units Needed:</span> <span id="modalReceiverUnits">—</span>
+        </div>
+        <p style="font-size:.82rem;color:#6B7280;margin-bottom:1rem;">Log the actual blood allocation from inventory. Inventory will be decremented by the units specified below.</p>
+
+        <!-- Blood Type -->
+        <div style="margin-bottom:1rem;">
+          <label for="rcvBloodType" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+            Blood Type Allocated <span style="color:#ef4444;">*</span>
+          </label>
+          <select id="rcvBloodType" style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;background:#fff;cursor:pointer;">
+            <option value="">Select blood type</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+
+        <!-- Units + Date row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem;">
+          <div>
+            <label for="rcvUnits" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+              Units Allocated <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="number" id="rcvUnits" min="0.5" max="20" step="0.5" value="1.0"
+              style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;box-sizing:border-box;">
+          </div>
+          <div>
+            <label for="rcvCompletionDate" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+              Completion Date <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="date" id="rcvCompletionDate"
+              style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;box-sizing:border-box;">
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div style="margin-bottom:1.4rem;">
+          <label for="rcvNotes" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:4px;">
+            Notes <span style="color:#9CA3AF;font-weight:400;">(optional)</span>
+          </label>
+          <textarea id="rcvNotes" rows="2" placeholder="Allocation remarks…"
+            style="width:100%;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div class="modal-actions" style="display:flex;gap:.75rem;justify-content:flex-end;">
+          <button class="btn-secondary" id="cancelCompleteReceiver">Cancel</button>
+          <button id="confirmCompleteReceiver"
+            style="background:linear-gradient(135deg,#C0281C,#991b1b);color:#fff;border:none;padding:.65rem 1.4rem;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.2s;">
+            ✓ Fulfill &amp; Decrement Inventory
           </button>
         </div>
       </div>

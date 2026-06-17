@@ -154,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── KICK OFF ──────────────────────────────────────────────────────────
   loadRequests();
 
+  // Expose so global handlers (handleConfirmDonation, etc.) can trigger a full reload
+  window.brReloadRequests = loadRequests;
+
 
   /* ─── 1. STATUS FILTER PILLS ─── */
   pills.forEach(pill => {
@@ -604,7 +607,19 @@ function showDonorResponseModal(request, attempts) {
             </div>
         `;
 
-        if (isAccepted && attempt.blood_units) {
+        const isConfirmed = attempt.status === 'confirmed';
+
+        if (isConfirmed) {
+          // Donation has been confirmed by the requester — show completed state
+          content += `
+            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; text-align:center;">
+              <p style="margin:0 0 4px 0; font-weight: 700; color: #16A34A; font-size: 1rem;">Donation Completed</p>
+              <p style="margin:0; color: #166534; font-size: 0.85rem;">
+                ${attempt.blood_units ? `${attempt.blood_units} unit(s) of ${attempt.blood_type_donated || 'blood'} confirmed.` : 'This donation has been confirmed and recorded.'}
+              </p>
+            </div>
+          `;
+        } else if (isAccepted && attempt.blood_units) {
           // Show donation details when donor has completed and submitted
           content += `
             <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
@@ -853,15 +868,23 @@ window.handleConfirmDonation = async function(attemptId, overlay, requestId) {
 
     const data = await res.json();
     console.log('[DONATION CONFIRM] Success:', data);
-    window.showToast('Donation confirmed successfully! Thank you for saving lives.', 'success');
+    window.showToast('Donation confirmed! The request is now marked as Completed. 🎉', 'success');
 
-    // Refresh the modal after a short delay
+    // Close the modal
     overlay.remove();
-    const req = window.cachedRequests.find(r => String(r.id) === String(requestId));
-    if (req) {
-      console.log('[DONATION CONFIRM] Refreshing modal for request:', requestId);
-      setTimeout(() => window.brOpenDonorResponseModal(req), 500);
+
+    // Update the cached request status to 'completed' immediately
+    const cachedReq = window.cachedRequests?.find(r => String(r.id) === String(requestId));
+    if (cachedReq) {
+      cachedReq.status = 'completed';
     }
+
+    // Reload the full request table from the server so the row status badge updates
+    if (typeof window.brReloadRequests === 'function') {
+      console.log('[DONATION CONFIRM] Reloading requests table...');
+      setTimeout(() => window.brReloadRequests(), 400);
+    }
+
   } catch (error) {
     console.error('[DONATION CONFIRM] Error:', error);
     window.showToast(`Error: ${error.message}`, 'error');

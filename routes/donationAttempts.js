@@ -3,6 +3,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { db } = require('../config/database');
 const Notification = require('../models/Notification');
 const Donation = require('../models/Donation');
+const { canDonateToRecipient } = require('../utils/bloodTypeCompatibility');
 // ADD THIS
 const { updateDonationCount } = require('../services/gamificationService');
 // END ADD THIS
@@ -17,6 +18,61 @@ router.post('/', authenticateToken, async (req, res) => {
     // Validate required fields
     if (!request_id || !donor_id || !donor_name) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // ── Guard 1: Cooldown / Availability check ──────────────────────
+    const [donorRows] = await db.execute(
+      'SELECT blood_type, is_available_donor, cooldown_ends_at FROM users WHERE id = ?',
+      [donor_id]
+    );
+
+    if (donorRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Donor not found' });
+    }
+
+    const donor = donorRows[0];
+
+    if (!donor.is_available_donor) {
+      const cooldownEnd = donor.cooldown_ends_at ? new Date(donor.cooldown_ends_at) : null;
+      const now = new Date();
+      if (cooldownEnd && cooldownEnd > now) {
+        const daysLeft = Math.ceil((cooldownEnd - now) / (1000 * 60 * 60 * 24));
+        return res.status(403).json({
+          success: false,
+          message: `You are on a donation cooldown. You can donate again in ${daysLeft} day(s) (${cooldownEnd.toLocaleDateString()}).`
+        });
+      }
+      return res.status(403).json({
+        success: false,
+        message: 'Your donor availability is currently turned off. Please enable it in your profile before donating.'
+      });
+    }
+
+    // ── Guard 2: Blood type compatibility check ─────────────────────
+    const [requestRows] = await db.execute(
+      'SELECT blood_type FROM blood_requests WHERE id = ?',
+      [request_id]
+    );
+
+    if (requestRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Blood request not found' });
+    }
+
+    const recipientBloodType = requestRows[0].blood_type;
+    const donorBloodType = donor.blood_type;
+
+    if (!donorBloodType) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your blood type is not set. Please update your profile before donating.'
+      });
+    }
+
+    if (!canDonateToRecipient(donorBloodType, recipientBloodType)) {
+      return res.status(403).json({
+        success: false,
+        message: `Your blood type (${donorBloodType}) is not compatible with this request (${recipientBloodType}). You cannot donate to this request.`
+      });
     }
 
     // Check if donation attempt already exists for this donor on this request
@@ -510,6 +566,12 @@ router.post('/:attemptId/confirm-complete', authenticateToken, async (req, res) 
     await db.execute(
       'UPDATE blood_requests SET status = "completed", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attempt[0].request_id]
+    );
+
+    // Mark the donation attempt as confirmed so the UI knows it's done
+    await db.execute(
+      'UPDATE donation_attempts SET status = "confirmed", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [attemptId]
     );
 
     // Create donation record

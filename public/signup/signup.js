@@ -163,6 +163,9 @@ emailInput.addEventListener('input', () => {
 // Password match validation
 const confirmInput = document.getElementById('confirmPassword');
 
+// Password regex pattern: requires uppercase, lowercase, digit, and special character
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
 function setFieldError(input, errorId, message) {
     let errorEl = document.getElementById(errorId);
     if (!errorEl && message) {
@@ -185,6 +188,8 @@ pwInput.addEventListener('blur', () => {
         setFieldError(pwInput, 'passwordError', 'Password is required.');
     } else if (pwInput.value.length < 8) {
         setFieldError(pwInput, 'passwordError', 'Password must be at least 8 characters.');
+    } else if (!passwordRegex.test(pwInput.value)) {
+        setFieldError(pwInput, 'passwordError', 'Password must contain uppercase, lowercase, number, and special character (@$!%*?&).');
     } else {
         setFieldError(pwInput, 'passwordError', '');
     }
@@ -295,6 +300,12 @@ signupForm.addEventListener('submit', async (e) => {
         }
     } else if (pwInput.value.length < 8) {
         setFieldError(pwInput, 'passwordError', 'Password must be at least 8 characters.');
+        if (!hasError) {
+            pwInput.focus();
+            hasError = true;
+        }
+    } else if (!passwordRegex.test(pwInput.value)) {
+        setFieldError(pwInput, 'passwordError', 'Password must contain uppercase, lowercase, number, and special character (@$!%*?&).');
         if (!hasError) {
             pwInput.focus();
             hasError = true;

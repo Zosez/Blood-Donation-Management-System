@@ -58,8 +58,10 @@ async function handleRequestApproval(request) {
         await Notification.insertMany(notifications);
         console.log(`[APPROVAL] Created ${notifications.length} in-app notification(s)`);
 
-        // STEP 3 — Send email ONLY if urgency_level === 'critical'
-        if (request.urgency_level === 'critical') {
+        // STEP 3 — Send email ONLY if urgency_level === 'urgent'
+        // (Previously 'critical' triggered emails; that workflow now belongs to 'urgent'.
+        //  Critical requests go through the Receiver Requests panel instead.)
+        if (request.urgency_level === 'urgent') {
             const emailTargets = matchedUsers.filter(user => !!user.email);
             const emailPromises = emailTargets.map(user =>
                 sendCriticalBloodRequestEmail(user, request)
@@ -67,9 +69,9 @@ async function handleRequestApproval(request) {
             // Promise.allSettled ensures one failure doesn't block others
             const results = await Promise.allSettled(emailPromises);
             const sent = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
-            console.log(`[APPROVAL] Critical emails: ${sent}/${emailTargets.length} sent`);
+            console.log(`[APPROVAL] Urgent emails: ${sent}/${emailTargets.length} sent`);
         }
-        // urgency_level 'normal' or 'urgent' → in-app notification only, NO email
+        // urgency_level 'normal' or 'critical' → in-app notification only, NO donor email
     } catch (err) {
         // Log but never let this block the approval response
         console.error('[APPROVAL] handleRequestApproval error:', err.message);
@@ -914,6 +916,235 @@ router.post('/donor-registrations/:id/reject', async (req, res) => {
         res.json({ message: 'Registration rejected', registration_id: id });
     } catch (error) {
         console.error('Reject donor registration error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+// RECEIVER REQUESTS — Critical blood requests managed by admin
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin/receiver-requests
+ * Returns critical blood requests with status pending or approved.
+ * These are managed directly by admin (contact user → approve/decline → complete).
+ */
+router.get('/receiver-requests', async (req, res) => {
+    try {
+        const [requests] = await db.execute(`
+            SELECT
+                br.id,
+                br.blood_type,
+                br.units_required,
+                br.urgency_level,
+                br.hospital_name,
+                br.city,
+                br.status,
+                br.notes,
+                br.created_at,
+                u.fullname  AS patient_name,
+                u.email     AS patient_email,
+                u.phone     AS patient_phone,
+                br.user_id
+            FROM blood_requests br
+            JOIN users u ON br.user_id = u.id
+            WHERE br.urgency_level = 'critical'
+              AND br.status IN ('pending', 'approved')
+            ORDER BY br.created_at DESC
+        `);
+        res.json({ requests, total: requests.length });
+    } catch (error) {
+        console.error('[RECEIVER REQUESTS] GET error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/receiver-requests/:id/approve
+ * Approve a critical blood request (admin has contacted user externally).
+ * Does NOT notify donors — only notifies the requesting user.
+ */
+router.post('/receiver-requests/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await db.execute(
+            'SELECT * FROM blood_requests WHERE id = ? AND urgency_level = \'critical\'',
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Critical blood request not found' });
+        }
+        if (rows[0].status !== 'pending') {
+            return res.status(400).json({ message: 'Request is not in pending status' });
+        }
+
+        const request = rows[0];
+
+        await db.execute(
+            'UPDATE blood_requests SET status = \'approved\', updated_at = NOW() WHERE id = ?',
+            [id]
+        );
+
+        // Notify the requesting user
+        try {
+            await Notification.create({
+                user_id:          request.user_id,
+                type:             'blood_request_approved',
+                title:            '🩸 Your Critical Blood Request Was Approved',
+                message:          `Your critical blood request for ${request.blood_type} (${request.units_required} unit(s)) at ${request.hospital_name} has been reviewed and approved. Our team will be in contact with you.`,
+                blood_request_id: request.id,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[RECEIVER APPROVE] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Critical receiver request #${id} approved by admin ${req.user.id}`);
+        res.json({ message: 'Receiver request approved successfully', request_id: id });
+    } catch (error) {
+        console.error('[RECEIVER APPROVE] Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/receiver-requests/:id/decline
+ * Decline a critical blood request.
+ */
+router.post('/receiver-requests/:id/decline', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const [rows] = await db.execute(
+            'SELECT * FROM blood_requests WHERE id = ? AND urgency_level = \'critical\'',
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Critical blood request not found' });
+        }
+        if (!['pending', 'approved'].includes(rows[0].status)) {
+            return res.status(400).json({ message: 'Request cannot be declined in its current state' });
+        }
+
+        const request = rows[0];
+
+        await db.execute(
+            `UPDATE blood_requests
+             SET status = 'cancelled', updated_at = NOW(),
+                 notes  = CONCAT(IFNULL(notes, ''), IF(? IS NOT NULL, CONCAT('\nAdmin decline reason: ', ?), ''))
+             WHERE id = ?`,
+            [reason || null, reason || null, id]
+        );
+
+        // Notify the requesting user
+        try {
+            await Notification.create({
+                user_id:          request.user_id,
+                type:             'blood_request_declined',
+                title:            'Critical Blood Request Update',
+                message:          reason
+                                    ? `Your critical blood request for ${request.blood_type} was declined: ${reason}`
+                                    : `Your critical blood request for ${request.blood_type} was not approved at this time. Please contact us for more information.`,
+                blood_request_id: request.id,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[RECEIVER DECLINE] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Critical receiver request #${id} declined by admin ${req.user.id}`);
+        res.json({ message: 'Receiver request declined', request_id: id });
+    } catch (error) {
+        console.error('[RECEIVER DECLINE] Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * POST /api/admin/receiver-requests/:id/complete
+ * Mark a critical blood request as fulfilled and decrement inventory.
+ * Accepts: { blood_type, units, completion_date, notes }
+ * Inventory is decremented by inserting a negative-unit 'usage' entry — this
+ * keeps the existing SUM(units) query accurate and preserves audit trail.
+ */
+router.post('/receiver-requests/:id/complete', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { blood_type, units, completion_date, notes } = req.body;
+
+        if (!blood_type || !units || !completion_date) {
+            return res.status(400).json({ message: 'blood_type, units, and completion_date are required' });
+        }
+        const parsedUnits = parseFloat(units);
+        if (isNaN(parsedUnits) || parsedUnits <= 0) {
+            return res.status(400).json({ message: 'units must be a positive number' });
+        }
+
+        const [rows] = await db.execute(
+            'SELECT * FROM blood_requests WHERE id = ? AND urgency_level = \'critical\'',
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Critical blood request not found' });
+        }
+        if (rows[0].status !== 'approved') {
+            return res.status(400).json({ message: 'Only approved receiver requests can be completed' });
+        }
+
+        const request = rows[0];
+
+        // 1. Check inventory has sufficient stock
+        const [stockRows] = await db.execute(
+            'SELECT COALESCE(SUM(units), 0) AS total FROM inventory WHERE blood_type = ?',
+            [blood_type]
+        );
+        const currentStock = parseFloat(stockRows[0].total);
+        if (currentStock < parsedUnits) {
+            return res.status(400).json({
+                message: `Insufficient inventory. Available ${blood_type}: ${currentStock.toFixed(1)} unit(s), requested: ${parsedUnits}.`
+            });
+        }
+
+        // 2. Decrement inventory via negative-unit 'usage' entry (preserves audit trail)
+        const [invResult] = await db.execute(
+            `INSERT INTO inventory
+             (blood_type, units, source_type, received_at, notes, recorded_by)
+             VALUES (?, ?, 'usage', ?, ?, ?)`,
+            [blood_type, -parsedUnits, completion_date, notes || `Receiver request #${id} fulfilled` , req.user.id]
+        );
+
+        // 3. Mark blood request as fulfilled
+        await db.execute(
+            'UPDATE blood_requests SET status = \'fulfilled\', updated_at = NOW() WHERE id = ?',
+            [id]
+        );
+
+        // 4. Notify the requesting user
+        try {
+            await Notification.create({
+                user_id:          request.user_id,
+                type:             'blood_request_fulfilled',
+                title:            '✅ Blood Request Fulfilled',
+                message:          `Your critical blood request for ${blood_type} (${parsedUnits} unit(s)) at ${request.hospital_name} has been fulfilled. ${parsedUnits} unit(s) have been allocated from our inventory.`,
+                blood_request_id: request.id,
+                related_user_id:  req.user.id
+            });
+        } catch (notifErr) {
+            console.warn('[RECEIVER COMPLETE] Notification error:', notifErr.message);
+        }
+
+        console.log(`[ADMIN] Critical receiver request #${id} completed: ${parsedUnits}u ${blood_type} deducted from inventory (entry #${invResult.insertId})`);
+        res.json({
+            success: true,
+            message: 'Receiver request fulfilled and inventory decremented successfully',
+            inventory_entry_id: invResult.insertId,
+            units_deducted: parsedUnits,
+            blood_type
+        });
+    } catch (error) {
+        console.error('[RECEIVER COMPLETE] Error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

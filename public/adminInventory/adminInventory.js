@@ -139,11 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const esc = s => !s ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
     // ── State ─────────────────────────────────────────
-    let allRegistrations = [];
-    let activeFilter     = 'all';
-    let activeRegId      = null;   // set when opening complete-donation modal
-    let adminLat         = null;   // admin's location
-    let adminLng         = null;
+    let allRegistrations    = [];
+    let activeFilter        = 'all';
+    let activeRegId         = null;   // set when opening complete-donation modal
+    let adminLat            = null;   // admin's location
+    let adminLng            = null;
+
+    // ── Receiver Requests State ───────────────────────
+    let allReceiverRequests   = [];
+    let activeReceiverFilter  = 'All Types';
+    let activeReceiverReqId   = null;  // set when opening complete-receiver modal
 
     // ── Helper: Calculate distance using Haversine formula (in km) ──
     function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -178,13 +183,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── Chip filter ───────────────────────────────────
-    document.querySelectorAll('.table-tabs .chip').forEach(chip => {
+    // ── Donor Requests: Chip filter ───────────────────
+    document.querySelectorAll('#requestsBody')?.forEach(() => {}); // anchor
+    const donorChips = document.querySelectorAll('.table-tabs:not(#receiverTabs) .chip');
+    donorChips.forEach(chip => {
         chip.addEventListener('click', () => {
-            document.querySelectorAll('.table-tabs .chip').forEach(c => c.className = c.className.replace('chip-red-solid','chip-grey'));
+            donorChips.forEach(c => c.className = c.className.replace('chip-red-solid','chip-grey'));
             chip.className = chip.className.replace('chip-grey','chip-red-solid');
             activeFilter = chip.textContent.trim();
             renderRegistrations(allRegistrations);
+        });
+    });
+
+    // ── Receiver Requests: Chip filter ───────────────
+    const receiverChips = document.querySelectorAll('#receiverTabs .chip');
+    receiverChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            receiverChips.forEach(c => c.className = c.className.replace('chip-red-solid','chip-grey'));
+            chip.className = chip.className.replace('chip-grey','chip-red-solid');
+            activeReceiverFilter = chip.dataset.rcvFilter || chip.textContent.trim();
+            renderReceiverRequests(allReceiverRequests);
         });
     });
 
@@ -213,6 +231,29 @@ document.addEventListener('DOMContentLoaded', () => {
             renderRegistrations(allRegistrations);
             if (tableInfo) tableInfo.textContent = `Showing ${allRegistrations.length} active donor request${allRegistrations.length !== 1 ? 's' : ''}`;
         } catch (err) { console.error('Donor registrations fetch error:', err); }
+    }
+
+    // ─────────────────────────────────────────────────
+    // Receiver Requests fetch
+    // ─────────────────────────────────────────────────
+    async function fetchReceiverRequests() {
+        const token = getAuthToken(); if (!token) return;
+        const tbody = document.getElementById('receiverRequestsBody');
+        if (!tbody) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/receiver-requests`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#9CA3AF;">Failed to load receiver requests.</td></tr>';
+                return;
+            }
+            const data = await res.json();
+            allReceiverRequests = data.requests || [];
+            renderReceiverRequests(allReceiverRequests);
+        } catch (err) {
+            console.error('Receiver requests fetch error:', err);
+        }
     }
 
     // ══════════════════════════════════════════════════
@@ -347,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (isApproved) {
                 actionBtns = `
                     <button class="complete-donation-btn" data-id="${reg.id}" data-name="${esc(reg.fullname)}" data-blood="${esc(reg.blood_type)}" style="background:linear-gradient(135deg,#C0281C,#9b1c1c);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;">
-                        🩸 Complete
+                        Complete
                     </button>`;
             }
 
@@ -372,6 +413,102 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.approve-reg').forEach(btn => btn.addEventListener('click', () => handleApprove(btn.dataset.id, btn.dataset.name)));
         document.querySelectorAll('.reject-reg').forEach(btn => btn.addEventListener('click', () => handleReject(btn.dataset.id, btn.dataset.name)));
         document.querySelectorAll('.complete-donation-btn').forEach(btn => btn.addEventListener('click', () => openCompleteModal(btn.dataset.id, btn.dataset.name, btn.dataset.blood)));
+    }
+
+    // ─────────────────────────────────────────────────
+    // Render Receiver Requests
+    // ─────────────────────────────────────────────────
+    function renderReceiverRequests(requests) {
+        const tbody      = document.getElementById('receiverRequestsBody');
+        const tableInfo  = document.getElementById('receiverTableInfo');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        // Apply blood-type filter
+        let filtered = requests;
+        if (activeReceiverFilter && activeReceiverFilter !== 'All Types') {
+            const bt = activeReceiverFilter.replace('\u2212', '-');
+            filtered = requests.filter(r => r.blood_type === bt);
+        }
+
+        const count = requests.length;
+        if (tableInfo) tableInfo.textContent = `Showing ${count} active critical receiver request${count !== 1 ? 's' : ''}`;
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:#9CA3AF;">
+                ${requests.length === 0 ? 'No active critical receiver requests.' : `No critical requests for blood type "${activeReceiverFilter}".`}
+            </td></tr>`;
+            return;
+        }
+
+        filtered.forEach(req => {
+            const isPending  = req.status === 'pending';
+            const isApproved = req.status === 'approved';
+
+            // Urgency badge (always critical here)
+            const urgencyBadge = `<span style="background:#FEF2F2;color:#C0281C;border:1px solid #fca5a5;padding:4px 10px;border-radius:20px;font-size:.73rem;font-weight:700;font-family:'Sora',sans-serif;white-space:nowrap;">🚨 Critical</span>`;
+
+            // Status pill
+            const statusPill = isPending
+                ? `<span style="background:#fff7ed;color:#92400e;border:1px solid #fdba74;padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;display:inline-block;">⏳ Pending</span>`
+                : `<span style="background:#f0fdf4;color:#166534;border:1px solid #86efac;padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;display:inline-block;">✓ Approved</span>`;
+
+            // Action buttons
+            let actionBtns = '';
+            if (isPending) {
+                actionBtns = `
+                    <button class="btn-action btn-action-green rcv-approve-btn"
+                        data-id="${req.id}" data-name="${esc(req.patient_name)}"
+                        style="background:#16a34a;color:#fff;border:none !important;padding:6px 14px;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;white-space:nowrap;">
+                        ✓ Approve
+                    </button>
+                    <button class="btn-action btn-action-red rcv-decline-btn"
+                        data-id="${req.id}" data-name="${esc(req.patient_name)}"
+                        style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5 !important;padding:6px 14px;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;white-space:nowrap;">
+                        ✕ Decline
+                    </button>`;
+            } else if (isApproved) {
+                actionBtns = `
+                    <button class="rcv-complete-btn"
+                        data-id="${req.id}" data-name="${esc(req.patient_name)}"
+                        data-blood="${esc(req.blood_type)}" data-units="${esc(String(req.units_required))}"
+                        style="background:linear-gradient(135deg,#C0281C,#9b1c1c);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        Fulfill
+                    </button>
+                    <button class="btn-action btn-action-red rcv-decline-btn"
+                        data-id="${req.id}" data-name="${esc(req.patient_name)}"
+                        style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5 !important;padding:6px 14px;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;white-space:nowrap;">
+                        ✕ Decline
+                    </button>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.height = '60px';
+            tr.innerHTML = `
+                <td class="td-req-id">#RR-${String(req.id).padStart(4,'0')}</td>
+                <td>
+                    <div class="td-facility" style="font-weight:600;">${esc(req.patient_name)}</div>
+                    <div class="td-facility-sub" style="font-size:.75rem;color:#9CA3AF;margin-top:2px;">${esc(req.hospital_name || '')}${req.city ? ', ' + esc(req.city) : ''}</div>
+                </td>
+                <td><span class="blood-type-box">${esc(req.blood_type)}</span></td>
+                <td style="font-size:.85rem;color:#374151;font-weight:600;">${esc(String(req.units_required))} unit${req.units_required !== 1 ? 's' : ''}</td>
+                <td>${urgencyBadge}</td>
+                <td>${statusPill}</td>
+                <td class="action-cell">${actionBtns}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Attach listeners
+        tbody.querySelectorAll('.rcv-approve-btn').forEach(btn =>
+            btn.addEventListener('click', () => handleReceiverApprove(btn.dataset.id, btn.dataset.name))
+        );
+        tbody.querySelectorAll('.rcv-decline-btn').forEach(btn =>
+            btn.addEventListener('click', () => handleReceiverDecline(btn.dataset.id, btn.dataset.name))
+        );
+        tbody.querySelectorAll('.rcv-complete-btn').forEach(btn =>
+            btn.addEventListener('click', () => openCompleteReceiverModal(btn.dataset.id, btn.dataset.name, btn.dataset.blood, btn.dataset.units))
+        );
     }
 
     // ══════════════════════════════════════════════════
@@ -407,6 +544,129 @@ document.addEventListener('DOMContentLoaded', () => {
             else showToast(data.message || 'Failed to reject.', 'danger');
         } catch { showToast('Network error. Please try again.', 'danger'); }
     }
+
+    // ══════════════════════════════════════════════════
+    // RECEIVER REQUEST ACTION HANDLERS
+    // ══════════════════════════════════════════════════
+
+    async function handleReceiverApprove(id, name) {
+        const confirmed = await showConfirmModal(
+            `Approve critical blood request from "${name}"?\n\nThey will be notified that their request is approved. You can then fulfill it from inventory.`,
+            'Approve Receiver Request'
+        );
+        if (!confirmed) return;
+        const token = getAuthToken();
+        try {
+            const res = await fetch(`${API_URL}/admin/receiver-requests/${id}/approve`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`✓ Request from ${name} approved.`, 'success');
+                await fetchReceiverRequests();
+            } else {
+                showToast(data.message || 'Failed to approve.', 'danger');
+            }
+        } catch { showToast('Network error. Please try again.', 'danger'); }
+    }
+
+    async function handleReceiverDecline(id, name) {
+        const reason = await showPromptModal(
+            `Reason for declining the request from "${name}" (optional):`,
+            'Decline Receiver Request'
+        );
+        if (reason === null) return;
+        const token = getAuthToken();
+        try {
+            const res = await fetch(`${API_URL}/admin/receiver-requests/${id}/decline`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: reason.trim() || null })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`Request from ${name} declined.`, 'warning');
+                await fetchReceiverRequests();
+            } else {
+                showToast(data.message || 'Failed to decline.', 'danger');
+            }
+        } catch { showToast('Network error. Please try again.', 'danger'); }
+    }
+
+    // ── Complete Receiver Request Modal ───────────────
+    const completeReceiverModal = document.getElementById('completeReceiverModal');
+    const rcvBloodTypeEl        = document.getElementById('rcvBloodType');
+    const rcvUnitsEl            = document.getElementById('rcvUnits');
+    const rcvDateEl             = document.getElementById('rcvCompletionDate');
+    const rcvNotesEl            = document.getElementById('rcvNotes');
+    const confirmRcvBtn         = document.getElementById('confirmCompleteReceiver');
+
+    if (rcvDateEl) rcvDateEl.value = new Date().toISOString().split('T')[0];
+
+    function openCompleteReceiverModal(id, name, bloodType, unitsNeeded) {
+        activeReceiverReqId = id;
+        document.getElementById('modalReceiverName').textContent      = name;
+        document.getElementById('modalReceiverBloodType').textContent  = bloodType;
+        document.getElementById('modalReceiverUnits').textContent      = `${unitsNeeded} unit(s)`;
+        if (rcvBloodTypeEl) {
+            [...rcvBloodTypeEl.options].forEach(o => { o.selected = o.text === bloodType; });
+        }
+        if (rcvUnitsEl)  rcvUnitsEl.value  = unitsNeeded || '1.0';
+        if (rcvDateEl)   rcvDateEl.value   = new Date().toISOString().split('T')[0];
+        if (rcvNotesEl)  rcvNotesEl.value  = '';
+        if (completeReceiverModal) completeReceiverModal.classList.add('show');
+        if (confirmRcvBtn) { confirmRcvBtn.textContent = '✓ Fulfill & Decrement Inventory'; confirmRcvBtn.disabled = false; }
+    }
+
+    function closeCompleteReceiverModal() {
+        if (completeReceiverModal) completeReceiverModal.classList.remove('show');
+        activeReceiverReqId = null;
+    }
+
+    document.getElementById('closeCompleteReceiverModal')?.addEventListener('click', closeCompleteReceiverModal);
+    document.getElementById('cancelCompleteReceiver')?.addEventListener('click', closeCompleteReceiverModal);
+    completeReceiverModal?.addEventListener('click', e => { if (e.target === completeReceiverModal) closeCompleteReceiverModal(); });
+
+    confirmRcvBtn?.addEventListener('click', async () => {
+        if (!activeReceiverReqId) return;
+
+        const blood_type       = rcvBloodTypeEl?.value?.trim();
+        const units            = parseFloat(rcvUnitsEl?.value);
+        const completion_date  = rcvDateEl?.value;
+        const notes            = rcvNotesEl?.value?.trim();
+
+        if (!blood_type)      { showToast('Please select a blood type.', 'warning'); return; }
+        if (!units || units <= 0) { showToast('Please enter valid units (> 0).', 'warning'); return; }
+        if (!completion_date) { showToast('Please select a completion date.', 'warning'); return; }
+        if (new Date(completion_date) > new Date()) { showToast('Completion date cannot be in the future.', 'warning'); return; }
+
+        confirmRcvBtn.textContent = 'Fulfilling…';
+        confirmRcvBtn.disabled    = true;
+
+        const token = getAuthToken();
+        try {
+            const res = await fetch(`${API_URL}/admin/receiver-requests/${activeReceiverReqId}/complete`, {
+                method:  'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ blood_type, units, completion_date, notes: notes || null })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`Request fulfilled! ${units}u of ${blood_type} deducted from inventory.`, 'success');
+                closeCompleteReceiverModal();
+                await init(); // refresh everything (inventory stock + receiver list)
+            } else {
+                confirmRcvBtn.textContent = '✓ Fulfill & Decrement Inventory';
+                confirmRcvBtn.disabled    = false;
+                showToast(data.message || 'Failed to fulfill request.', 'danger');
+            }
+        } catch {
+            confirmRcvBtn.textContent = '✓ Fulfill & Decrement Inventory';
+            confirmRcvBtn.disabled    = false;
+            showToast('Network error. Please try again.', 'danger');
+        }
+    });
 
     // ── Complete Donation Modal ───────────────────────
     const completeModal  = document.getElementById('completeDonationModal');
@@ -470,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showToast(`🩸 Donation recorded! ${units}u of ${blood_type} added to inventory.`, 'success');
+                showToast(`Donation recorded! ${units}u of ${blood_type} added to inventory.`, 'success');
                 closeCompleteModal();
                 await init(); // refresh everything
             } else {
@@ -486,12 +746,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ══════════════════════════════════════════════════
-    // INITIALIZE — run both fetches in parallel
+    // INITIALIZE — run all fetches in parallel
     // ══════════════════════════════════════════════════
     async function init() {
         const [, invData] = await Promise.all([
             fetchDonorRegistrations(),
-            fetchInventoryData()
+            fetchInventoryData(),
+            fetchReceiverRequests()
         ]);
         if (invData) renderStats(invData);
         // Get admin location for distance sorting

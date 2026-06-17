@@ -381,8 +381,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ──────────────────────────────────────────────
   // Donation Flow Modal
   // ──────────────────────────────────────────────
-  function showDonationFlow(request, existingAttempt = null) {
-    // Get current user data
+  async function showDonationFlow(request, existingAttempt = null) {
+    // Get current user data from localStorage as fallback
     let currentUser = null;
     try {
       let userData = localStorage.getItem('user');
@@ -400,6 +400,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Fetch FRESH user data from server (cooldown, availability, blood type are critical)
+    try {
+      const token = getToken();
+      const meRes = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        if (meData.user) {
+          // Merge fresh server data into currentUser
+          currentUser = { ...currentUser, ...meData.user };
+          // Also update localStorage so other pages benefit
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          console.log('[DONATE FLOW] Fresh user data loaded:', {
+            is_available_donor: currentUser.is_available_donor,
+            cooldown_ends_at: currentUser.cooldown_ends_at,
+            on_cooldown: currentUser.on_cooldown,
+            blood_type: currentUser.blood_type
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[DONATE FLOW] Could not fetch fresh user data, using cached:', e.message);
+    }
+
     // Prepare system state for donation flow
     const systemState = {
       currentUser: {
@@ -407,7 +432,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: currentUser.fullname || currentUser.name || 'User',
         blood_type: currentUser.blood_type || 'N/A',
         city: currentUser.district || currentUser.city || 'N/A',
-        cooldown_ends: currentUser.cooldown_ends || null,
+        cooldown_ends: currentUser.cooldown_ends_at || currentUser.cooldown_ends || null,
+        is_available_donor: currentUser.is_available_donor,
         adverse_reaction_flag: currentUser.adverse_reaction_flag || false,
         phone: currentUser.phone || '',
         email: currentUser.email || ''

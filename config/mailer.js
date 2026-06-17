@@ -237,18 +237,25 @@ async function sendPasswordResetEmail(toEmail, token) {
 }
 
 /**
- * Send a critical blood request email to a matched donor
- * Only called when urgency_level === 'critical'
- * @param {object} user   - matched donor { email, fullname, blood_type, city }
- * @param {object} request - blood request row from DB
+ * Send an urgent/matched blood request email to a matched donor.
+ * Called after admin approval when urgency_level === 'urgent'.
+ * @param {object} user    - matched donor { email, fullname, blood_type, city }
+ * @param {object} request - blood request row from DB (includes urgency_level)
  */
 async function sendCriticalBloodRequestEmail(user, request) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
+    // Build urgency label and color dynamically from the actual request level
+    const urgencyRaw   = (request.urgency_level || 'urgent').toLowerCase();
+    const urgencyLabel = urgencyRaw === 'urgent' ? 'URGENT' : urgencyRaw.toUpperCase();
+    const urgencyColor = urgencyRaw === 'urgent' ? '#D97706' : '#C82020';  // amber for urgent, red for critical
+    const headerTitle  = urgencyRaw === 'urgent' ? '🔶 URGENT BLOOD REQUEST' : '🚨 BLOOD REQUEST ALERT';
+    const subjectEmoji = urgencyRaw === 'urgent' ? '🔶' : '🚨';
+
     const mailOptions = {
         from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
         to: user.email,
-        subject: `🚨 Urgent Blood Request – ${request.blood_type} Needed at ${request.hospital_name}`,
+        subject: `${subjectEmoji} ${urgencyLabel} Blood Request – ${request.blood_type} Needed at ${request.hospital_name}`,
         html: `
 <!DOCTYPE html>
 <html>
@@ -264,9 +271,9 @@ async function sendCriticalBloodRequestEmail(user, request) {
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#C82020,#991B1B);padding:32px 40px;text-align:center;">
+            <td style="background:linear-gradient(135deg,${urgencyColor},#991B1B);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">
-                🩸 URGENT BLOOD REQUEST
+                ${headerTitle}
               </h1>
               <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
                 LifeLink Blood Donation Management System
@@ -281,8 +288,8 @@ async function sendCriticalBloodRequestEmail(user, request) {
                 Dear ${user.fullname},
               </h2>
               <p style="margin:0 0 24px;color:#6B7280;font-size:15px;line-height:1.6;">
-                A <strong style="color:#C82020;">CRITICAL</strong> blood request matching your blood group
-                has been posted in your city. Please help if you are available.
+                An <strong style="color:${urgencyColor};">${urgencyLabel}</strong> blood request matching your blood group
+                has been approved and posted in your city. Please help if you are available.
               </p>
 
               <!-- Request Details Table -->
@@ -309,7 +316,7 @@ async function sendCriticalBloodRequestEmail(user, request) {
                 </tr>
                 <tr>
                   <td style="padding:12px 16px;border:1px solid #fecaca;font-weight:600;color:#374151;">Urgency Level</td>
-                  <td style="padding:12px 16px;border:1px solid #fecaca;color:#C82020;font-weight:700;">🔴 Critical</td>
+                  <td style="padding:12px 16px;border:1px solid #fecaca;color:${urgencyColor};font-weight:700;">${urgencyLabel}</td>
                 </tr>
               </table>
 
@@ -317,8 +324,8 @@ async function sendCriticalBloodRequestEmail(user, request) {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="${baseUrl}/bloodRequest"
-                       style="display:inline-block;background:linear-gradient(135deg,#C82020,#991B1B);color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;padding:14px 48px;border-radius:50px;box-shadow:0 4px 14px rgba(185,28,28,0.35);">
+                    <a href="${baseUrl}/activeRequests"
+                       style="display:inline-block;background:linear-gradient(135deg,${urgencyColor},#991B1B);color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;padding:14px 48px;border-radius:50px;box-shadow:0 4px 14px rgba(185,28,28,0.35);">
                       View Blood Request
                     </a>
                   </td>
@@ -337,7 +344,7 @@ async function sendCriticalBloodRequestEmail(user, request) {
           <tr>
             <td style="padding:20px 40px;background:#f8f9fc;border-top:1px solid #e5e7eb;text-align:center;">
               <p style="margin:0;color:#9CA3AF;font-size:12px;">
-                © 2026 LifeLink Blood Donation Platform · ${request.city}
+                &copy; 2026 LifeLink Blood Donation Platform &middot; ${request.city}
               </p>
             </td>
           </tr>
@@ -353,11 +360,132 @@ async function sendCriticalBloodRequestEmail(user, request) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] Critical blood request email sent to ${user.email} (messageId: ${info.messageId})`);
+        console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (messageId: ${info.messageId})`);
         return true;
     } catch (error) {
-        console.error(`[MAILER] Failed to send critical email to ${user.email}:`, error.message);
-        // Silently fail — do NOT throw, do NOT block other emails
+        console.error(`[MAILER] Failed to send ${urgencyLabel} email to ${user.email}:`, error.message);
+        return false;
+    }
+}
+
+/**
+ * Send an urgent blood request alert email TO ADMINS
+ * Called when a user submits an urgent urgency blood request (needs admin approval)
+ * @param {object} admin     - admin user { email, fullname }
+ * @param {object} request   - { blood_type, hospital_name, city, units_required, urgency_level, id }
+ * @param {object} requester - { fullname } user who submitted
+ */
+async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+
+    const mailOptions = {
+        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        to: admin.email,
+        subject: `🔶 [Action Required] Urgent Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`,
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#D97706,#92400E);padding:32px 40px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">
+                🔶 URGENT REQUEST — ADMIN APPROVAL NEEDED
+              </h1>
+              <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">
+                LifeLink Blood Donation Management System
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px;">
+              <h2 style="margin:0 0 8px;color:#111827;font-size:18px;font-weight:700;">
+                Dear ${admin.fullname},
+              </h2>
+              <p style="margin:0 0 24px;color:#6B7280;font-size:15px;line-height:1.6;">
+                An <strong style="color:#D97706;">URGENT</strong> blood request has been submitted by
+                <strong>${requester.fullname}</strong> and requires your review and approval.
+                Once approved, matched donors in the area will be notified by email.
+              </p>
+
+              <!-- Request Details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 28px;font-size:14px;">
+                <tr style="background:#fffbeb;">
+                  <td style="padding:12px 16px;border:1px solid #fde68a;font-weight:600;width:45%;color:#374151;">Blood Group</td>
+                  <td style="padding:12px 16px;border:1px solid #fde68a;color:#C82020;font-weight:700;font-size:16px;">${request.blood_type}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">Hospital</td>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#374151;">${request.hospital_name}</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">City</td>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#374151;">${request.city || '—'}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">Units Required</td>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#374151;">${request.units_required}</td>
+                </tr>
+                <tr style="background:#fffbeb;">
+                  <td style="padding:12px 16px;border:1px solid #fde68a;font-weight:600;color:#374151;">Urgency</td>
+                  <td style="padding:12px 16px;border:1px solid #fde68a;color:#D97706;font-weight:700;">🔶 URGENT</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">Submitted By</td>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#374151;">${requester.fullname}</td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <div style="text-align:center;margin:0 0 24px;">
+                <a href="${baseUrl}/pendingRequests"
+                   style="display:inline-block;background:linear-gradient(135deg,#D97706,#92400E);color:#ffffff;
+                          text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;">
+                  Review &amp; Approve Request
+                </a>
+              </div>
+
+              <p style="margin:0;color:#9CA3AF;font-size:13px;text-align:center;line-height:1.5;">
+                Please log in to the LifeLink Admin Panel to take action.<br/>
+                Approving this request will automatically notify matched donors by email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">
+                LifeLink Blood Donation Management System &bull; This is an automated alert.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (messageId: ${info.messageId})`);
+        return true;
+    } catch (error) {
+        console.error(`[MAILER] Failed to send urgent admin alert to ${admin.email}:`, error.message);
         return false;
     }
 }
@@ -409,7 +537,8 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
               </h2>
               <p style="margin:0 0 24px;color:#6B7280;font-size:15px;line-height:1.6;">
                 A <strong style="color:#C82020;">CRITICAL</strong> blood request has been submitted by
-                <strong>${requester.fullname}</strong> and requires your immediate review and approval.
+                <strong>${requester.fullname}</strong> and requires your immediate review.
+                This request will appear in the <strong>Receiver Requests</strong> section of Inventory Management.
               </p>
 
               <!-- Request Details -->
@@ -432,7 +561,7 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
                 </tr>
                 <tr style="background:#f9fafb;">
                   <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">Urgency</td>
-                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#C82020;font-weight:700;">CRITICAL</td>
+                  <td style="padding:12px 16px;border:1px solid #e5e7eb;color:#C82020;font-weight:700;">🚨 CRITICAL</td>
                 </tr>
                 <tr>
                   <td style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">Submitted By</td>
@@ -442,16 +571,16 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
 
               <!-- CTA Button -->
               <div style="text-align:center;margin:0 0 24px;">
-                <a href="${baseUrl}/pendingRequests"
+                <a href="${baseUrl}/adminInventory"
                    style="display:inline-block;background:linear-gradient(135deg,#C82020,#991B1B);color:#ffffff;
                           text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;">
-                  Review &amp; Approve Request
+                  Go to Receiver Requests
                 </a>
               </div>
 
               <p style="margin:0;color:#9CA3AF;font-size:13px;text-align:center;line-height:1.5;">
                 Please log in to the LifeLink Admin Panel to take action.<br/>
-                Approving this request will automatically notify matched donors.
+                Contact the patient externally, then Approve or Decline from Inventory Management.
               </p>
             </td>
           </tr>
@@ -487,6 +616,7 @@ module.exports = {
     sendVerificationEmail,
     sendPasswordResetEmail,
     sendCriticalBloodRequestEmail,
+    sendUrgentRequestToAdminsEmail,
     sendCriticalRequestToAdminsEmail
 };
 

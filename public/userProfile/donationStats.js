@@ -1,4 +1,4 @@
-﻿/**
+/**
  * donationStats.js
  * Self-contained gamification stats widget for the User Profile page.
  *
@@ -394,6 +394,19 @@
       if (!json.success) throw new Error(json.message || 'API error');
 
       render(mount, json.data);
+
+      // Keep the sidebar donor tier tag synchronized with the latest gamification tier
+      const tierTagEl = document.querySelector('.tag-tier .tag-val');
+      const tierSvgEl = document.querySelector('.tag-tier svg');
+      if (tierTagEl && json.data.currentTier) {
+        const tier = json.data.currentTier;
+        tierTagEl.textContent = tier;
+        tierTagEl.className = `tag-val tier-${tier.toLowerCase()}`;
+        if (tierSvgEl) {
+          const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#9CA3AF', Gold: '#D97706', Platinum: '#6B7280' };
+          tierSvgEl.setAttribute('stroke', TIER_COLORS[tier] || '#3B82F6');
+        }
+      }
 
       // Handle ?newBadge=badge_id — show award modal
       const params  = new URLSearchParams(window.location.search);

@@ -1,6 +1,8 @@
 // LifeLink – Password Reset Script (FIXED)
 
 const API_URL = 'http://localhost:5000/api';
+// Password regex pattern: requires uppercase, lowercase, digit, and special character
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Get token from URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -235,6 +237,11 @@ async function handleResetPassword() {
 
         if (newPassword.length < 8) {
             showError('Password must be at least 8 characters long');
+            return;
+        }
+
+        if (!passwordRegex.test(newPassword)) {
+            showError('Password must contain uppercase, lowercase, number, and special character (@$!%*?&).');
             return;
         }
 
