@@ -5,11 +5,21 @@ dotenv.config();
 
 // Render blocks outbound SMTP (ports 465/587) at the network level.
 // Resend sends email via HTTPS API calls instead — never blocked by Render.
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize so the app doesn't crash on startup if the key isn't set yet.
+let _resend = null;
+function getResend() {
+    if (!_resend) {
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('[MAILER] RESEND_API_KEY environment variable is not set. Add it in your Render dashboard.');
+        }
+        _resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return _resend;
+}
 
 const FROM_ADDRESS = process.env.SMTP_FROM || 'LifeLink <onboarding@resend.dev>';
 
-console.log('[MAILER] Using Resend API for email delivery (SMTP blocked on Render).');
+console.log('[MAILER] Using Resend API for email delivery.');
 
 
 
@@ -108,7 +118,7 @@ async function sendVerificationEmail(toEmail, token) {
     };
 
     try {
-        const { data, error } = await resend.emails.send(mailOptions);
+        const { data, error } = await getResend().emails.send(mailOptions);
         if (error) throw new Error(error.message);
         console.log(`[MAILER] Verification email sent to ${toEmail} (id: ${data.id})`);
         return true;
@@ -214,7 +224,7 @@ async function sendPasswordResetEmail(toEmail, token) {
     };
 
     try {
-        const { data, error } = await resend.emails.send(mailOptions);
+        const { data, error } = await getResend().emails.send(mailOptions);
         if (error) throw new Error(error.message);
         console.log(`[MAILER] Password reset email sent to ${toEmail} (id: ${data.id})`);
         return true;
@@ -348,7 +358,7 @@ async function sendCriticalBloodRequestEmail(user, request) {
     };
 
     try {
-        const { data, error } = await resend.emails.send(mailOptions);
+        const { data, error } = await getResend().emails.send(mailOptions);
         if (error) throw new Error(error.message);
         console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (id: ${data.id})`);
         return true;
@@ -471,7 +481,7 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
     };
 
     try {
-        const { data, error } = await resend.emails.send(mailOptions);
+        const { data, error } = await getResend().emails.send(mailOptions);
         if (error) throw new Error(error.message);
         console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (id: ${data.id})`);
         return true;
@@ -594,7 +604,7 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
     };
 
     try {
-        const { data, error } = await resend.emails.send(mailOptions);
+        const { data, error } = await getResend().emails.send(mailOptions);
         if (error) throw new Error(error.message);
         console.log(`[MAILER] Critical admin alert sent to ${admin.email} (id: ${data.id})`);
         return true;
