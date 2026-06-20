@@ -71,11 +71,19 @@ router.post(
             // Generate and send verification email
             await generateAndSendVerification(email);
 
-            // Do NOT return a token — user must verify email first
+            let message = 'Account created! Please check your email to verify your account.';
+            let requiresVerification = true;
+
+            if (process.env.BYPASS_EMAIL_VERIFICATION === 'true') {
+                await User.markEmailVerified(userId);
+                message = 'Account created! (Verification bypassed for cloud testing. You can log in directly.)';
+                requiresVerification = false;
+            }
+
             res.status(201).json({
-                message: 'Account created! Please check your email to verify your account.',
+                message,
                 email: email,
-                requiresVerification: true
+                requiresVerification
             });
         } catch (error) {
             console.error('Signup error:', error);
