@@ -1,29 +1,39 @@
-const { Resend } = require('resend');
 const dotenv = require('dotenv');
-
 dotenv.config();
 
-// Render blocks outbound SMTP (ports 465/587) at the network level.
-// Resend sends email via HTTPS API calls instead — never blocked by Render.
-// Lazy-initialize so the app doesn't crash on startup if the key isn't set yet.
-let _resend = null;
-function getResend() {
-    if (!_resend) {
-        if (!process.env.RESEND_API_KEY) {
-            throw new Error('[MAILER] RESEND_API_KEY environment variable is not set. Add it in your Render dashboard.');
-        }
-        _resend = new Resend(process.env.RESEND_API_KEY);
+// SendGrid — free 100 emails/day, single sender verification (no domain needed),
+// uses HTTPS API so Render never blocks it.
+async function sendWithSendGrid(to, subject, htmlContent) {
+    const apiKey = process.env.SENDGRID_API_KEY;
+    if (!apiKey) throw new Error('[MAILER] SENDGRID_API_KEY is not set in environment variables.');
+
+    const senderEmail = process.env.SENDGRID_SENDER_EMAIL;
+    if (!senderEmail) throw new Error('[MAILER] SENDGRID_SENDER_EMAIL is not set in environment variables.');
+
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            from: { email: senderEmail, name: 'LifeLink' },
+            to: [{ email: to }],
+            subject,
+            content: [{ type: 'text/html', value: htmlContent }]
+        })
+    });
+
+    if (!response.ok) {
+        const text = await response.text().catch(() => response.status.toString());
+        throw new Error(`SendGrid error ${response.status}: ${text}`);
     }
-    return _resend;
+
+    // SendGrid returns 202 Accepted with no body on success
+    return { messageId: `sendgrid-${Date.now()}` };
 }
 
-// NOTE: The 'from' address MUST be a domain verified on Resend.
-// 'onboarding@resend.dev' is Resend's own pre-verified test domain — works immediately.
-// To use your own domain (e.g. noreply@yourdomain.com), verify it at https://resend.com/domains
-const FROM_ADDRESS = process.env.RESEND_FROM || 'LifeLink <onboarding@resend.dev>';
-
-
-console.log('[MAILER] Using Resend API for email delivery.');
+console.log('[MAILER] Using SendGrid API for email delivery.');
 
 
 
@@ -36,11 +46,8 @@ async function sendVerificationEmail(toEmail, token) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
     const verifyLink = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-    const mailOptions = {
-        from: FROM_ADDRESS,
-        to: toEmail,
-        subject: 'LifeLink – Verify Your Email Address',
-        html: `
+    const subject = 'LifeLink – Verify Your Email Address';
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -118,13 +125,11 @@ async function sendVerificationEmail(toEmail, token) {
   </table>
 </body>
 </html>
-        `
-    };
+        `;
 
     try {
-        const { data, error } = await getResend().emails.send(mailOptions);
-        if (error) throw new Error(error.message);
-        console.log(`[MAILER] Verification email sent to ${toEmail} (id: ${data.id})`);
+        const result = await sendWithSendGrid(toEmail, subject, html);
+        console.log(`[MAILER] Verification email sent to ${toEmail} (messageId: ${result.messageId})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send verification email to ${toEmail}:`, error.message);
@@ -142,11 +147,8 @@ async function sendPasswordResetEmail(toEmail, token) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
     const resetLink = `${baseUrl}/passwordReset?token=${token}`;
 
-    const mailOptions = {
-        from: FROM_ADDRESS,
-        to: toEmail,
-        subject: 'LifeLink – Reset Your Password',
-        html: `
+    const subject = 'LifeLink – Reset Your Password';
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -224,13 +226,11 @@ async function sendPasswordResetEmail(toEmail, token) {
   </table>
 </body>
 </html>
-        `
-    };
+        `;
 
     try {
-        const { data, error } = await getResend().emails.send(mailOptions);
-        if (error) throw new Error(error.message);
-        console.log(`[MAILER] Password reset email sent to ${toEmail} (id: ${data.id})`);
+        const result = await sendWithSendGrid(toEmail, subject, html);
+        console.log(`[MAILER] Password reset email sent to ${toEmail} (messageId: ${result.messageId})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send password reset email to ${toEmail}:`, error.message);
@@ -255,11 +255,8 @@ async function sendCriticalBloodRequestEmail(user, request) {
     const headerTitle  = urgencyRaw === 'urgent' ? '🔶 URGENT BLOOD REQUEST' : '🚨 BLOOD REQUEST ALERT';
     const subjectEmoji = urgencyRaw === 'urgent' ? '🔶' : '🚨';
 
-    const mailOptions = {
-        from: FROM_ADDRESS,
-        to: user.email,
-        subject: `${subjectEmoji} ${urgencyLabel} Blood Request – ${request.blood_type} Needed at ${request.hospital_name}`,
-        html: `
+    const subject = `${subjectEmoji} ${urgencyLabel} Blood Request – ${request.blood_type} Needed at ${request.hospital_name}`;
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -358,13 +355,11 @@ async function sendCriticalBloodRequestEmail(user, request) {
   </table>
 </body>
 </html>
-        `
-    };
+        `;
 
     try {
-        const { data, error } = await getResend().emails.send(mailOptions);
-        if (error) throw new Error(error.message);
-        console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (id: ${data.id})`);
+        const result = await sendWithSendGrid(user.email, subject, html);
+        console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (messageId: ${result.messageId})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send ${urgencyLabel} email to ${user.email}:`, error.message);
@@ -382,11 +377,8 @@ async function sendCriticalBloodRequestEmail(user, request) {
 async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
-    const mailOptions = {
-        from: FROM_ADDRESS,
-        to: admin.email,
-        subject: `🔶 [Action Required] Urgent Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`,
-        html: `
+    const subject = `🔶 [Action Required] Urgent Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`;
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -481,13 +473,11 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
     </tr>
   </table>
 </body>
-</html>`
-    };
+</html>        `;
 
     try {
-        const { data, error } = await getResend().emails.send(mailOptions);
-        if (error) throw new Error(error.message);
-        console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (id: ${data.id})`);
+        const result = await sendWithSendGrid(admin.email, subject, html);
+        console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (messageId: ${result.messageId})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send urgent admin alert to ${admin.email}:`, error.message);
@@ -505,11 +495,8 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
 async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
-    const mailOptions = {
-        from: FROM_ADDRESS,
-        to: admin.email,
-        subject: `🚨 [Action Required] Critical Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`,
-        html: `
+    const subject = `🚨 [Action Required] Critical Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`;
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -604,13 +591,11 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
     </tr>
   </table>
 </body>
-</html>`
-    };
+</html>        `;
 
     try {
-        const { data, error } = await getResend().emails.send(mailOptions);
-        if (error) throw new Error(error.message);
-        console.log(`[MAILER] Critical admin alert sent to ${admin.email} (id: ${data.id})`);
+        const result = await sendWithSendGrid(admin.email, subject, html);
+        console.log(`[MAILER] Critical admin alert sent to ${admin.email} (messageId: ${result.messageId})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send admin alert to ${admin.email}:`, error.message);
@@ -625,4 +610,3 @@ module.exports = {
     sendUrgentRequestToAdminsEmail,
     sendCriticalRequestToAdminsEmail
 };
-
