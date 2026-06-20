@@ -1,40 +1,61 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
-const dns = require('dns');
-
-// Force Node.js DNS resolution to prioritize IPv4 over IPv6 globally.
-// This resolves ENETUNREACH errors on cloud platforms like Render where
-// the container might lack external IPv6 connectivity but still tries
-// to connect to Google's SMTP servers over IPv6.
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
+const dns = require('dns').promises;
 
 dotenv.config();
 
 const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: smtpPort,
-    secure: smtpPort === 465, // true for port 465 (SSL), false for 587 (STARTTLS)
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    connectionTimeout: 3000, // Fail fast (3 seconds) if Render blocks the SMTP ports
-    greetingTimeout: 3000,
-    socketTimeout: 5000
-});
+let transporterInstance = null;
+let transporterPromise = null;
 
-// Verify SMTP connection on startup so misconfiguration surfaces immediately
-transporter.verify((error) => {
-    if (error) {
-        console.error('[MAILER] SMTP connection failed:', error.message);
-    } else {
-        console.log('[MAILER] SMTP connection established – ready to send emails');
-    }
-});
+async function getTransporter() {
+    if (transporterInstance) return transporterInstance;
+    if (transporterPromise) return transporterPromise;
+
+    transporterPromise = (async () => {
+        try {
+            // Force resolve to IPv4 to bypass Render's IPv6 ENETUNREACH issues
+            const addresses = await dns.resolve4(smtpHost);
+            const ipv4 = addresses[0];
+            
+            transporterInstance = nodemailer.createTransport({
+                host: ipv4,
+                port: smtpPort,
+                secure: smtpPort === 465,
+                tls: {
+                    servername: smtpHost // Required for certificate validation when connecting by IP
+                },
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                },
+                connectionTimeout: 5000,
+                greetingTimeout: 5000,
+                socketTimeout: 5000
+            });
+            console.log(`[MAILER] SMTP connection established via IPv4 (${ipv4})`);
+        } catch (error) {
+            console.warn(`[MAILER] IPv4 DNS resolution failed for ${smtpHost}, falling back to default hostname:`, error.message);
+            transporterInstance = nodemailer.createTransport({
+                host: smtpHost,
+                port: smtpPort,
+                secure: smtpPort === 465,
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                },
+                connectionTimeout: 5000,
+                greetingTimeout: 5000,
+                socketTimeout: 5000
+            });
+        }
+        return transporterInstance;
+    })();
+
+    return transporterPromise;
+}
 
 /**
  * Send an email verification link to the user
@@ -42,6 +63,7 @@ transporter.verify((error) => {
  * @param {string} token - Verification token
  */
 async function sendVerificationEmail(toEmail, token) {
+    const transporter = await getTransporter();
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
     const verifyLink = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
@@ -148,6 +170,7 @@ async function sendVerificationEmail(toEmail, token) {
  * @param {string} token - Password reset token
  */
 async function sendPasswordResetEmail(toEmail, token) {
+    const transporter = await getTransporter();
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
     const resetLink = `${baseUrl}/passwordReset?token=${token}`;
 
@@ -255,6 +278,7 @@ async function sendPasswordResetEmail(toEmail, token) {
  * @param {object} request - blood request row from DB (includes urgency_level)
  */
 async function sendCriticalBloodRequestEmail(user, request) {
+    const transporter = await getTransporter();
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
     // Build urgency label and color dynamically from the actual request level
@@ -388,6 +412,7 @@ async function sendCriticalBloodRequestEmail(user, request) {
  * @param {object} requester - { fullname } user who submitted
  */
 async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
+    const transporter = await getTransporter();
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
     const mailOptions = {
@@ -510,6 +535,7 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
  * @param {object} requester - { fullname } user who submitted
  */
 async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
+    const transporter = await getTransporter();
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
     const mailOptions = {
