@@ -51,6 +51,9 @@ setInterval(restoreExpiredCooldowns, 60 * 60 * 1000);
 
 const app = express();
 
+// Trust proxy (required for rate-limiting behind reverse proxies like Render)
+app.set('trust proxy', 1);
+
 // Import middleware
 const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const { corsMiddleware } = require('./middleware/corsConfig');
