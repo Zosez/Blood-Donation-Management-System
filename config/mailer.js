@@ -17,7 +17,11 @@ function getResend() {
     return _resend;
 }
 
-const FROM_ADDRESS = process.env.SMTP_FROM || 'LifeLink <onboarding@resend.dev>';
+// NOTE: The 'from' address MUST be a domain verified on Resend.
+// 'onboarding@resend.dev' is Resend's own pre-verified test domain — works immediately.
+// To use your own domain (e.g. noreply@yourdomain.com), verify it at https://resend.com/domains
+const FROM_ADDRESS = process.env.RESEND_FROM || 'LifeLink <onboarding@resend.dev>';
+
 
 console.log('[MAILER] Using Resend API for email delivery.');
 
