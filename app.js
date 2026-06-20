@@ -75,6 +75,44 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve AI chatbot script from /AI directory
 app.use('/AI', express.static(path.join(__dirname, 'AI')));
 
+// Fallback resolver for static assets in nested folders (resolves case-sensitivity and relative path routing issues)
+const fs = require('fs');
+const assetCache = {};
+
+function cacheAssetsRecursive(dir) {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+            if (file !== 'node_modules' && file !== '.git') {
+                cacheAssetsRecursive(fullPath);
+            }
+        } else {
+            const ext = path.extname(file);
+            if (['.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2'].includes(ext)) {
+                assetCache[file] = fullPath;
+            }
+        }
+    }
+}
+
+try {
+    cacheAssetsRecursive(path.join(__dirname, 'public'));
+    cacheAssetsRecursive(path.join(__dirname, 'AI'));
+    console.log(`[ASSET RESOLVER] Cached ${Object.keys(assetCache).length} assets successfully.`);
+} catch (err) {
+    console.error('[ASSET RESOLVER] Error caching assets:', err.message);
+}
+
+app.use((req, res, next) => {
+    const basename = path.basename(req.path);
+    if (assetCache[basename]) {
+        return res.sendFile(assetCache[basename]);
+    }
+    next();
+});
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const donationRoutes = require('./routes/donations');
@@ -197,7 +235,7 @@ app.get('/events', (req, res) => {
 });
 
 app.get('/userdashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/UserDashboard/userdashboard.html'));
+    res.sendFile(path.join(__dirname, 'public/userdashboard/userdashboard.html'));
 });
 
 app.get('/bloodRequest', (req, res) => {
