@@ -68,11 +68,8 @@ router.post(
             // Create user (is_verified defaults to 0)
             const userId = await User.create({ fullname, email, password, phone, province, city, blood_type, date_of_birth });
 
-            // Generate and send verification email asynchronously (fire-and-forget)
-            // This prevents the UI from hanging while Nodemailer negotiates the SMTP connection
-            generateAndSendVerification(email).catch(err => {
-                console.error('[AUTH] Background email sending failed:', err);
-            });
+            // Generate and send verification email
+            await generateAndSendVerification(email);
 
             // Do NOT return a token — user must verify email first
             res.status(201).json({
@@ -160,10 +157,8 @@ router.post(
                 return res.status(400).json({ message: 'This email is already verified. Please login.' });
             }
 
-            // Generate and send new verification email in background
-            generateAndSendVerification(email).catch(err => {
-                console.error('[AUTH] Background resend verification failed:', err);
-            });
+            // Generate and send new verification email
+            await generateAndSendVerification(email);
 
             res.json({ message: 'Verification email resent. Please check your inbox.' });
         } catch (error) {
@@ -278,10 +273,13 @@ router.post(
             // Save token to database
             await User.saveResetToken(email, resetToken, expiry);
 
-            // Send password reset email in background
-            sendPasswordResetEmail(email, resetToken).catch(err => {
-                console.warn(`[AUTH] Background password reset email send failed for ${email}:`, err);
-            });
+            // Send password reset email
+            const emailSent = await sendPasswordResetEmail(email, resetToken);
+
+            if (!emailSent) {
+                console.warn(`[AUTH] Email send failed for ${email}, but reset link created`);
+                // Still return success for security, but log the failure
+            }
 
             res.json({
                 message: 'If this email is registered, a password reset link has been sent to your inbox.',

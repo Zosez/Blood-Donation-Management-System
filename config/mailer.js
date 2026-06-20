@@ -1,15 +1,15 @@
 const nodemailer = require('nodemailer');
-const dns = require('dns');
 const dotenv = require('dotenv');
+const dns = require('dns');
 
-dotenv.config();
-
-// Force Node to prefer IPv4 results when resolving hostnames globally
+// Force Node to prefer IPv4 results when resolving hostnames
 if (dns.setDefaultResultOrder) {
     dns.setDefaultResultOrder('ipv4first');
 }
 
-const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
+dotenv.config();
+
+const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
