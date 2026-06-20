@@ -1,35 +1,17 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const dotenv = require('dotenv');
-const dns = require('dns');
-
-// Force Node to prefer IPv4 results when resolving hostnames
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
 
 dotenv.config();
 
-const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+// Render blocks outbound SMTP (ports 465/587) at the network level.
+// Resend sends email via HTTPS API calls instead — never blocked by Render.
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: smtpPort,
-    secure: smtpPort === 465, // true for port 465 (SSL), false for 587 (STARTTLS)
-    family: 4, // <-- force IPv4 for this connection
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+const FROM_ADDRESS = process.env.SMTP_FROM || 'LifeLink <onboarding@resend.dev>';
 
-// Verify SMTP connection on startup
-transporter.verify((error) => {
-    if (error) {
-        console.error('[MAILER] SMTP connection failed:', error.message);
-    } else {
-        console.log('[MAILER] SMTP connection established – ready to send emails');
-    }
-});
+console.log('[MAILER] Using Resend API for email delivery (SMTP blocked on Render).');
+
+
 
 /**
  * Send an email verification link to the user
@@ -41,7 +23,7 @@ async function sendVerificationEmail(toEmail, token) {
     const verifyLink = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        from: FROM_ADDRESS,
         to: toEmail,
         subject: 'LifeLink – Verify Your Email Address',
         html: `
@@ -126,12 +108,12 @@ async function sendVerificationEmail(toEmail, token) {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] Verification email sent to ${toEmail} (messageId: ${info.messageId})`);
+        const { data, error } = await resend.emails.send(mailOptions);
+        if (error) throw new Error(error.message);
+        console.log(`[MAILER] Verification email sent to ${toEmail} (id: ${data.id})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send verification email to ${toEmail}:`, error.message);
-        // In dev mode, log the link so you can still test
         console.log(`[DEV FALLBACK] Verification link for ${toEmail}: ${verifyLink}`);
         return false;
     }
@@ -147,7 +129,7 @@ async function sendPasswordResetEmail(toEmail, token) {
     const resetLink = `${baseUrl}/passwordReset?token=${token}`;
 
     const mailOptions = {
-        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        from: FROM_ADDRESS,
         to: toEmail,
         subject: 'LifeLink – Reset Your Password',
         html: `
@@ -232,12 +214,12 @@ async function sendPasswordResetEmail(toEmail, token) {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] Password reset email sent to ${toEmail} (messageId: ${info.messageId})`);
+        const { data, error } = await resend.emails.send(mailOptions);
+        if (error) throw new Error(error.message);
+        console.log(`[MAILER] Password reset email sent to ${toEmail} (id: ${data.id})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send password reset email to ${toEmail}:`, error.message);
-        // In dev mode, log the link so you can still test
         console.log(`[DEV FALLBACK] Password reset link for ${toEmail}: ${resetLink}`);
         return false;
     }
@@ -260,7 +242,7 @@ async function sendCriticalBloodRequestEmail(user, request) {
     const subjectEmoji = urgencyRaw === 'urgent' ? '🔶' : '🚨';
 
     const mailOptions = {
-        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        from: FROM_ADDRESS,
         to: user.email,
         subject: `${subjectEmoji} ${urgencyLabel} Blood Request – ${request.blood_type} Needed at ${request.hospital_name}`,
         html: `
@@ -366,8 +348,9 @@ async function sendCriticalBloodRequestEmail(user, request) {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (messageId: ${info.messageId})`);
+        const { data, error } = await resend.emails.send(mailOptions);
+        if (error) throw new Error(error.message);
+        console.log(`[MAILER] ${urgencyLabel} blood request email sent to ${user.email} (id: ${data.id})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send ${urgencyLabel} email to ${user.email}:`, error.message);
@@ -386,7 +369,7 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
     const mailOptions = {
-        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        from: FROM_ADDRESS,
         to: admin.email,
         subject: `🔶 [Action Required] Urgent Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`,
         html: `
@@ -488,8 +471,9 @@ async function sendUrgentRequestToAdminsEmail(admin, request, requester) {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (messageId: ${info.messageId})`);
+        const { data, error } = await resend.emails.send(mailOptions);
+        if (error) throw new Error(error.message);
+        console.log(`[MAILER] Urgent admin alert sent to ${admin.email} (id: ${data.id})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send urgent admin alert to ${admin.email}:`, error.message);
@@ -508,7 +492,7 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
     const mailOptions = {
-        from: process.env.SMTP_FROM || `"LifeLink" <${process.env.SMTP_USER}>`,
+        from: FROM_ADDRESS,
         to: admin.email,
         subject: `🚨 [Action Required] Critical Blood Request #${request.id} — ${request.blood_type} at ${request.hospital_name}`,
         html: `
@@ -610,8 +594,9 @@ async function sendCriticalRequestToAdminsEmail(admin, request, requester) {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[MAILER] Critical admin alert sent to ${admin.email} (messageId: ${info.messageId})`);
+        const { data, error } = await resend.emails.send(mailOptions);
+        if (error) throw new Error(error.message);
+        console.log(`[MAILER] Critical admin alert sent to ${admin.email} (id: ${data.id})`);
         return true;
     } catch (error) {
         console.error(`[MAILER] Failed to send admin alert to ${admin.email}:`, error.message);
