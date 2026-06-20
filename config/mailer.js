@@ -1,20 +1,25 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+// Force Node to prefer IPv4 results when resolving hostnames globally
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
+const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: smtpPort,
     secure: smtpPort === 465, // true for port 465 (SSL), false for 587 (STARTTLS)
+    family: 4, // <-- force IPv4 for this connection
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
     }
-    // We explicitly REMOVED connectionTimeout, greetingTimeout, and socketTimeout 
-    // to allow the connection enough time to establish, especially on cloud hosts.
 });
 
 // Verify SMTP connection on startup
