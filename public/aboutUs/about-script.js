@@ -307,3 +307,10 @@ document.getElementById("home").addEventListener("click",function(){
 document.getElementById("active-request").addEventListener("click",function(){
   window.location.href = "/activeRequests";
 });
+
+//Events Redirection
+if (document.getElementById("events")) {
+  document.getElementById("events").addEventListener("click",function(){
+    window.location.href = "/events";
+  });
+}

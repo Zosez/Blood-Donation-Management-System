@@ -1,4 +1,4 @@
-﻿/* ─── TOAST UTILITY ─── */
+/* ─── TOAST UTILITY ─── */
 let toastTimeout = null;
 let activeToast = null;
 
@@ -154,7 +154,7 @@ async function registerForEvent(card, button) {
     window.showToast('Please log in before registering for an event.', 'warning');
 
     setTimeout(() => {
-      window.location.href = '../login/login.html';
+      window.location.href = '/login';
     }, 800);
 
     return;
@@ -592,13 +592,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-      window.location.href = '../login/login.html';
+      window.location.href = '/login';
     });
   }
 
   if (registerBtn) {
     registerBtn.addEventListener('click', () => {
-      window.location.href = '../register/register.html';
+      window.location.href = '/signup';
     });
   }
 
