@@ -235,7 +235,7 @@ app.get('/events', (req, res) => {
 });
 
 app.get('/userdashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/userdashboard/userdashboard.html'));
+    res.sendFile(path.join(__dirname, 'public/UserDashboard/userdashboard.html'));
 });
 
 app.get('/bloodRequest', (req, res) => {
@@ -264,7 +264,7 @@ app.get('/donorRequest', (req, res) => {
 
 // -- Admin Routes --
 app.get('/adminDashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/adminDashboard/adminDashboard.html'));
+    res.sendFile(path.join(__dirname, 'public/admindashboard/admindashboard.html'));
 });
 
 app.get('/adminNotification', (req, res) => {

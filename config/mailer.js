@@ -1,5 +1,14 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Force Node.js DNS resolution to prioritize IPv4 over IPv6 globally.
+// This resolves ENETUNREACH errors on cloud platforms like Render where
+// the container might lack external IPv6 connectivity but still tries
+// to connect to Google's SMTP servers over IPv6.
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 dotenv.config();
 
