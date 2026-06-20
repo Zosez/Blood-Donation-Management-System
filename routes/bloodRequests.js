@@ -36,7 +36,7 @@ async function notifyAdmins(requestId, requestData, requester) {
     try {
         // Fetch all admin users
         const [admins] = await db.execute(
-            'SELECT id, fullname, email FROM users WHERE role = "admin"'
+            `SELECT id, fullname, email FROM users WHERE role = 'admin'`
         );
         if (!admins.length) return;
 

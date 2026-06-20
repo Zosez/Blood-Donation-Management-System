@@ -258,7 +258,7 @@ router.get('/pending-requests', async (req, res) => {
                 created_at,
                 status
             FROM blood_requests 
-            WHERE status = "pending"
+            WHERE status = 'pending'
             ORDER BY 
                 CASE urgency_level 
                     WHEN 'critical' THEN 1
@@ -347,7 +347,7 @@ router.post('/approve-request/:requestId', async (req, res) => {
 
         // Update request status to approved
         const [result] = await db.execute(
-            'UPDATE blood_requests SET status = "approved", updated_at = NOW() WHERE id = ?',
+            `UPDATE blood_requests SET status = 'approved', updated_at = NOW() WHERE id = ?`,
             [requestId]
         );
 
@@ -386,7 +386,7 @@ router.post('/reject-request/:requestId', async (req, res) => {
 
         // Update request status to rejected and store reason
         await db.execute(
-            'UPDATE blood_requests SET status = "rejected", updated_at = NOW(), notes = CONCAT(IFNULL(notes, ""), "\\nAdmin Rejection: ", ?) WHERE id = ?',
+            `UPDATE blood_requests SET status = 'rejected', updated_at = NOW(), notes = CONCAT(IFNULL(notes, ''), '\\nAdmin Rejection: ', ?) WHERE id = ?`,
             [reason, requestId]
         );
 
@@ -406,7 +406,7 @@ router.get('/users', async (req, res) => {
         const limit = Math.min(parseInt(req.query.limit) || 50, 100);
         const offset = parseInt(req.query.offset) || 0;
 
-        const [users] = await db.execute(`
+        const [users] = await db.query(`
             SELECT 
                 id,
                 fullname,
@@ -818,7 +818,7 @@ router.get('/inventory-log', async (req, res) => {
         const limit  = Math.min(parseInt(req.query.limit)  || 50, 200);
         const offset = parseInt(req.query.offset) || 0;
 
-        const [rows] = await db.execute(`
+        const [rows] = await db.query(`
             SELECT
                 i.id, i.blood_type, i.units, i.source_type, i.received_at,
                 i.notes, i.created_at,
