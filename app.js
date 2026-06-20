@@ -91,7 +91,7 @@ function cacheAssetsRecursive(dir) {
         } else {
             const ext = path.extname(file);
             if (['.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2'].includes(ext)) {
-                assetCache[file] = fullPath;
+                assetCache[file.toLowerCase()] = fullPath;
             }
         }
     }
@@ -106,7 +106,7 @@ try {
 }
 
 app.use((req, res, next) => {
-    const basename = path.basename(req.path);
+    const basename = path.basename(req.path).toLowerCase();
     if (assetCache[basename]) {
         return res.sendFile(assetCache[basename]);
     }
