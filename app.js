@@ -197,7 +197,7 @@ app.get('/events', (req, res) => {
 });
 
 app.get('/userdashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/userdashboard/userdashboard.html'));
+    res.sendFile(path.join(__dirname, 'public/UserDashboard/userdashboard.html'));
 });
 
 app.get('/bloodRequest', (req, res) => {

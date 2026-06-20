@@ -19,31 +19,13 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify SMTP connection on startup so misconfiguration surfaces immediately
-if (process.env.BYPASS_EMAIL_VERIFICATION !== 'true') {
-    transporter.verify((error) => {
-        if (error) {
-            console.error('[MAILER] SMTP connection failed:', error.message);
-        } else {
-            console.log('[MAILER] SMTP connection established – ready to send emails');
-        }
-    });
-} else {
-    console.log('[MAILER] Email verification bypass is active. SMTP verify skipped.');
-    
-    // Override sendMail to bypass SMTP connection entirely and print to console logs
-    transporter.sendMail = async (options) => {
-        console.log(`[MAILER BYPASS] Successfully bypassed email to: ${options.to}`);
-        console.log(`[MAILER BYPASS] Subject: ${options.subject}`);
-        
-        // Extract any links from the email HTML (like verification or password reset links)
-        const linkMatch = options.html ? options.html.match(/href="([^"]+)"/) : null;
-        if (linkMatch) {
-            console.log(`[MAILER BYPASS] Action Link: ${linkMatch[1]}`);
-        }
-        
-        return { messageId: 'bypass-id-' + Math.random().toString(36).substr(2, 9) };
-    };
-}
+transporter.verify((error) => {
+    if (error) {
+        console.error('[MAILER] SMTP connection failed:', error.message);
+    } else {
+        console.log('[MAILER] SMTP connection established – ready to send emails');
+    }
+});
 
 /**
  * Send an email verification link to the user
