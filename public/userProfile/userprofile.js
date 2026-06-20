@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = '/api';
   const token = localStorage.getItem('token');
 
   /* ─── HELPER: Format location from city and province ─── */

@@ -1,6 +1,6 @@
 // LifeLink – Password Reset Script (FIXED)
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 // Password regex pattern: requires uppercase, lowercase, digit, and special character
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 

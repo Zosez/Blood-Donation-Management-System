@@ -1,6 +1,6 @@
 // LifeLink – Login Script (FINAL MERGED)
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");

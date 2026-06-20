@@ -1,6 +1,6 @@
 // LifeLink – Signup Script with Backend Integration
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 // ── Nepal Province & City Data ──
 const nepalData = {

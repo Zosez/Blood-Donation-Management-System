@@ -1,6 +1,6 @@
 // LifeLink – Check Your Email Script
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 // Get email from URL query parameter
 const urlParams = new URLSearchParams(window.location.search);
