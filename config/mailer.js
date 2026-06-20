@@ -17,8 +17,8 @@ async function sendWithSendGrid(to, subject, htmlContent) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+            personalizations: [{ to: [{ email: to }] }],
             from: { email: senderEmail, name: 'LifeLink' },
-            to: [{ email: to }],
             subject,
             content: [{ type: 'text/html', value: htmlContent }]
         })
