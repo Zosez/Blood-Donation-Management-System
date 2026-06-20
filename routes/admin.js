@@ -85,21 +85,21 @@ async function handleRequestApproval(request) {
 router.get('/dashboard-stats', async (req, res) => {
     try {
         // Total users
-        const [userCountResult] = await db.execute('SELECT COUNT(*) as count FROM users WHERE role = "user"');
+        const [userCountResult] = await db.execute('SELECT COUNT(*) as count FROM users WHERE role = \'user\'');
         const totalUsers = userCountResult[0].count;
 
         // Pending requests
-        const [pendingResult] = await db.execute('SELECT COUNT(*) as count FROM blood_requests WHERE status = "pending"');
+        const [pendingResult] = await db.execute('SELECT COUNT(*) as count FROM blood_requests WHERE status = \'pending\'');
         const pendingRequests = pendingResult[0].count;
 
         // Open requests (approved but not fulfilled)
-        const [openResult] = await db.execute('SELECT COUNT(*) as count FROM blood_requests WHERE status = "approved"');
+        const [openResult] = await db.execute('SELECT COUNT(*) as count FROM blood_requests WHERE status = \'approved\'');
         const openRequests = openResult[0].count;
 
         // Donations today
         const [donationsResult] = await db.execute(`
             SELECT COUNT(*) as count FROM donations 
-            WHERE DATE(donation_date) = CURDATE() AND status = "completed"
+            WHERE DATE(donation_date) = CURDATE() AND status = 'completed'
         `);
         const donationsToday = donationsResult[0].count;
 
@@ -124,7 +124,7 @@ router.get('/sidebar-counts', async (req, res) => {
     try {
         // Count pending blood requests
         const [pendingResult] = await db.execute(
-            'SELECT COUNT(*) as count FROM blood_requests WHERE status = "pending"'
+            'SELECT COUNT(*) as count FROM blood_requests WHERE status = \'pending\''
         );
         const pendingRequests = pendingResult[0].count;
 
@@ -136,7 +136,7 @@ router.get('/sidebar-counts', async (req, res) => {
 
         // Also get pending donor registrations to include in inventory count
         const [pendingRegsResult] = await db.execute(
-            'SELECT COUNT(*) as count FROM donor_registrations WHERE status = "pending"'
+            'SELECT COUNT(*) as count FROM donor_registrations WHERE status = \'pending\''
         );
         const pendingDonorRegs = pendingRegsResult[0].count;
 

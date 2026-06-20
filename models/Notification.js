@@ -46,7 +46,8 @@ class Notification {
      * @param {number} limit
      */
     static async findByUserIdWithRequest(userId, limit = 20) {
-        const [rows] = await db.execute(
+        const numLimit = parseInt(limit, 10) || 20;
+        const [rows] = await db.query(
             `SELECT 
                 n.id,
                 n.user_id,
@@ -64,17 +65,19 @@ class Notification {
              LEFT JOIN blood_requests br ON n.blood_request_id = br.id
              WHERE n.user_id = ?
              ORDER BY n.created_at DESC
-             LIMIT ?`,
-            [userId, limit]
+             LIMIT ${numLimit}`,
+            [userId]
         );
         return rows;
     }
 
     static async findByUserId(userId, limit = 50, offset = 0) {
-        const [rows] = await db.execute(
+        const numLimit = parseInt(limit, 10) || 50;
+        const numOffset = parseInt(offset, 10) || 0;
+        const [rows] = await db.query(
             `SELECT * FROM notifications WHERE user_id = ? 
-             ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-            [userId, limit, offset]
+             ORDER BY created_at DESC LIMIT ${numLimit} OFFSET ${numOffset}`,
+            [userId]
         );
         return rows;
     }

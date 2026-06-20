@@ -33,7 +33,7 @@ class Donation {
 
     static async getUserStats(userId) {
         const [rows] = await db.execute(
-            'SELECT COUNT(id) as total_donations, SUM(blood_units) as total_units FROM donations WHERE user_id = ? AND status != "cancelled"',
+            'SELECT COUNT(id) as total_donations, SUM(blood_units) as total_units FROM donations WHERE user_id = ? AND status != \'cancelled\'',
             [userId]
         );
         return {
@@ -44,7 +44,7 @@ class Donation {
 
     static async getLastDonation(userId) {
         const [rows] = await db.execute(
-            'SELECT MAX(donation_date) as last_donation_date FROM donations WHERE user_id = ? AND status = "completed"',
+            'SELECT MAX(donation_date) as last_donation_date FROM donations WHERE user_id = ? AND status = \'completed\'',
             [userId]
         );
         return rows[0].last_donation_date || null;

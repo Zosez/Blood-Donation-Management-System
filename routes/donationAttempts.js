@@ -304,13 +304,13 @@ router.post('/:attemptId/accepted', authenticateToken, async (req, res) => {
 
     // Update status to accepted
     await db.execute(
-      'UPDATE donation_attempts SET status = "accepted", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE donation_attempts SET status = \'accepted\', updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attemptId]
     );
 
     // Also update the blood request status to ongoing
     await db.execute(
-      'UPDATE blood_requests SET status = "ongoing", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE blood_requests SET status = \'ongoing\', updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attempt[0].request_id]
     );
 
@@ -352,7 +352,7 @@ router.post('/:attemptId/accepted', authenticateToken, async (req, res) => {
 
       // Fetch and notify all declined donors
       const [declinedDonors] = await db.execute(
-        `SELECT donor_id FROM donation_attempts WHERE request_id = ? AND status = "declined" AND donor_id != ?`,
+        `SELECT donor_id FROM donation_attempts WHERE request_id = ? AND status = 'declined' AND donor_id != ?`,
         [acceptedAttempt[0].request_id, donorId]
       );
 
@@ -374,7 +374,7 @@ router.post('/:attemptId/accepted', authenticateToken, async (req, res) => {
 
     // Optionally: Decline all other donations for this request
     await db.execute(
-      'UPDATE donation_attempts SET status = "declined", updated_at = CURRENT_TIMESTAMP WHERE request_id = ? AND id != ? AND status = "pending"',
+      'UPDATE donation_attempts SET status = \'declined\', updated_at = CURRENT_TIMESTAMP WHERE request_id = ? AND id != ? AND status = \'pending\'',
       [attempt[0].request_id, attemptId]
     );
 
@@ -421,7 +421,7 @@ router.post('/:attemptId/declined', authenticateToken, async (req, res) => {
 
     // Update status to declined
     await db.execute(
-      'UPDATE donation_attempts SET status = "declined", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE donation_attempts SET status = \'declined\', updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attemptId]
     );
 
@@ -564,13 +564,13 @@ router.post('/:attemptId/confirm-complete', authenticateToken, async (req, res) 
 
     // Update blood request to completed
     await db.execute(
-      'UPDATE blood_requests SET status = "completed", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE blood_requests SET status = \'completed\', updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attempt[0].request_id]
     );
 
     // Mark the donation attempt as confirmed so the UI knows it's done
     await db.execute(
-      'UPDATE donation_attempts SET status = "confirmed", updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE donation_attempts SET status = \'confirmed\', updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [attemptId]
     );
 
