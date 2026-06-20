@@ -3,15 +3,25 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const pool = mysql.createPool({
+const poolConfig = {
     host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'lifelink_db',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-});
+};
+
+// Enable SSL if specified in environment (required for Aiven MySQL)
+if (process.env.DB_SSL === 'true') {
+    poolConfig.ssl = {
+        rejectUnauthorized: false
+    };
+}
+
+const pool = mysql.createPool(poolConfig);
 
 const db = pool.promise();
 
@@ -19,17 +29,31 @@ const db = pool.promise();
 async function initializeDatabase() {
     try {
         // Create database if it doesn't exist
-        const tempPool = mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || '',
-            waitForConnections: true,
-            connectionLimit: 2,
-            queueLimit: 0
-        }).promise();
+        try {
+            const tempPoolConfig = {
+                host: process.env.DB_HOST || 'localhost',
+                port: process.env.DB_PORT || 3306,
+                user: process.env.DB_USER || 'root',
+                password: process.env.DB_PASSWORD || '',
+                waitForConnections: true,
+                connectionLimit: 2,
+                queueLimit: 0
+            };
 
-        await tempPool.execute(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'lifelink_db'}\``);
-        await tempPool.end();
+            if (process.env.DB_SSL === 'true') {
+                tempPoolConfig.ssl = {
+                    rejectUnauthorized: false
+                };
+            }
+
+            const tempPool = mysql.createPool(tempPoolConfig).promise();
+
+            await tempPool.execute(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'lifelink_db'}\``);
+            await tempPool.end();
+            console.log('[DB] Database verified/created successfully');
+        } catch (dbCreateErr) {
+            console.warn('[DB] Warning: Could not auto-create database (typical for hosted databases like Aiven):', dbCreateErr.message);
+        }
 
         // Disable foreign key checks during table creation
         await db.execute('SET FOREIGN_KEY_CHECKS=0');
